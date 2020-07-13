@@ -1,0 +1,279 @@
+<!--
+Copyright 2020 Idemia Identity & Security
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Basic liveness detection</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/apple-touch-icon.png">
+    <link rel="shortcut icon" href="./favicons/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/favicon-16x16.png">
+    <link rel="manifest" href="./favicons/manifest.json">
+    <link rel="mask-icon" href="./favicons/safari-pinned-tab.svg" color="#430099">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WebSDK">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#430099"/>
+</head>
+
+<body>
+
+    <main class="container-fluid">
+
+        <header class="row">
+            <div class="col logo"><img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png"></div>
+        </header>
+
+        <div id="step-0" class="row step d-none">
+            <div class="col-12 description">
+                You seem to be using an unsupported browser.
+            </div>
+            <div class="col-12 browsers-description">
+                <p>Please use one of following browsers for a better experience</p>
+            </div>
+
+            <div class="col-12 browsers-content">
+
+                <div class="browsers os-list">
+                    <div class="browser">
+                        <div id="chrome" class="browser-img"></div><span>Google Chrome Version 66+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="firefox" class="browser-img"></div><span>Mozilla Firefox Version 52+</span>
+                    </div>
+                    <div class="browser">
+                        <div id="safari" class="browser-img"></div><span>Apple Safari Version 11.2+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="opera" class="browser-img"></div><span> Opera Version 55+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="edge" class="browser-img"></div><span> Microsoft Edge Version 17+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-weak-network" class="row step d-none">
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center">Checking network signal</span>
+            </div>
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain" width="100" src="./img/wifi-weak.png" alt="Weak network signal">
+                </div>
+                <div class="text-center description">
+                    <span>Weak network signal <span class="signal-value"></span></span>
+                    <small class="pt-2">
+                        <span class="download">This process only works with a connection speed of at least</span>
+                        <span class="upload">This process only works with an upload connection speed of at least</span>
+                        <span class="signal-min-value"></span>.
+                        It appears your network signal is too weak.
+                    </small>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" id="check-network">re-test network connection</button>
+                </div>
+            </div>
+        </div>
+        <!--displayed just before the livess start if no response from connectivity check-->
+        <div id="connectivity-check" class="row step d-none">
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center">Checking network signal</span>
+            </div>
+        </div>
+        <div id="step-good-network" class="row step d-none">
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain" width="100" src="./img/wifi-medium.png" alt="Good network signal">
+                </div>
+                <div class="text-center description">
+                    <span>Good network signal <span class="signal-value"></span></span>
+                    <small class="pt-2">This process only works with a connection speed of at least
+                        <span class="signal-min-value"></span>.
+                        so make sure you maintain a good connection.
+                    </small>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" data-target="#step-1">i'm ready</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-1" class="row step d-none">
+            <div class="col-12 description">
+                <span class="mobile-item">Bring your phone up to eye level.</span>
+                <span class="pc-item">For the next task, make sure your computer is flat on a table or other surface.</span>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain mobile-item" src="./img/liveness-animation-part1.gif" alt="Bring your phone up to eye level">
+                <img class="contain pc-item" src="./img/liveness-animation-part1-pc.gif" alt="Computer flat on a table">
+                <div class="col-12 footer d-none">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#step-2">next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-2" class="row step d-none">
+            <div class="col-12 description">
+                <span class="mobile-item">Center your head in the frame.</span>
+                <span class="pc-item">Then, center your head in the frame.</span>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain mobile-item" src="./img/liveness-animation-part2.gif" alt="Center your head in the frame">
+                <img class="contain pc-item" src="./img/liveness-animation-part2-pc.gif" alt="Center your head">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#step-3">next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-3" class="row step d-none">
+            <div class="col-12 description">
+                <span class="mobile-item">Keep your phone still and move your head in any direction.</span>
+                <span class="pc-item">Keep your computer still and move your head in any direction.</span>
+
+            </div>
+            <div class="col-12 animation">
+                <img class="contain mobile-item" src="./img/liveness-animation-part3.gif" alt="Move your head">
+                <img class="contain pc-item" src="./img/liveness-animation-part3-pc.gif" alt="Move your head">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col pr-2">
+                            <button type="button" data-target="#step-1" class="btn btn-outline-primary btn-block reset-animations">tutorial</button>
+                        </div>
+                        <div class="col pl-2">
+                            <button type="button" data-target="#connectivity-check" class="btn btn-primary btn-block start-capture">i'm ready</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Liveness detection -->
+        <div id="step-4" class="row step d-none">
+            <div class="col-12 animation">
+                <video id="user-video" class="w-100" autoplay playsinline></video>
+                <button id="stop-capture" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div id="center-head-animation" class="video-overlay w-sm-75 w-100 h-100">
+                    <span class="video-msg align-self-end">Center your face inside the outline.</span>
+                </div>
+                <div id="challenge-animation" class="d-none-fadeout video-overlay w-sm-75 w-100 h-100">
+                    <span class="video-msg align-self-end">Turn your head left or right.</span>
+                </div>
+                <div id="authentication-in-progress" class="d-none-fadeout video-overlay w-100 h-100 flex-column">
+                    <div class="loader-wrapper d-flex flex-column">
+                        <div class="loader-animation  align-self-center"><div></div></div>
+                        <span class="loader-text text-center">Authentication in progress</span>
+                    </div>
+                </div>
+                <div id="move-closer-animation" class="d-none-fadeout video-overlay w-sm-75 w-100 h-100">
+                    <span class="video-msg align-self-end">Move your head closer.</span>
+                </div>
+                <div id="illumination-overlay" class="d-none"></div>
+            </div>
+        </div>
+
+        <!-- Liveness Results OK -->
+        <div id="step-5" class="row step d-none">
+            <div class="col-12 animation">
+                <div class="best-image">
+                    <img src="./img/success.svg" alt="success">
+                </div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block next-step" data-target="#step-6">next</button>
+                            <button class="btn btn-primary btn-block reset-step reset-animations" data-target="#step-1">try again</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selfie upload -->
+        <div id="step-6" class="row step d-none">
+            <div class="col-12 description">
+                <span class="mobile-item">Now, put your phone in front of your face, and take a selfie.</span>
+                <span class="pc-item">Now, upload a selfie of yourself.</span>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain mobile-item" src="./img/selfie-animation.gif" alt="Take a selfie">
+                <img class="contain pc-item" src="./img/selfie-animation.gif" alt="Upload a selfie">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button id="takeMyPickture" class="btn btn-primary btn-block">
+                                <span class="mobile-item">take my picture</span>
+                                <span class="pc-item">upload my picture</span>
+                            </button>
+                            <input hidden accept="image/*" capture="user" class="file-upload" id="selfieInput" name="image" type="file">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matching Results OK -->
+        <div id="step-7" class="row step d-none">
+            <div class="col-12 animation">
+                <img src="./img/success.svg" alt="success">
+                <span class="description text-center">Success</span>
+                <button class="btn btn-primary reset-animations" data-target="#step-1">try again</button>
+            </div>
+        </div>
+        <!-- Results KO -->
+        <div id="step-8" class="row step d-none">
+            <div class="col-12 animation">
+                <img src="./img/failure.svg" alt="failure">
+                <span class="description text-center">Sorry, there was an issue.</span>
+                <button class="btn btn-primary reset-animations" data-target="#step-1">try again</button>
+            </div>
+        </div>
+
+        <!-- loading -->
+        <div id="loading" class="row step d-none">
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center">Uploading image</span>
+            </div>
+        </div>
+    </main>
+
+
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-environment-api.js"></script>
+    <script src="./js/detect-env.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-api.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-network-check.js"></script>
+    <script src="./js/index.js"></script>
+</body>
+</html>

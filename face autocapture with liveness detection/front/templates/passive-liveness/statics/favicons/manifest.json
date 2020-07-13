@@ -1,0 +1,17 @@
+{
+  "name": "IPV WebSDK",
+  "short_name": "WebSDK",
+  "start_url": "/video-server/high-liveness-demo/",
+  "scope": "/video-server/high-liveness-demo/",
+  "icons": [
+    {
+      "src": "./android-chrome-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#430099",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait"
+}

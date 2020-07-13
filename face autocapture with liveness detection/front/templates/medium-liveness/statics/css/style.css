@@ -1,0 +1,446 @@
+/*
+Copyright 2020 Idemia Identity & Security
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/* load custom fonts */
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-Regular.ttf) format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-Bold.ttf) format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-SemiBold.ttf) format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+html,
+body {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex: 1;
+    font-family: Montserrat, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    max-width: 576px;
+    min-width: 320px;
+    background: white;
+}
+main.pc {
+    max-width: 100%;
+    min-width: 1024px;
+}
+header {
+    padding: 12px;
+    height: 49px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+}
+.pc header {
+    padding: 24px;
+    height: 88px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+}
+header > .col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+header .logo img {
+    width: 180px
+}
+.pc header .logo img {
+    width: 296px
+}
+
+.darker-bg {
+    background-color: #2c2c2c!important;
+}
+.step {
+    flex: 1;
+    flex-direction: column;
+}
+.pc .step {
+    margin: 0px 66px;
+
+}
+.step .description,
+.step .footer {
+    flex: 0 1 auto;
+}
+
+.step .description {
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1.36;
+    color: #430099;
+    padding: 16px;
+}
+
+/* hide all pc items*/
+.pc-item {
+    display: none;
+}
+/* hide all mobile item on pc environment*/
+.pc .mobile-item {
+    display: none;
+}
+/* show pc items on pc environment*/
+.pc .pc-item {
+    display: block;
+}
+
+/* ** */
+
+.pc .step .description {
+    font-size: 44px;
+    font-weight: bold;
+    line-height: 1.45;
+    color: #430099;
+    padding: 16px;
+}
+.step .animation {
+    flex: 1 2 0;
+    padding: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+.pc .step .animation {
+    flex-direction: column;
+    justify-content: flex-start;
+}
+.step .animation .contain{
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    padding-bottom: 80px;
+}
+.pc .step .animation .contain{
+    height: 400px;
+    width: 500px;
+    padding-bottom: 0;
+}
+.step .footer {
+    padding: 16px;
+    background-color: white;
+    position: fixed;
+    bottom: 6px;
+    max-width: 576px;
+}
+.pc .step .footer {
+    position: relative;
+    max-width: 500px;
+}
+
+.btn {
+    height: 44px;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    border-color: #430099;
+}
+.pc .btn {
+    height: 60px;
+    font-size: 18px;
+}
+
+.btn-primary,
+.btn-primary:active {
+    background-color: #430099!important
+}
+
+.btn-outline-primary,
+.btn-outline-primary:active {
+    border-color: #430099;
+    color: #430099!important;
+    font-weight: normal;
+    background-color: white!important;
+}
+
+.browsers-content {
+    flex: 1;
+    flex-wrap: wrap;
+}
+.browsers-description {
+    flex: 0 0 auto;
+    padding: 20px;
+}
+.browsers, .os-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.browser, .os {
+    display: flex;
+    flex: 1 1 100%;
+}
+.browser-img,.os-img{
+    background-size: auto 100px;
+    background-repeat: no-repeat;
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    margin: 5px;
+}
+.browser-img {
+    background-image: url(../img/browsers.png) ;
+}
+.os-img {
+    background-image: url(../img/os.png) ;
+}
+.browser > span,.os > span  {
+    align-self: center;
+}
+
+.browser #chrome {
+    background-position: -100px 0;
+}
+.browser #firefox {
+    background-position: -200px 0;
+}
+.browser #edge {
+    background-position: -300px 0;
+}
+.browser #safari, .browsers #mobile-safari {
+    background-position: -400px 0;
+}
+.browser #opera {
+    background-position: -500px 0;
+}
+.browser #samsung-browser {
+    background-position: -600px 0;
+}
+.os #windows {
+    background-position: 0 0;
+}
+.os #android {
+    background-position: -100px 0;
+}
+.os #ios {
+    background-position: -200px 0;
+}
+.os #mac-os {
+    background-position: -300px 0;
+}
+.os #linux {
+    background-position: -400px 0;
+}
+
+.step .check-phone {
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 16px 0;
+    margin: 16px;
+}
+.check-phone img {max-height: 184px;}
+.pc .check-phone img {max-height: 250px;}
+#step-weak-network .animation,
+#connectivity-check .animation {
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+
+}
+#step-weak-network .signal-value {color: #f23445}
+#step-good-network .signal-value {color: #4b9e00}
+.description small {display: block}
+/* video items*/
+.pc #step-4 {
+    margin: 0;
+    align-self: center;
+    width: 700px;
+}
+#step-4 video {
+    transform: scaleX(-1); /* invert user camera */
+}
+
+#step-4 .animation {
+    align-items: center;
+    background-color: black
+}
+.pc #step-4 .animation {
+    justify-content: center;
+    box-shadow: 0 0 10px 3px rgba(0,0,0,0.75);
+}
+
+#step-4 .video-overlay {
+    position: absolute;
+    top: 0;
+    z-index: 99;
+    display: flex;
+    justify-content: center;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transition: opacity 1s ease-in;
+}
+
+#step-4 .d-none-fadeout {
+    opacity: 0!important;
+    transition: opacity 500ms ease-out;
+}
+
+#step-4 .video-msg {
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1.36;
+    text-align: center;
+    padding: 0 2vw 5vh; /*TODO: to be ajusted*/
+}
+
+#step-4 #stop-capture {
+    position: absolute;
+    z-index: 999;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin: 10px;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.24), 0 0 4px 0 rgba(0, 0, 0, 0.12);
+    border: 0.5px solid;
+    background-color: #ffffff;
+    font-weight: normal;
+    color: #430099 !important;
+}
+
+#step-4 #challenge-animation {
+    background-image: url("../img/rotating_left_right_white_bolder.gif");
+    background-size: 100%;
+}
+
+#step-4 #center-head-animation {
+    background-image: url("../img/recenter_face_outline_white.png");
+    background-size: 65%;
+}
+
+#step-4 #move-closer-animation {
+    background-image: url("../img/recenter_face_outline_white.png");
+    background-size: 65%;
+}
+
+
+#step-4 #illumination-overlay, #loading {
+    position: fixed;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    background-color: white;
+    z-index: 9999999;
+    transition: background-color 100ms linear;
+}
+
+
+
+
+#step-4 #authentication-in-progress {
+    background: white;
+}
+#step-4 #authentication-in-progress .loader-text {
+    padding-top: 10px;
+    font-size: 20px;
+    font-weight: 500;
+}
+#step-4 #authentication-in-progress.loader-text {
+    font-size: 24px;
+}
+
+
+
+.pc #step-5,.pc #step-7,.pc #step-8 {
+    margin-left: 0;
+}
+#step-5 .animation,
+#step-7 .animation,
+#step-8 .animation {
+    flex-direction: column;
+    align-items: center!important;
+    justify-content: center!important;
+}
+#step-5 .animation .btn,
+#step-7 .animation .btn,
+#step-8 .animation .btn {
+    padding-left: 4rem;
+    padding-right: 4rem;
+    margin-top: 4rem;
+}
+#loading {background-color: rgba(255,255,255,0.9);}
+#loading .animation {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.loader-animation {
+    width: 100px;
+    height: 100px;
+    position: relative;
+}
+#loading .loader-animation {
+    background: url('../img/upload_3x.png') center no-repeat;
+    background-size: 40%;
+}
+.loader-animation > div{
+    width: 100%;
+    height: 100%;
+    border: 5px solid #ac85df;
+    border-top-color: #430099;
+    border-radius: 50%;
+    position: relative;
+    top: 0;
+    left: 0;
+    animation: loader-rotate 1s linear infinite;
+}
+@keyframes loader-rotate {
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.best-image {
+    background-position: center center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    flex: 1;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    transform: scaleX(-1);
+}
+.best-image > img {transform: scaleX(-1);}
+.pc .best-image { z-index: 999;}

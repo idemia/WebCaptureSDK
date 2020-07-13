@@ -1,0 +1,694 @@
+/*
+Copyright 2020 Idemia Identity & Security
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/* load custom fonts */
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-Regular.woff2) format('woff2'), url(../font/Montserrat-Regular.ttf) format('ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-Bold.woff2) format('woff2'), url(../font/Montserrat-Bold.ttf) format('ttf');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-SemiBold.woff2) format('woff2'), url(../font/Montserrat-SemiBold.ttf) format('ttf');
+    font-weight: 500;
+    font-style: normal;
+}
+
+html,
+body {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex: 1;
+    font-family: Montserrat, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    max-width: 576px;
+    min-width: 320px;
+    background: white;
+}
+main.pc {
+    max-width: 100%;
+    min-width: 1024px;
+}
+.header {
+    padding: 0;
+    height: 49px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+    background: white;
+}
+.liveness-header {
+    margin:0;
+    padding:0!important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999990;
+}
+.liveness-header .btn{
+    height: 30px;
+    padding: 6px 16px;
+    border-width: 1px;
+    line-height: 18px;
+}
+.liveness-header #switch-camera{
+    cursor: pointer;
+    padding: 0 10px;
+}
+.liveness-header #switch-camera img{
+    width: 34px;
+}
+.pc .liveness-header #switch-camera img {
+    width: 50px;
+}
+.pc .liveness-header .btn {
+    height: 45px;
+}
+.pc header {
+    padding: 24px;
+    height: 88px;
+}
+.pc .liveness-header {
+    height: 88px;
+}
+
+.header > .col {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header .logo img {
+    width: 213px;
+}
+header .logo .skip {
+    background: white;
+    text-align: center;
+    font-size: 14px;
+    color: #430099;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 15px;
+    border: solid 1px #430099;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 10px;
+    text-transform: uppercase;
+
+}
+
+.pointer {cursor: pointer}
+.pc header .logo .skip {
+    height: 45px;
+    line-height: 45px;
+}
+.pc header .logo img {
+    width: 296px
+}
+
+.darker-bg {
+    background-color: #2c2c2c!important;
+}
+.step {
+    flex: 1;
+    flex-direction: column;
+    margin:0;
+}
+.step-basis-auto {
+    flex: 1 0 auto !important;
+}
+.pc .step {
+    margin: 0 66px;
+}
+.step .description,
+.step .footer {
+    flex: 0 0 auto;
+}
+
+.step .description {
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1.36;
+    color: #101010;
+    padding: 16px 0;
+}
+.step .description small {
+    display: block;
+    line-height: 1.38;
+    color: #545454;
+    font-size: 70%;
+}
+small ul {
+    margin: 0; padding:0 0 0 16px;
+}
+.step .check-phone {
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 16px 0;
+}
+.check-phone img {max-height: 184px;}
+.pc .check-phone img {max-height: 250px;}
+#step-weak-network .animation,
+#connectivity-check .animation {
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+#step-weak-network .signal-value {color: #f23445}
+#step-good-network .signal-value {color: #4b9e00}
+.start-tutorial {
+    background: black;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* hide all pc items*/
+.pc-item {
+    display: none;
+}
+/* hide all mobile item on pc environment*/
+.pc .mobile-item {
+    display: none;
+}
+/* show pc items on pc environment*/
+.pc .pc-item {
+    display: block;
+}
+
+/* ** */
+.pc .step .description {
+    font-size: 38px;
+}
+.step .animation {
+    flex: 1 2 0;
+    padding: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+.pc .step .animation {
+    flex-direction: column;
+    justify-content: flex-start;
+}
+.step .animation .contain{
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    padding-bottom: 80px;
+}
+.pc .step .animation .contain{
+    height: 400px;
+    width: 500px;
+    padding-bottom: 0;
+}
+.step .footer {
+    padding: 16px;
+    background-color: white;
+    position: fixed;
+    bottom: 0;
+    max-width: 576px;
+}
+.pc .step .footer, .pc .step .check-phone .btn-footer {
+    position: relative;
+    max-width: 500px;
+}
+.pc .step .footer .col{
+    padding-bottom: 1rem;
+}
+
+.btn {
+    height: 44px;
+    font-size: 14px;
+    font-weight: 500!important;
+    text-transform: uppercase;
+    border-color: #430099;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+}
+
+.btn img {
+    width: 18px;
+    margin: 0 5px;
+}
+.pc .btn {
+    height: 60px;
+    font-size: 18px;
+}
+
+.btn-primary,
+.btn-primary:active {
+    background-color: #430099!important
+}
+
+.btn-outline-primary,
+.btn-outline-primary:active {
+    color: #430099!important;
+    background-color: white!important;
+}
+
+.browsers-content {
+    flex: 1;
+    flex-wrap: wrap;
+}
+.browsers-description {
+    flex: 0 0 auto;
+    padding: 20px;
+}
+.browsers, .os-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.browser, .os {
+    display: flex;
+    flex: 1 1 100%;
+}
+.browser-img,.os-img{
+    background-size: auto 100px;
+    background-repeat: no-repeat;
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    margin: 5px;
+}
+.browser-img {
+    background-image: url(../img/browsers.png) ;
+}
+.os-img {
+    background-image: url(../img/os.png) ;
+}
+.browser > span,.os > span  {
+    align-self: center;
+}
+
+.browser #chrome {
+    background-position: -100px 0;
+}
+.browser #firefox {
+    background-position: -200px 0;
+}
+.browser #edge {
+    background-position: -300px 0;
+}
+.browser #safari, .browsers #mobile-safari {
+    background-position: -400px 0;
+}
+.browser #opera {
+    background-position: -500px 0;
+}
+
+.browser #samsung-browser {
+    background-position: -600px 0;
+}
+.os #windows {
+    background-position: 0 0;
+}
+.os #android {
+    background-position: -100px 0;
+}
+.os #ios {
+    background-position: -200px 0;
+}
+.os #mac-os {
+    background-position: -300px 0;
+}
+.os #linux {
+    background-position: -400px 0;
+}
+.column-center {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding:0;
+}
+.pc .column-center {
+    align-items: flex-start;
+    max-width: 500px;
+}
+.row-center {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: 1px solid #b3babe;
+    /*max-height: 123px;*/
+    /*min-height: 106px;*/
+    cursor: pointer;
+}
+.pc .row-center:hover {
+    border: 1px solid #430099;
+}
+.row-center img {
+    width: 100%;
+    height: 45px;
+    object-fit: contain;
+}
+.row-center span{
+    margin-top: 15px
+}
+/* video items*/
+video {background-color: black}
+#step-liveness,.video-tut #step-tutorial {margin: 0 -15px}
+.pc #step-liveness {
+    margin: 0;
+    align-self: center;
+    width: 700px;
+}
+.pc.video-tut #step-tutorial {
+    max-width: 576px;
+    align-self: center;
+}
+#step-liveness video {
+    transform: scaleX(-1); /* invert user front camera */
+}
+
+#step-liveness .animation {
+    align-items: center;
+    background-color: black
+}
+.pc #step-liveness .animation {
+    justify-content: center;
+    box-shadow: 0 0 10px 3px rgba(0,0,0,0.75);
+}
+
+#step-liveness .video-overlay {
+    position: absolute;
+    top: 0 ; /* high of header */
+    z-index: 99;
+    display: flex;
+    justify-content: center;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transition: opacity 1s ease-in;
+}
+
+#step-liveness .d-none-fadeout {
+    opacity: 0!important;
+    transition: opacity 500ms ease-out;
+}
+
+#step-liveness .video-msg {
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1.36;
+    text-align: center;
+}
+#step-liveness .video-msg-center {
+    align-self: center;
+    font-size: 34px;
+    line-height: 1.2;
+    text-align: center;
+    word-spacing: 100vw; /* to force words wrap*/
+}
+.pc #step-liveness .video-msg-center {
+    font-size: 44px;
+}
+#step-liveness .video-msg-bottom {
+    align-self: flex-end;
+    line-height: 1.2;
+}
+.pc #step-liveness .video-msg-bottom {
+    font-size: 44px;
+}
+#step-liveness .video-msg-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    margin-top: 49px ; /* high of header */
+}
+.pc #step-liveness .video-msg-top {
+    margin-top: 88px ; /* high of header */
+}
+
+#stop-tutorial {
+    position: absolute;
+    z-index: 99;
+    top: 44px;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin: 10px;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.24), 0 0 4px 0 rgba(0, 0, 0, 0.12);
+    border: 2px solid;
+    background-color: #ffffff;
+    font-weight: bold;
+    color: #430099 !important;
+    cursor: pointer;
+}
+
+#step-liveness #center-head-animation {
+    background-image: url("../img/recenter_face_outline_white.png");
+    background-size: 75%;
+}
+
+.pc #step-liveness #center-head-animation {
+    background-size: 50%;
+}
+
+#step-liveness #move-closer-animation {
+    background-image: url("../img/recenter_face_outline_white.png");
+    background-size: 75%;
+}
+
+#step-liveness #move-head-animation .animation-part3{
+    height: 60%;
+    min-height: 250px;
+}
+#step-liveness #move-phone-animation img{
+    object-fit: contain;
+    width: 100%;
+    height: 70%;
+}
+
+.pc #step-liveness #move-closer-animation {
+    background-size: 50%;
+}
+
+#step-liveness #head-rotation-animation {
+    background-size: 110%;
+}
+.pc #step-liveness #head-rotation-animation {
+    background-size: 80%;
+}
+.video-msg-wrapper.d-none-fadeout{
+    margin-top: 49px ; /* high of header */
+    height: calc(100% - 49px) !important;
+}
+.pc .video-msg-wrapper.d-none-fadeout{
+    margin-top: 88px ; /* high of header */
+    height: calc(100% - 88px) !important;
+}
+#step-liveness .video-msg-wrapper {
+    z-index: 999999;
+    background-color: rgba(255,255,255,0.98);
+}
+
+#step-liveness .video-msg-wrapper .video-msg {
+    padding: 16px;
+    color:black;
+}
+
+#step-liveness .bg-green {background-color: #1e7e34}
+
+#step-liveness #illumination-overlay, #loading {
+    position: fixed;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    background-color: white;
+    z-index: 9999;
+    transition: background-color 100ms linear;
+}
+#step-liveness #loading-challenge {
+    background: white;
+}
+#step-liveness #loading-challenge .loader-text {
+    padding-top: 10px;
+    font-size: 20px;
+    font-weight: 500;
+}
+.pc #step-liveness #loading-challenge .loader-text {
+    font-size: 24px;
+}
+
+
+#step-liveness #dont-move-animation {
+    background-image: url("../img/recenter_face_outline_white.png");
+    background-size: 75%;
+}
+
+.pc #step-liveness #dont-move-animation {
+    background-size: 50%;
+}
+
+#step-liveness #darkness {
+    background-image: url("../img/recenter_face_outline_white.png");
+    background-size: 75%;
+}
+
+.pc #step-liveness #darkness {
+    background-size: 50%;
+}
+
+#step-liveness #brightness {
+    background-image: url("../img/recenter_face_outline_white.png");
+    background-size: 75%;
+}
+
+.pc #step-liveness #brightness {
+    background-size: 50%;
+}
+
+
+.animation-full {
+    margin-bottom: 80px;
+}
+.pc .results {
+    margin-left: 0;
+}
+.results .animation{
+    flex-direction: column;
+    align-items: center!important;
+    justify-content: center!important;
+}
+.results .animation .btn:not(.btn-block) {
+    padding-left: 4rem;
+    padding-right: 4rem;
+    margin-top: 4rem;
+}
+#loading {background-color: rgba(255,255,255,0.9);}
+#loading .animation {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.loader-animation {
+    width: 80px;
+    height: 80px;
+    position: relative;
+}
+.pc .loader-animation {
+    width: 100px;
+    height: 100px;
+}
+#loading .loader-animation {
+    background: url('../img/upload_3x.png') center no-repeat;
+    background-size: 40%;
+}
+.loader-animation > div{
+    width: 100%;
+    height: 100%;
+    border: 5px solid #cccccc;
+    border-top-color: #101010;
+    border-radius: 50%;
+    position: relative;
+    top: 0;
+    left: 0;
+    animation: loader-rotate 1s linear infinite;
+}
+@keyframes loader-rotate {
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.best-image {
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 220px;
+    height: 250px;
+    justify-content: center;
+    transform: scaleX(-1);
+    position: relative;
+}
+.best-image img {
+    transform: scaleX(-1);
+    position: absolute;
+    top: -37px;
+    right: -30px;
+}
+
+.logo #application-version .loader-wrapper {
+    background:white;
+    border-radius: 8px;
+    width: 214px;
+}
+.logo #application-version  .loader-text {
+    color: #430099;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 15px;
+    border: solid 1px #430099;
+    font-size: 10px;
+}
+
+.version-overlay {
+    position: absolute;
+    top: 0 ; /* high of header */
+    z-index: 99;
+    display: flex;
+    justify-content: center;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transition: opacity 1s ease-in;
+
+}
+
+/*generic*/
+.bg-orange { background-color: #ff6700}
+.bg-green { background-color: #429400}
+.animation-tut .video-tut { display:none!important;}
+.video-tut .animation-tut { display:none!important;}

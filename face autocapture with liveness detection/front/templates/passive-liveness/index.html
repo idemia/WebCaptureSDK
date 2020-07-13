@@ -1,0 +1,459 @@
+<!--
+Copyright 2020 Idemia Identity & Security
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Passive liveness detection</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/apple-touch-icon.png">
+    <link rel="shortcut icon" href="./favicons/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/favicon-16x16.png">
+    <link rel="manifest" href="./favicons/manifest.json">
+    <link rel="mask-icon" href="./favicons/safari-pinned-tab.svg" color="#430099">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WebSDK">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#430099"/>
+</head>
+
+<body>
+
+
+    <main class="container-fluid animation-tut">
+
+        <!--check browser compatibility-->
+        <div id="step-compatibility" class="row step d-none">
+
+            <div class="col-12 description">
+                <%= __("You seem to be using an unsupported browser.") %>
+            </div>
+            <div class="col-12 browsers-description">
+                <p><%= __("Please use one of following browsers for a better experience") %></p>
+            </div>
+
+            <div class="col-12 browsers-content">
+
+                <div class="browsers os-list">
+                    <div class="browser">
+                        <div id="chrome" class="browser-img"></div><span>Google Chrome Version 66+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="firefox" class="browser-img"></div><span>Mozilla Firefox Version 52+</span>
+                    </div>
+                    <div class="browser">
+                        <div id="safari" class="browser-img"></div><span>Apple Safari Version 11.2+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="opera" class="browser-img"></div><span> Opera Version 55+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="edge" class="browser-img"></div><span> Microsoft Edge Version 17+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-weak-network" class="row step d-none">
+
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+
+                </div>
+
+            </header>
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center"><%= __("Checking network signal") %></span>
+            </div>
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain" width="100" src="./img/wifi-weak.png" alt="Weak network signal">
+                </div>
+                <div class="text-center description">
+                    <span><%= __("Weak network signal") %> <span class="signal-value"></span></span>
+                    <small class="pt-2">
+                        <span class="download"><%= __("This process only works with a connection speed of at least") %></span>
+                        <span class="upload"><%= __("This process only works with an upload connection speed of at least") %></span>
+                        <span class="signal-min-value"></span>.
+                        <%= __("It appears your network signal is too weak.") %>
+
+                    </small>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" id="check-network"><%= __("re-test network connection") %></button>
+                </div>
+            </div>
+        </div>
+        <!--displayed just before the livess start if no response from connectivity check-->
+        <div id="connectivity-check" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center"><%= __("Checking network signal") %></span>
+            </div>
+        </div>
+        <div id="step-good-network" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+
+                </div>
+            </header>
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain" width="100" src="./img/wifi-medium.png" alt="Good network signal">
+                </div>
+                <div class="text-center description">
+                    <span><%= __("Good network signal") %> <span class="signal-value"></span></span>
+                    <small class="pt-2"><%= __("This process only works with a connection speed of at least") %>
+                        <span class="signal-min-value"></span>.
+                        <%= __("so make sure you maintain a good connection.") %>
+                    </small>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" data-target="#step-1"><%= __("i'm ready") %></button>
+                </div>
+            </div>
+        </div>
+        <!--tutorial animations-->
+
+        <div id="step-1-anim" class="row step d-none">
+
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+
+                     <span class="skip" data-target="#application-version">?</span>
+                    <div id="application-version" class="d-none version-overlay h-100 flex-column">
+                        <div class="loader-wrapper d-flex flex-column">
+                            <span class="monitoring loader-text text-center ">Version?</span>
+                        </div>
+                    </div>
+
+                    <span class="skip" data-target="#step-end-tutorial"><%= __("SKIP") %></span>
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span class="mobile-item"><%= __("Bring your phone up to eye level.") %></span>
+                <span class="pc-item"><%= __("For the next task, make sure your computer is flat on a table or other surface.") %></span>
+            </div>
+            <div class="col-12 animation">
+                <div class="animation-part1 contain mobile-item"></div>
+                <div class="animation-part1-pc contain pc-item"></div>
+                <!--<img class="contain pc-item" src="./img/liveness-animation-part1-pc.gif" alt="Computer flat on a table">-->
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#step-end-tutorial" data-delay><%= __("next") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="step-end-tutorial-anim" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+
+                </div>
+
+            </header>
+            <div class="col-12 description">
+                <span><%= __("For this task, you'll need to center your face.") %></span>
+            </div>
+            <div class="col-12 animation">
+                <div class="animation-part2 contain mobile-item"></div>
+                <div class="animation-part2-pc contain pc-item"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block start-capture" data-target="#step-liveness"><%= __("i'm ready") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-help" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <span class="skip reset-animations" data-target="#step-end-tutorial"><%= __("go back") %></span>
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("Need some help? Here's some helpful tips:") %></span>
+                <small class="pb-3" >
+                    <ul>
+                        <li><%= __("Don't move the device, only your head.") %></li>
+                        <li><%= __("For this task, you'll need to center your face.") %></li>
+                    </ul>
+                </small>
+            </div>
+            <div class="col-12 animation">
+                <div class="animation-part2 contain mobile-item"></div>
+                <div class="animation-part2-pc contain pc-item"></div>
+
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block start-capture" data-target="#step-liveness"><%= __("try again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-access-permission" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain" src="./img/phone-check_2x.png" alt="Check phone">
+                </div>
+                <div class="text-center description">
+                    <span><%= __("In order to authenticate you, we need access to your phone's camera. Sound good?") %></span>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" data-target="#connectivity-check"><%= __("i accept") %></button>
+                </div>
+            </div>
+        </div>
+        <!-- Video Liveness detection -->
+        <div id="step-liveness" class="row step d-none">
+            <div class="col-12 animation">
+                <div class="row header liveness-header">
+                    <div class="col">
+                        <button  id="stop-capture" type="button" data-target="#step-end-tutorial"
+                                 class="btn btn-outline-primary reset-animations"><%= __("go back") %>
+                        </button>
+                        <div id="switch-camera" class="d-none"><img src="img/switch_camera_2x.png"></div>
+                        <button type="button" data-target="#step-help" class="btn btn-outline-primary tutorial">
+                            <img src="./img/question-mark_2x.png" alt="play"><%= __("help") %>
+                        </button>
+                    </div>
+                </div>
+                <video id="user-video" class="w-100 h-100" style="object-fit: cover" autoplay playsinline></video>
+                <div id="darkness" class="d-none-fadeout video-overlay w-100 h-100">
+                    <span class="video-msg video-msg-center align-self-center"><%= __("The place is too dark") %></span>
+                </div>
+                <div id="brightness" class="d-none-fadeout video-overlay w-100 h-100">
+                    <span class="video-msg video-msg-center align-self-center"><%= __("The place is too bright") %></span>
+                </div>
+                <div id="dont-move-animation" class="d-none-fadeout video-overlay w-100 h-100">
+                    <span class="video-msg video-msg-center align-self-center"><%= __("Don't move.") %></span>
+                </div>
+                <div id="loading-challenge" class="d-none-fadeout video-overlay w-100 h-100 flex-column">
+                    <div class="loader-wrapper d-flex flex-column">
+                        <div class="loader-animation  align-self-center"><div></div></div>
+                        <span class="loader-text text-center"><%= __("Authentication in progress") %> </span>
+                    </div>
+                </div>
+                <div id="center-head-animation" class="video-overlay w-100 h-100">
+                    <span class="video-msg video-msg-center align-self-center"><%= __("Center your face") %></span>
+                </div>
+                <div id="move-closer-animation" class="d-none-fadeout video-overlay w-100 h-100 ">
+                    <span class="video-msg video-msg-center "><%= __("Move closer") %></span>
+                </div>
+                <div id="head-rotation-animation" class="d-none-fadeout video-overlay w-100 h-100"></div>
+                <div id="positive-message" class="d-none-fadeout video-overlay w-100 h-100">
+                    <span class="video-msg video-msg-top bg-green w-100">
+                        <%= __("Good job! Only one more point to go.") %>
+                    </span>
+                </div>
+
+                <div id="move-phone-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 h-100 flex-column">
+                    <img src="./img/rotate_head_black_L.gif" width="350" alt="move head" class="align-self-center">
+                    <span class="video-msg"><%= __("Move only your head, not the device.") %></span>
+                </div>
+                <div id="phone-not-vertical-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 h-100 flex-column">
+                    <img src="./img/chevrons_up.png" width="80" alt="Up" class="align-self-center">
+                    <span class="video-msg align-self-center"><%= __("Please hold your phone vertically.") %></span>
+                </div>
+                <div id="illumination-overlay" class="d-none"></div>
+            </div>
+        </div>
+        <!-- Liveness Results OK -->
+        <div id="step-liveness-ok" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div class="best-image">
+                    <img src="./img/success.svg" alt="success">
+                </div>
+                <span class="description text-center"><%= __("You passed liveness!") %></span>
+                <b class="text-center pb-3"><%= __("Here's the image we captured during liveness.") %></b>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block next-step" data-target="#step-selfie"><%= __("next") %></button>
+                            <button class="btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Liveness Results KO/Timeout -->
+        <div id="step-liveness-timeout" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("It looks like you’re having a bit of trouble. Here are some tips:") %></span>
+                <small class="pb-3" >
+                    <ul>
+                        <li><%= __("Don't move the device, only your head.") %></li>
+                        <li><%= __("For this task, you'll need to center your face.") %></li>
+                    </ul>
+                </small>
+            </div>
+            <div class="col-12 animation">
+                <div class="animation-part2 contain mobile-item"></div>
+                <div class="animation-part2-pc contain pc-item"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block start-capture" data-target="#step-liveness"><%= __("try again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-liveness-failed" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("It looks like you’re having a bit of trouble. Here are some tips:") %></span>
+                <small class="pb-3" >
+                    <ul>
+                        <li><%= __("Don't move the device, only your head.") %></li>
+                        <li><%= __("For this task, you'll need to center your face.") %></li>
+                    </ul>
+                </small>
+            </div>
+            <div class="col-12 animation">
+                   <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block start-capture" data-target="#step-liveness"><%= __("try again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-liveness-ko" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/failure.svg" alt="failure">
+                <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
+                <span class="description"><small class="text-center"></small></span>
+                <button class="btn btn-primary reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+            </div>
+        </div>
+        <!-- Selfie upload -->
+        <div id="step-selfie" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span class="mobile-item"><%= __("Now, put your phone in front of your face, and take a selfie.") %></span>
+                <span class="pc-item"><%= __("Now, upload a selfie of yourself.") %></span>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain mobile-item" src="./img/selfie-animation.gif" alt="Take a selfie">
+                <img class="contain pc-item" src="./img/selfie-animation.gif" alt="Upload a selfie">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button id="takeMyPickture" class="btn btn-primary btn-block">
+                                <span class="mobile-item"><%= __("take my picture") %></span>
+                                <span class="pc-item"><%= __("upload my picture") %></span>
+                            </button>
+                            <input hidden accept="image/*" capture="user" class="file-upload" id="selfieInput" name="image" type="file">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Matching Results OK -->
+        <div id="step-selfie-ok" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/success.svg" alt="success">
+                <span class="description text-center"><%= __("Success") %></span>
+                <button class="btn btn-primary reset-animations" data-target="#step-1"><%= __("try again") %></button>
+            </div>
+        </div>
+        <!-- Matching Results KO -->
+        <div id="step-selfie-ko" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/failure.svg" alt="failure">
+                <span class="description text-center"><%= __("Matching failed.") %></span>
+                <button class="btn btn-primary reset-animations" data-target="#step-selfie"><%= __("try again") %></button>
+            </div>
+        </div>
+        <!-- loading -->
+        <div id="loading" class="row step d-none">
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center"><%= __("Uploading image") %></span>
+            </div>
+        </div>
+    </main>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-environment-api.js"></script>
+    <script src="./js/detect-env.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-ui.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-api.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-network-check.js"></script>
+    <script src="./js/index.js"></script>
+
+</body>
+</html>
