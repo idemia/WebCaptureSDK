@@ -35,6 +35,7 @@ module.exports = {
     getLivenessChallengeResult: getLivenessChallengeResult,
     createFace: createFace,
     getFaceImage: getFaceImage,
+    getGipsStatus: getGipsStatus,
 
 };
 
@@ -73,11 +74,39 @@ async function getSession(identityId) {
 }
 
  /**
+ * retrieve GIPS status from a given session
+ * @param session
+ * @returns gipsStatus
+ */
+async function getGipsStatus(session) {
+   debug('getGipsStatus called');
+
+   let gipsStatus =  await getGlobalStatus(session.identityId);
+   debug('getGipsStatus called', gipsStatus);
+
+   return gipsStatus;
+}
+
+ /**
  * retrieve challenge result for a given session
  * @param session
  * @returns livenessResult
  */
 async function getLivenessChallengeResult(session) {
+    // {
+    //     "status":"NOT_VERIFIED",
+    //     "type":"PORTRAIT",
+    //     "id":"0eca6486-4623-44a4-b956-1b0eaba17723"
+    // }
+
+    // SUCCESS,                  // Challenge(s) request(s) success
+    // FAILED,                       // challenge(s) request(s) failed
+    // SPOOF,                        // Challenge(s) request(s) spoof detected
+    // TIMEOUT,
+    // INITIALIZED,
+    // IN_PROGRESS,
+    // ERROR
+
 
    let portraitStatus =  await getStatus(session.identityId, session.portraitId);
 
@@ -193,23 +222,51 @@ function postConsent(identityId) {
 
 
 /**
- * Start video capture init session
+ * Start video capture init session with parameters from configuration
  * response 200
 
- * POST {{url}}/v1/identities/{{identityId}}/attributes/portrait/live-capture-video-session
+ * POST {{url}}/v1/identities/{{identityId}}/attributes/portrait/live-capture-session
  * @returns
  * {
  *   "status": "PROCESSING",
- *   "type": "PORTRAIT",
- *   "id": "3c527efe-6cf2-48d5-b797-36e417b3fc9b",
- *   "sessionId": "c8ce1c32-2bab-411f-8c33-7fb17012a028"
+ *   "type": "ID_DOCUMENT",
+ *   "id": "gips-998cf41c-6d76-45d2-b173-185854dc959f",
+ *   "errors": [
+ *     {
+ *       "field": "surname",
+ *       "code": "1006",
+ *       "message": "A field does not have the good format"
+ *     }
+ *   ],
+ *   "sessionId": "string",
+ *   "livenessParameters": {
+ *     "seed": "string",
+ *     "serverRandom": "string",
+ *     "certificates": [
+ *       "string"
+ *     ],
+ *     "type": "LIVENESS_HIGH",
+ *     "timeout": 0,
+ *     "securityLevel": "VERY_LOW",
+ *     "nbChallenge": 0,
+ *     "useAccurateMatch": true,
+ *     "matchThreshold": 0,
+ *     "signature": "string"
+ *   }
  * }
  */
 function startVideoCapture(identityId) {
 
-    return fetch(config.GIPS_URL + '/v1/identities/'+identityId+'/attributes/portrait/live-capture-video-session', {
+    const livenessParamerters  = {
+        "type": config.LIVENESS_MODE,
+        "securityLevel": config.LIVENESS_SECURITY_LEVEL,
+        "nbChallenge": config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE
+    };
+
+    return fetch(config.GIPS_URL + '/v1/identities/'+identityId+'/attributes/portrait/live-capture-session', {
         method: 'POST',
-        headers: authenticationHeader()
+        body: JSON.stringify(livenessParamerters),
+        headers: jsonContentType(authenticationHeader())
     }).then(function (res) {
         if (res.status !== 200) return  Promise.reject(res);
         else return res.json()
@@ -238,6 +295,49 @@ function getStatus(identityId, portraitId) {
         else return res.json()
     })
 }
+
+
+/**
+ * Get GIPS global status
+ * {{url}}/v1/identities/{{identityId}}
+ * { globalStatus:
+ * { id: 'gips-68f30e11-0c2a-44e1-8f31-0fe090cac51c',
+ *   status: 'EXPECTING_INPUT',
+ *   levelOfAssurance: 'LOA0',
+ *   creationDateTime: '2020-10-14T11:08:11.372',
+ *   evaluationDateTime: '2020-10-14T11:08:20.994',
+ *   upgradePaths: { LOA1: [Object], LOA2: [Object], LOA3: [Object], LOA4: [Object] } },
+ *   consents:
+ * [ { consentId: '7e5abdc2-34e7-4b78-a043-18554cb49ea9',
+ *     approved: true,
+ *     type: 'PORTRAIT',
+ *     validityPeriod: [Object] } ],
+ *   portrait:
+ * { evidenceId: '23d323a0-3c2e-46d7-80d1-f289438e4c9b',
+ *   submitDateTime: '2020-10-14T11:08:12.057',
+ *   type: 'PORTRAIT',
+ *   evidenceStatus:
+ *    { evaluationDateTime: '2020-10-14T11:08:20.994',
+ *      status: 'NOT_VERIFIED',
+ *      strength: 'LEVEL4',
+ *      score: 'LEVEL0',
+ *      isAdjudicable: false },
+ *   portraitQuality: true,
+ *   portraitData: { source: 'LIVE_CAPTURE_VIDEO', channel: 'webSDK' } } }
+ * @param identityId
+ * @returns {*}
+ */
+function getGlobalStatus(identityId) {
+
+    return fetch(config.GIPS_URL + '/v1/identities/'+identityId, {
+        method: 'GET',
+        headers: authenticationHeader()
+    }).then(function (res) {
+        if (res.status !== 200) return  Promise.reject(res);
+        else return res.json()
+    })
+}
+
 
 /**
  * associate face to an identity
@@ -288,10 +388,12 @@ function getFaceImage(identityId) {
 }
 
 
+
+
+
 function authenticationHeader() {
     const headers = {};
-    headers[config.API_KEY_HEADER] =  config.API_KEY_SECRET;
-    headers[config.GIPS_API_KEY_HEADER] =  config.GIPS_API_KEY_SECRET;
+    headers['apikey'] =  config.GIPS_RS_API_Key;
     headers['Tenant-Role'] =  config.GIPS_TENANT_ROLE;
     headers['X-Forwarded-For'] =  'to-specify';
 

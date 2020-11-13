@@ -20,24 +20,29 @@ const lottie = require('lottie-web/build/player/lottie_light.js');
 const commonutils = require('../../utils/commons');
 // define html elements
 const videoOutput = document.querySelector('#user-video');
-const monitoring = document.querySelectorAll('.monitoring');
 
 const stopCaptureButton = document.querySelector('#stop-capture');
+const monitoring = document.querySelectorAll('.monitoring');
+
+const tooBrightMsg = document.querySelector('#darkness');
+const tooDarkMsg = document.querySelector('#brightness');
+const countDown = document.querySelector('#count-down');
+
+const getIpvTransactionButton = document.querySelector('#get-ipv-transaction');
+const getIpvPortraitButton = document.querySelector('#get-ipv-portrait');
 
 const switchCameraButton = document.querySelector('#switch-camera');
 const headStartPositionOutline = document.querySelector('#center-head-animation');
 
 const moveCloserMsg = document.querySelector('#move-closer-animation');
+const moveFurtherMsg = document.querySelector('#move-further-animation');
 
 const movingPhoneMsg = document.querySelector('#move-phone-animation');
 const phoneNotVerticalMsg = document.querySelector('#phone-not-vertical-animation');
 const loadingChallenge = document.querySelector('#loading-challenge');
-const dontMoveAnimation = document.querySelector('#dont-move-animation');
 const illuminationOverlay = document.querySelector('#illumination-overlay');
 const bestImgElement = document.querySelector('#step-liveness-ok .best-image');
 const selfieInput = document.querySelector('#selfieInput');
-const tooBrightMsg = document.querySelector('#darkness');
-const tooDarkMsg = document.querySelector('#brightness');
 const videoMsgOverlays = document.querySelectorAll('#step-liveness .video-overlay');
 
 let timeoutCheckConnectivity; // settimeout used to stop if network event received
@@ -55,8 +60,6 @@ let identityId;
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
 const isMatchingEnabled = urlParams.get('enableMatching') === 'true';
 const isVideoTutEnabled = urlParams.get('videoTutorial') === 'true';
-const isSkipTutorial = urlParams.get('skipTutorial') === 'true';
-const recordLabel = urlParams.get('videoBackup');
 
 
 const sessionIdParam = urlParams.get('sessionId');
@@ -67,8 +70,8 @@ const videoUrlWithBasePath = VIDEO_URL + VIDEO_BASE_PATH;
 const videoBasePath = VIDEO_BASE_PATH;
 const videoUrl = VIDEO_URL;
 const enablePolling = !DISABLE_CALLBACK;
-const useProxy = USE_INTERNAL_PROXY;
-const healthPath = VIDEO_HEALTH_PATH;
+const healthPath = DEMO_HEALTH_PATH;
+const idProofingWorkflow = IDPROOFING;
 
 /**
  * 1- init liveness session (from backend)
@@ -78,15 +81,11 @@ const healthPath = VIDEO_HEALTH_PATH;
  * 5- [Optional] get the matching result between the best image from webRTC and the reference image
  */
 
-let monitorBaseUrl = videoUrlWithBasePath; // default is video-server url
-if(useProxy) {
-    monitorBaseUrl = basePath; // if we use proxy, we need to reach demo-server url
-}
-
-commonutils.getMonitoring(monitorBaseUrl, healthPath).then(
+// call getCapabilities from demo-server which will call with apikey the endpoint from video-server
+commonutils.getCapabilities(basePath, healthPath).then(
   (response) => {
     if (response && response.version) {
-      monitoring.forEach((element) => element.innerHTML = `${response.version} - ${new Date(response.since).toLocaleString()}`);
+      monitoring.forEach((element) => element.innerHTML = `${response.version}`);
     }
   },
 ).catch((e) => {
@@ -98,7 +97,7 @@ async function init(options = {}) {
   client = undefined;
   initLivenessDesign();
   // get user camera video (front camera is default)
-  videoStream = await BioserverVideo.getDeviceStream({ video: { width: 1280, height: 720, deviceId: options.deviceId } })
+  videoStream = await BioserverVideo.getDeviceStream({video: {deviceId: options.deviceId}})
     .catch((e) => {
       let msg = __('Failed to get camera device stream');
       let extendedMsg;
@@ -113,8 +112,8 @@ async function init(options = {}) {
   videoOutput.srcObject = videoStream;
 
   // request a sessionId from backend (if we are switching camera we use the same session)
-  if (!sessionId || !options.switchCamera) {
-    const session = await initLivenessSession(sessionIdParam || '', identityIdParam || '')
+  if (!sessionId || !options.switchCamera) {
+    const session = await commonutils.initLivenessSession(basePath, sessionIdParam || '', identityIdParam || '')
       .catch(() => {
         sessionId = false;
         stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
@@ -127,24 +126,24 @@ async function init(options = {}) {
   let challengeInProgress = false;
   const faceCaptureOptions = {
     bioSessionId: sessionId,
-    identityId,
+    identityId: identityId,
     showChallengeInstruction: (challengeInstruction) => {
       if (challengeInstruction === 'TRACKER_CHALLENGE_PENDING') {
         // pending ==> display waiting msg meanwhile the showChallengeResult callback is called with result
         challengeInProgress = false;
         videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
         loadingChallenge.classList.remove('d-none-fadeout');
-      } else { // challengeInstruction == TRACKER_CHALLENGE_DON_T_MOVE
+      } else { // challengeInstruction == TRACKER_CHALLENGE_DONT_MOVE
         challengeInProgress = true;
         switchCameraButton.classList.add('d-none'); // once the challenge started user can not switch camera
       }
     },
     showChallengeResult: async () => {
       console.log('Liveness Challenge done > requesting result ...');
-      const result = await getLivenessChallengeResult(sessionId)
+      const result = await commonutils.getLivenessChallengeResult(basePath, enablePolling, sessionId)
         .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
       loadingChallenge.classList.add('d-none-fadeout');
-      if (result) stopVideoCaptureAndProcessResult(result.isLivenessSucceeded, result.message, result.bestImageId);
+      if (result) stopVideoCaptureAndProcessResult(result.isLivenessSucceeded, result.message, result.bestImageId, result.diagnostic);
       if (client) client.disconnect();
     },
     trackingFn: (trackingInfo) => {
@@ -158,24 +157,50 @@ async function init(options = {}) {
       challengeInProgress = false;
       stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
       if (client) client.disconnect();
-    },
+    }
   };
-  if(useProxy) {
-    faceCaptureOptions.wspath = basePath + '/wsocket';
-    faceCaptureOptions.rtcConfigurationPath = basePath+'/rtcConfigurationService?bioSessionId=' + encodeURIComponent(sessionId);
-  } else {
-    faceCaptureOptions.wspath = videoBasePath + '/engine.io';
-    faceCaptureOptions.bioserverVideoUrl = videoUrl;
-    faceCaptureOptions.rtcConfigurationPath = videoUrlWithBasePath+'/coturnService?bioSessionId=' + encodeURIComponent(sessionId);
-  }
+  faceCaptureOptions.wspath = videoBasePath + '/engine.io';
+  faceCaptureOptions.bioserverVideoUrl = videoUrl;
+  faceCaptureOptions.rtcConfigurationPath = videoUrlWithBasePath + '/coturnService?bioSessionId=' + encodeURIComponent(sessionId);
   client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
 }
 
+/**
+ * Button stop activated
+ **/
 stopCaptureButton.addEventListener('click', async () => {
   resetLivenessDesign();
   if (client) client.disconnect();
 });
 
+/**
+ * Get GIPS Transaction Button activated
+ **/
+getIpvTransactionButton.addEventListener('click', async () => {
+  console.log("calling getGipsStatus with identityId=" + identityId);
+  document.querySelector('#get-ipv-status-result').innerHTML = "";
+  const result = await commonutils.getGipsStatus(basePath, identityId);
+  console.log("result IPV response" + result);
+  document.querySelector('#get-ipv-status-result').innerHTML = JSON.stringify(result, null, 4);
+  document.querySelector(`#get-ipv-status-result`).classList.remove('d-none');
+});
+
+
+/**
+ * Get GIPS Transaction Button activated
+ **/
+getIpvPortraitButton.addEventListener('click', async () => {
+  console.log("calling getIpvPortraitButton ");
+  document.querySelector('#best-image-ipv').src = "";
+  const faceImg = await commonutils.getFaceImage(basePath, sessionId, bestImageId);
+  bestImageURL = window.URL.createObjectURL(faceImg);
+  document.querySelector('#best-image-ipv').src = `${bestImageURL}`;
+  document.querySelector(`#best-image-ipv`).classList.remove('d-none');
+});
+
+/**
+ * Select another device camera
+ **/
 switchCameraButton.addEventListener('click', async () => {
   if (client) {
     try {
@@ -189,12 +214,15 @@ switchCameraButton.addEventListener('click', async () => {
         switchCameraButton.classList.remove('d-none');
         return;
       }
-      client.disconnect();
+      if (client) {
+        videoOutput.srcObject = null; // this line can avoid some freeze when changing camera from front to back
+        client.disconnect();
+      }
       resetLivenessDesign();
-      console.log('video devices: ', { videoMediaDevices });
+      console.log('video devices: ', {videoMediaDevices});
       const videoTrack = videoStream.getVideoTracks()[0];
       const settings = videoTrack.getSettings();
-      console.log('video track settings: ', { settings });
+      console.log('video track settings: ', {settings});
       let currentDeviceId = settings.deviceId; // not all browsers support this
       const index = currentDeviceId ? videoMediaDevices.indexOf(currentDeviceId) : currentDeviceIndex ? currentDeviceIndex + 1 : 0;
       if (videoMediaDevices.length > 1) {
@@ -206,10 +234,10 @@ switchCameraButton.addEventListener('click', async () => {
       }
       // get next camera id (loop over user cameras)
       currentDeviceId = videoMediaDevices[currentDeviceIndex];
-      await init({ deviceId: currentDeviceId, switchCamera: true });
+      await init({deviceId: currentDeviceId, switchCamera: true});
       if (client) {
         setTimeout(() => {
-          client.start(videoStream, recordLabel);
+          client.start(videoStream);
           switchCameraButton.classList.remove('d-none');
         }, 2000);
       }
@@ -223,12 +251,16 @@ switchCameraButton.addEventListener('click', async () => {
 // when next button is clicked go to targeted step
 document.querySelectorAll('*[data-target]')
   .forEach((btn) => btn.addEventListener('click', async () => {
-    const targetStepId = btn.getAttribute('data-target');
+    let targetStepId = btn.getAttribute('data-target');
     await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
       .catch(() => stopVideoCaptureAndProcessResult(false));
   }));
 
 async function processStep(targetStepId, displayWithDelay) {
+  // init debug ipv
+  document.querySelector(`#best-image-ipv`).classList.add('d-none');
+  document.querySelector(`#get-ipv-status-result`).classList.add('d-none');
+
   if (targetStepId === '#application-version') {
     document.querySelector(targetStepId).classList.remove('d-none');
 
@@ -265,9 +297,23 @@ async function processStep(targetStepId, displayWithDelay) {
         await init();
         if (client) {
           setTimeout(() => {
-            client.start(videoStream, recordLabel);
-            switchCameraButton.classList.remove('d-none');
-            document.querySelector('#step-liveness .header').classList.remove('d-none');
+            let timeleft = 3;
+            let downloadTimer = setInterval(function () {
+              if (timeleft <= 0) {
+                clearInterval(downloadTimer);
+                document.getElementById("count-down-txt-id").innerHTML = "";
+                countDown.classList.add('d-none');
+              } else {
+                document.getElementById("count-down-txt-id").innerHTML = "Countdown... " + timeleft;
+                countDown.classList.remove('d-none');
+              }
+              timeleft -= 1;
+            }, 1000);
+            setTimeout(() => {
+              client.start(videoStream);
+              switchCameraButton.classList.remove('d-none');
+              document.querySelector('#step-liveness .header').classList.remove('d-none');
+            }, 4000);
           }, 2000);
         } else return; // no client > no process
       }
@@ -286,6 +332,7 @@ async function processStep(targetStepId, displayWithDelay) {
     }
   }
 }
+
 document.querySelector('#step-liveness .tutorial').addEventListener('click', async () => {
   resetLivenessDesign();
   if (client) {
@@ -298,6 +345,7 @@ document.querySelectorAll('.reset-animations').forEach((btn) => {
     refreshImgAnimations();
   });
 });
+
 function refreshImgAnimations() {
   // reload only gif animations
   document.querySelectorAll('.step > .animation > img').forEach((img) => {
@@ -305,6 +353,10 @@ function refreshImgAnimations() {
     if (gifAnimation.endsWith('.gif')) img.src = `${gifAnimation}?v=${Math.random()}`;
   });
 }
+
+/**
+ * suspend video camera and return result
+ */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', extendedMsg) {
   bestImageId = faceId;
   // we reset the session when we finished the liveness check real session
@@ -314,24 +366,31 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', exten
   if (success) {
     document.querySelector('#step-liveness-ok').classList.remove('d-none');
     document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add('d-none'));
-    const faceImg = await getFaceImage(sessionId, faceId);
-    bestImageURL = window.URL.createObjectURL(faceImg);
-    bestImgElement.style.backgroundImage = `url(${bestImageURL})`;
+    if (!idProofingWorkflow) {
+      const faceImg = await commonutils.getFaceImage(basePath, sessionId, faceId);
+      bestImageURL = window.URL.createObjectURL(faceImg);
+      bestImgElement.style.backgroundImage = `url(${bestImageURL})`;
+      document.querySelector(".success-no-ipv").classList.remove('d-none');
+    } else {
+      document.querySelector(".success-ipv").classList.remove('d-none');
+      document.querySelector(`#get-ipv-transaction`).classList.remove('d-none');
+      document.querySelector(`#get-ipv-portrait`).classList.remove('d-none');
+    }
     const nextButton = isMatchingEnabled ? 'next-step' : 'reset-step';
-    document.querySelector(`#step-liveness-ok button.${nextButton}`).classList.remove('d-none');
+
+    document.querySelectorAll(`#step-liveness-ok button.${nextButton}`).forEach((step) => step.classList.remove('d-none'));
   } else if (msg && (msg.indexOf('Timeout') > -1)) {
     sessionStorage.setItem('livenessResult', '1');
     document.querySelector('#step-liveness-timeout').classList.remove('d-none');
     setTimeout(() => {
       document.querySelector('#step-liveness-timeout .footer').classList.remove('d-none');
     }, 2000);
+    
   } else {
     document.querySelector('#step-liveness-ko').classList.remove('d-none');
-    if (msg) document.querySelector('#step-liveness-ko .description').textContent = __('Liveness failed');
-    const small = document.querySelector('#step-liveness-ko small');
-    small.textContent = extendedMsg || '';
   }
 }
+
 /**
  * prepare video capture elements
  * @param trainingModeEnabled
@@ -343,6 +402,7 @@ function initLivenessDesign(trainingModeEnabled) {
   videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
   headStartPositionOutline.classList.remove('d-none-fadeout');
 }
+
 /**
  * reset video capture elements at the end of the process
  */
@@ -353,45 +413,57 @@ function resetLivenessDesign() {
   bestImgElement.style.backgroundImage = null;
 
   switchCameraButton.classList.add('d-none');
-  if (headAnimationOn || headAnimationOff) {
+  if (headAnimationOn || headAnimationOff) {
     window.clearTimeout(headAnimationOn);
     window.clearTimeout(headAnimationOff);
   }
   lastChallengeIndex = -1;
 }
+
 /**
  * display messages to user during capture (eg: move closer, center your face ...)
  * @param trackingInfo face tracking info
  * @param challengeInProgress challenge has started?
  * @param trainingMode training mode enabled ?
  */
-let lastChallengeIndex = -1; let headAnimationOn; let headAnimationOff; let userInstructionMsgDisplayed; let
-  userInstructionMsgToDisplay;
+let lastChallengeIndex = -1;
+let headAnimationOn;
+let headAnimationOff;
+let userInstructionMsgDisplayed;
+let userInstructionMsgToDisplay;
+
 function displayInstructionsToUser(trackingInfo, challengeInProgress) {
-  if (challengeInProgress || userInstructionMsgDisplayed) return;
+  if (challengeInProgress || userInstructionMsgDisplayed) return;
   if (trackingInfo.phoneNotVertical) { // << user phone not up to face
     videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
     phoneNotVerticalMsg.classList.remove('d-none-fadeout');
     if (userInstructionMsgToDisplay) userInstructionMsgToDisplay = window.clearTimeout(userInstructionMsgToDisplay);
-    userInstructionMsgToDisplay = window.setTimeout(() => { userInstructionMsgToDisplay = false; }, 3000);
-  } else if (trackingInfo.distance) { // << user face found but too far from camera
+    userInstructionMsgToDisplay = window.setTimeout(() => {
+      userInstructionMsgToDisplay = false;
+    }, 3000);
+  } else if (trackingInfo.tooFar) { // << user face found but too far from camera
     videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
     moveCloserMsg.classList.remove('d-none-fadeout');
+  } else if (trackingInfo.tooClose) { // << user face found but too close from camera
+    videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
+    moveFurtherMsg.classList.remove('d-none-fadeout');
   } else {
     const livenessHighData = trackingInfo.livenessHigh;
     if (trackingInfo.faceh === 0 && trackingInfo.facew === 0) { // << no face detected
       videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
       headStartPositionOutline.classList.remove('d-none-fadeout');
     } else if (livenessHighData
-            && livenessHighData.movingPhone // << user is moving his phone so display gif animation to keep phone still
-            && !userInstructionMsgToDisplay) {
+      && livenessHighData.movingPhone // << user is moving his phone so display gif animation to keep phone still
+      && !userInstructionMsgToDisplay) {
       videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
       userInstructionMsgToDisplay = true;
       movingPhoneMsg.classList.remove('d-none-fadeout');
       userInstructionMsgDisplayed = window.setTimeout(() => {
         movingPhoneMsg.classList.add('d-none-fadeout');
         userInstructionMsgDisplayed = window.clearTimeout(userInstructionMsgDisplayed);
-        window.setTimeout(() => { userInstructionMsgToDisplay = false; }, 5000);
+        window.setTimeout(() => {
+          userInstructionMsgToDisplay = false;
+        }, 5000);
       }, 5000);
     } else if (trackingInfo.positionInfo) {
       videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
@@ -399,6 +471,7 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
     }
   }
 }
+
 function displayMsg(elementToDisplay, ttl = 2000) {
   // hide all messages
   videoMsgOverlays.forEach((overlay) => overlay.classList.add('d-none-fadeout'));
@@ -408,6 +481,7 @@ function displayMsg(elementToDisplay, ttl = 2000) {
     userInstructionMsgDisplayed = window.clearTimeout(userInstructionMsgDisplayed);
   }, ttl);
 }
+
 // not used
 function displayIlluminationOverlay(colors, i) {
   // show illumination. overlay
@@ -420,195 +494,15 @@ function displayIlluminationOverlay(colors, i) {
     if (colors[i + 2]) displayIlluminationOverlay(colors, i + 2);
   }, colors[i + 1]);
 }
-/**
- * init a liveness session
- * @return sessionId
- */
-async function initLivenessSession(sessionId = '', identityId = '') {
-  console.log('init liveness session');
-  return new Promise(((resolve, reject) => {
-    const xhttp = new window.XMLHttpRequest();
-    let path = `${basePath}/init-liveness-session/${sessionId}`;
-    if (identityId && identityId != '') {
-      path = `${path}?identityId=${identityId}`;
-    }
-    xhttp.open('GET', path, true);
-    xhttp.responseType = 'json';
-    xhttp.onload = function () {
-      if (this.status >= 200 && this.status < 300) {
-        resolve(xhttp.response);
-      } else {
-        console.error('initLivenessSession failed');
-        reject();
-      }
-    };
-    xhttp.onerror = function () {
-      reject();
-    };
-    xhttp.send();
-  }));
-}
-/**
- * retrieve the liveness challenge result from backend (via polling)
- * @param sessionId
- * @param maxAttempts
- * @param interval
- * @return {isLivenessSucceeded, message}
- */
-async function getLivenessChallengeResult(sessionId, maxAttempts = 10, interval = 1000) {
-  return new Promise(((resolve, reject) => {
-    const xhttp = new window.XMLHttpRequest();
-    xhttp.open('GET', `${basePath}/liveness-challenge-result/${sessionId}/?polling=${enablePolling}`, true);
-    xhttp.setRequestHeader('Content-type', 'application/json');
-    xhttp.responseType = 'json';
-    xhttp.onload = () => {
-      if (xhttp.status) {
-        if (xhttp.status === 200) {
-          resolve(xhttp.response);
-        } else if (maxAttempts) { // >> polling
-          console.log('getLivenessChallengeResult retry ...', maxAttempts);
-          return new Promise((r) => setTimeout(r, interval))
-            .then(() => {
-              resolve(getLivenessChallengeResult(sessionId, maxAttempts - 1));
-            });
-        } else {
-          console.error('getLivenessChallengeResult failed, max retries reached');
-          reject();
-        }
-      }
-    };
-
-    xhttp.onerror = function (e) {
-      reject();
-    };
-    xhttp.send();
-  }));
-}
-/**
- * send another image to match with video best image
- * @param selfieImage
- * @return {Promise<void>}
- */
-async function pushFaceAndDoMatch(selfieImage) {
-  try {
-    const face2 = await createFace(sessionId, selfieImage);
-    const matches = await getMatches(sessionId, bestImageId, face2.faceId);
-    document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
-    if (matches.matching === 'ok') {
-      document.querySelector('#step-selfie-ok .description').innerHTML = __('Matching succeeded <br> score: ') + matches.score;
-      document.querySelector('#step-selfie-ok').classList.remove('d-none');
-    } else {
-      document.querySelector('#step-selfie-ko').classList.remove('d-none');
-      if (matches.score) {
-        document.querySelector('#step-selfie-ko .description').innerHTML = __('Matching failed <br> score: ') + matches.score || '';
-      }
-    }
-    console.log(matches);
-  } catch (e) {
-    console.error(e);
-    document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
-    document.querySelector('#step-selfie-ko').classList.remove('d-none');
-    document.querySelector('#step-selfie-ko .description').innerHTML = 'Matching failed';
-  }
-}
-
-/**
- * associate a new face to session 
- * @param sessionId session id 
- * @param imageFile face image 
- * @param faceInfo face information
- * @return {Promise<void>}
- */
-async function createFace(sessionId, imageFile, faceInfo = '{"imageType" : "SELFIE","friendlyName" : "selfie", "imageRotationEnabled":"true"}') {
-  return new Promise(((resolve, reject) => {
-    const formData = new window.FormData();
-    const xhttp = new window.XMLHttpRequest();
-    formData.append('image', imageFile);
-    formData.append('face', new window.Blob([faceInfo], { type: 'application/json' }));
-    xhttp.open('POST', `${basePath}/bio-session/${sessionId}/faces`, true);
-    xhttp.responseType = 'json';
-    xhttp.onload = function () {
-      document.getElementById('loading').classList.add('d-none');
-      if (this.status === 200) {
-        resolve(xhttp.response);
-      } else {
-        console.error('createFace failed');
-        reject();
-      }
-    };
-    xhttp.onerror = function () {
-      console.error('createFace failed');
-      reject(xhttp);
-    };
-    xhttp.send(formData);
-    document.getElementById('loading').classList.remove('d-none');
-  }));
-}
-
-/**
- * retrieve face for a given session 
- * @param sessionId
- * @param faceId
- */
-async function getFaceImage(sessionId, faceId) {
-  return new Promise(((resolve, reject) => {
-    const xhttp = new window.XMLHttpRequest();
-    xhttp.open('GET', `${basePath}/bio-session/${sessionId}/faces/${faceId}/image`, true);
-    xhttp.responseType = 'blob';
-    xhttp.onload = function () {
-      if (this.status === 200) {
-        resolve(xhttp.response);
-      } else {
-        console.error('createFace failed');
-        reject();
-      }
-    };
-    xhttp.onerror = function () {
-      console.error('createFace failed');
-      reject(xhttp);
-    };
-    xhttp.send();
-  }));
-}
-
-/**
- * get matches result for a given session and two faces
- * @param sessionId
- * @param referenceFaceId
- * @param candidateFaceId
- */
-async function getMatches(sessionId, referenceFaceId, candidateFaceId) {
-  return new Promise(((resolve, reject) => {
-    const xhttp = new window.XMLHttpRequest();
-    xhttp.open('GET', `${basePath}/bio-session/${sessionId}/faces/${referenceFaceId}/matches/${candidateFaceId}`, true);
-    xhttp.responseType = 'json';
-    xhttp.onload = function () {
-      if (this.status === 200) {
-        resolve(xhttp.response);
-      } else {
-        console.error('createFace failed');
-        reject();
-      }
-    };
-    xhttp.onerror = function () {
-      console.error('createFace failed');
-      reject(xhttp);
-    };
-    xhttp.send();
-  }));
-}
 
 document.querySelector('#takeMyPickture').addEventListener('click', () => {
   selfieInput.click();
 });
 selfieInput.addEventListener('change', (e) => {
-  pushFaceAndDoMatch(e.target.files[0]);
+  commonutils.pushFaceAndDoMatch(basePath, sessionId, bestImageId, e.target.files[0]);
 });
 
-if (isSkipTutorial) {
-  cameraPermissionAlreadyAsked = true; // hack to skip the camera frame
-  processStep('#step-liveness',100);
-} else if (isVideoTutEnabled) {
+if (isVideoTutEnabled) {
   document.querySelector('main').classList.remove('animation-tut');
   document.querySelector('main').classList.add('video-tut');
   document.querySelector('#step-1-vid').id = 'step-1';
@@ -625,11 +519,12 @@ sessionStorage.removeItem('livenessResult');
  * check user connectivity (latency, download speed, upload speed)
  */
 window.onload = () => {
-  if (BioserverNetworkCheck && window.envBrowserOk && !isSkipTutorial) {
+  if (BioserverNetworkCheck && window.envBrowserOk) {
     let ttlInProgress = window.setTimeout(() => {
       onNetworkCheckUpdate();
     }, 10000);
     let displayGoodSignal = false;
+
     function onNetworkCheckUpdate(networkConnectivity) {
       if (!ttlInProgress) return;
       if (!networkConnectivity || !networkConnectivity.goodConnectivity) {
@@ -645,34 +540,31 @@ window.onload = () => {
         document.querySelectorAll('.step').forEach((s) => s.classList.add('d-none'));
         weakNetworkCheckPage.classList.remove('d-none');
         if (networkConnectivity) {
-          const uploadNotGood = networkConnectivity.upload;
-          const signalValue = uploadNotGood ? networkConnectivity.upload : networkConnectivity.download;
-          const signalThreshold = uploadNotGood
-            ? BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD
-            : BioserverNetworkCheck.DOWNLOAD_SPEED_THRESHOLD;
-          weakNetworkCheckPage.querySelector('.signal-value').innerHTML = signalValue && `(${signalValue}kbps)` || '';
-          weakNetworkCheckPage.querySelector('.signal-min-value').innerHTML = `${signalThreshold}kbps`;
+          const uploadNotGood = !networkConnectivity.upload ? true : (networkConnectivity.upload < BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD);
+          const signalValue = networkConnectivity.upload;
+          const signalThreshold = BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD;
+          weakNetworkCheckPage.querySelector('.signal-value').innerHTML = (signalValue && '(' + signalValue + ' kb/s)') || '';
+          weakNetworkCheckPage.querySelector('.signal-min-value').innerHTML = signalThreshold + ' kb/s';
           if (uploadNotGood) weakNetworkCheckPage.querySelector('.upload').classList.remove('d-none');
-          else weakNetworkCheckPage.querySelector('.download').classList.remove('d-none');
         } else { // << case of time out
           weakNetworkCheckPage.querySelector('.signal-value').innerHTML = '';
-          weakNetworkCheckPage.querySelector('.signal-min-value').innerHTML = `${BioserverNetworkCheck.DOWNLOAD_SPEED_THRESHOLD}kbps`;
-          weakNetworkCheckPage.querySelector('.download').classList.remove('d-none');
+          weakNetworkCheckPage.querySelector('.signal-min-value').innerHTML = BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD + ' kb/s';
+          weakNetworkCheckPage.querySelector('.upload').classList.remove('d-none');
         }
         // close VideoCapture If Needed;
         resetLivenessDesign();
         if (client) {
           client.disconnect();
         }
-      } else if (networkConnectivity
-                && displayGoodSignal
-                && networkConnectivity.goodConnectivity
-                && networkConnectivity.upload) {
-        document.querySelectorAll('.step').forEach((s) => s.classList.add('d-none'));
+      } else if (networkConnectivity &&
+        displayGoodSignal &&
+        networkConnectivity.goodConnectivity &&
+        networkConnectivity.upload) {
+        document.querySelectorAll('.step').forEach(s => s.classList.add('d-none'));
         const goodNetworkCheckPage = document.querySelector('#step-good-network');
         goodNetworkCheckPage.classList.remove('d-none');
-        goodNetworkCheckPage.querySelector('.signal-value').innerHTML = `(${networkConnectivity.download}kbps)`;
-        goodNetworkCheckPage.querySelector('.signal-min-value').innerHTML = `${BioserverNetworkCheck.DOWNLOAD_SPEED_THRESHOLD}kbps`;
+        goodNetworkCheckPage.querySelector('.signal-value').innerHTML = '(' + networkConnectivity.upload + ' kb/s)';
+        goodNetworkCheckPage.querySelector('.signal-min-value').innerHTML = BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD + ' kb/s';
         displayGoodSignal = false;
         connectivityOK = true; // connectivity results retrived enough (page displayed)
       } else {
@@ -684,21 +576,13 @@ window.onload = () => {
       }
       ttlInProgress = window.clearTimeout(ttlInProgress);
     }
-    if(useProxy) {
-        BioserverNetworkCheck.connectivityMeasure({
-            downloadURL:  basePath + '/network-speed',
-            uploadURL:  basePath + '/network-speed',
-            latencyURL:  basePath + '/network-latency',
-            onNetworkCheckUpdate: onNetworkCheckUpdate
-        });
-    } else {
-        BioserverNetworkCheck.connectivityMeasure({
-            downloadURL:  videoUrlWithBasePath + '/network-speed',
-            uploadURL:  videoUrlWithBasePath + '/network-speed',
-            latencyURL:  videoUrlWithBasePath + '/network-latency',
-            onNetworkCheckUpdate: onNetworkCheckUpdate
-        });
-    }
+
+    BioserverNetworkCheck.connectivityMeasure({
+      downloadURL: videoUrlWithBasePath + '/network-speed',
+      uploadURL: videoUrlWithBasePath + '/network-speed',
+      latencyURL: videoUrlWithBasePath + '/network-latency',
+      onNetworkCheckUpdate: onNetworkCheckUpdate
+    });
     document.querySelector('#check-network').onclick = function () {
       const weakNetworkCheckPage = document.querySelector('#step-weak-network');
       weakNetworkCheckPage.querySelector('.animation').classList.remove('d-none');
@@ -708,21 +592,12 @@ window.onload = () => {
       }, 10000);
       displayGoodSignal = true;
       window.setTimeout(() => {
-        if(useProxy) {
-            BioserverNetworkCheck.connectivityMeasure({
-                downloadURL:  basePath + '/network-speed',
-                uploadURL:  basePath + '/network-speed',
-                latencyURL:  basePath + '/network-latency',
-                onNetworkCheckUpdate: onNetworkCheckUpdate
-            });
-        } else {
-            BioserverNetworkCheck.connectivityMeasure({
-                downloadURL:  videoUrlWithBasePath + '/network-speed',
-                uploadURL:  videoUrlWithBasePath + '/network-speed',
-                latencyURL:  videoUrlWithBasePath + '/network-latency',
-                onNetworkCheckUpdate: onNetworkCheckUpdate
-            });
-        }
+        BioserverNetworkCheck.connectivityMeasure({
+          downloadURL: videoUrlWithBasePath + '/network-speed',
+          uploadURL: videoUrlWithBasePath + '/network-speed',
+          latencyURL: videoUrlWithBasePath + '/network-latency',
+          onNetworkCheckUpdate: onNetworkCheckUpdate
+        });
       }, 100);
     };
   }
@@ -738,7 +613,7 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_part1.json'), // the animation data
+      animationData: require('./animations/liveness_animation_part1.json') // the animation data
     });
   });
   document.querySelectorAll('.animation-part1-pc').forEach((anim) => {
@@ -747,7 +622,7 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_part1_pc.json'), // the animation data
+      animationData: require('./animations/liveness_animation_part1_pc.json') // the animation data
     });
   });
   document.querySelectorAll('.animation-part2').forEach((anim) => {
@@ -756,7 +631,7 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_part2.json'), // the animation data
+      animationData: require('./animations/liveness_animation_part2.json') // the animation data
     });
   });
   document.querySelectorAll('.animation-part2-pc').forEach((anim) => {
@@ -765,7 +640,7 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_part2_pc.json'), // the animation data
+      animationData: require('./animations/liveness_animation_part2_pc.json') // the animation data
     });
   });
   document.querySelectorAll('.animation-part3').forEach((anim) => {
@@ -774,7 +649,7 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_part3.json'), // the animation data
+      animationData: require('./animations/liveness_animation_part3.json') // the animation data
     });
   });
   document.querySelectorAll('.animation-part3-pc').forEach((anim) => {
@@ -783,7 +658,7 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_part3_pc.json'), // the animation data
+      animationData: require('./animations/liveness_animation_part3_pc.json') // the animation data
     });
   });
   document.querySelectorAll('.animation-full').forEach((animationFull) => {
@@ -792,7 +667,7 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_full.json'), // the animation data
+      animationData: require('./animations/liveness_animation_full.json') // the animation data
     });
   });
   document.querySelectorAll('.animation-full-pc').forEach((animationFull) => {
@@ -801,18 +676,17 @@ function initLivenessAnimations() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      animationData: require('./animations/liveness_animation_full_pc.json'), // the animation data
+      animationData: require('./animations/liveness_animation_full_pc.json') // the animation data
     });
   });
 }
+
 initLivenessAnimations();
 
 
 function handlePositionInfo(positionInfo) {
   switch (positionInfo) {
     case 'TRACKER_POSITION_INFO_MOVE_BACK_INTO_FRAME': // No head detected
-    case 'TRACKER_POSITION_INFO_CENTER_MOVE_BACKWARDS': // Move away from the camera 
-    case 'TRACKER_POSITION_INFO_CENTER_MOVE_FORWARDS': // Move closer to the camera 
     case 'TRACKER_POSITION_INFO_CENTER_TURN_RIGHT': // Turn your head right
     case 'TRACKER_POSITION_INFO_CENTER_TURN_LEFT': // Turn your head left
     case 'TRACKER_POSITION_INFO_CENTER_ROTATE_UP': // Turn your head up
@@ -822,6 +696,12 @@ function handlePositionInfo(positionInfo) {
     case 'TRACKER_POSITION_INFO_CENTER_TILT_LEFT': // Tilt your head left
     case 'TRACKER_POSITION_INFO_STAND_STILL': // Stand still
       displayMsg(headStartPositionOutline);
+      break;
+    case 'TRACKER_POSITION_INFO_CENTER_MOVE_BACKWARDS': // Move away from the camera
+      displayMsg(moveFurtherMsg);
+      break;
+    case 'TRACKER_POSITION_INFO_CENTER_MOVE_FORWARDS': // Move closer to the camera
+      displayMsg(moveCloserMsg);
       break;
     case 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA': // The place is too bright
       displayMsg(tooBrightMsg);

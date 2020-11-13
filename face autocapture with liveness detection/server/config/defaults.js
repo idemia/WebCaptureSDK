@@ -15,67 +15,40 @@ limitations under the License.
 */
 
 // this file contains configuration of sample app
-
 const path = require('path');
 
 module.exports = {
-    DEBUG: '*',
-    NODE_TLS_REJECT_UNAUTHORIZED: '0',
-    BASE_PATH: "/demo-server",
-    LIVENESS_MODE: "LIVENESS_HIGH", // NO_LIVENESS, LIVENESS_MEDIUM, LIVENESS_HIGH, LIVENESS_PASSIVE
-    LIVENESS_HIGH_NUMBER_OF_CHALLENGE: 2,
-    /*
-	  possible value for LIVENESS_SECURITY_LEVEL:
-        VERY_LOW  // lowest level, the algorithm will be more tolerant
-        LOW
-        MEDIUM
-        HIGH
-        VERY_HIGH
-        VERY_HIGH2
-        VERY_HIGH3
-        VERY_HIGH4
-        VERY_HIGH5
-        VERY_HIGH6
-        VERY_HIGH7
-        VERY_HIGH8// Highest level, the algorithm will be as much strict as it can be
-	*/
-    LIVENESS_SECURITY_LEVEL: "VERY_HIGH3",
-    // used to callback demo-server by WebioServer
-    SERVER_PUBLIC_ADDRESS: "https://localhost",
-    // used in callback URL to receive liveness result from WebioServer
-    // callbackURL = SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH
-    LIVENESS_RESULT_CALLBACK_PATH: "/liveness-result-callback",
-    DISABLE_CALLBACK: true, // set this key to true to disable callback functionality
-    VIDEO_HEALTH_PATH: '/v2/monitor', // monitor url of video-server, should be fixed as /health on prod
 
-    VIDEO_SERVER_BASE_PATH: "/video-server",
-    VIDEO_SERVER_WSPATH: "/engine.io",
-    VIDEO_SERVER_RTCCONFIGPATH: "/coturnService",
+  // ******************* APIKEY/URL for WBS/GIPS *******************
+  BIOSERVER_CORE_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443/bioserver-app/v2',
+  BIOSERVER_VIDEO_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443',
+  WEB_SDK_LIVENESS_ID_DOC: 'PLEASE_FILL_WITH_YOUR_APIKEY',
 
-    TLS_API_PORT: 9943,
-    TLS_CERT_PATH: path.join(__dirname, 'certs/cert.pem'),
-    TLS_KEY_PATH: path.join(__dirname, 'certs/key.pem'),
+  // only needed if using ID&V
+  GIPS_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443/gips',
+  GIPS_RS_API_Key: 'PLEASE_FILL_WITH_YOUR_APIKEY',
+  IDPROOFING: false, // enable ID&V integration to use ID&V for initialisation and retrieve results on the liveness
 
-    // BioServer service
-    BIOSERVER_CORE_URL: 'https://localhost/bioserver-app/v2',
-    BIOSERVER_VIDEO_URL: 'https://localhost:9443',
+  // callbackURL = SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH
+  DISABLE_CALLBACK: true, // set this key to true to disable callback functionality
+  SERVER_PUBLIC_ADDRESS: 'https://localhost', // used in callback URL to receive liveness result from WebioServer
+  LIVENESS_RESULT_CALLBACK_PATH: '/liveness-result-callback',
+  // *******************************************************************
 
-    // apiKey conf
-    API_KEY_HEADER: 'apikey',//apiKey
-    API_KEY_SECRET: 'secret',
+  // ******************* LIVENESS parameters *******************
+  /* lowest level, the algorithm will be more tolerant
+   Highest level, the algorithm will be as much strict as it can be
+   VERY_LOW;LOW;MEDIUM;HIGH;VERY_HIGH;VERY_HIGH2;VERY_HIGH3;VERY_HIGH4;VERY_HIGH5;VERY_HIGH6;VERY_HIGH7;VERY_HIGH8 */
+  LIVENESS_SECURITY_LEVEL: 'HIGH',
+  LIVENESS_MODE: 'LIVENESS_PASSIVE', // NO_LIVENESS;LIVENESS_MEDIUM;LIVENESS_HIGH;LIVENESS_PASSIVE
+  LIVENESS_HIGH_NUMBER_OF_CHALLENGE: 2,
+  // *******************************************************************
 
-    CODING_QUALITY_THRESHOLD: 100,
-    MATCHING_SCORE_THRESHOLD: 3000,
-    ENABLE_IMAGE_COMPRESSION:true,
-    /********************
-    // GIPS INTEGRATION
-    // ENABLE GIPS TO WBS AUTHENT TYPE
-    ********************/
-    GIPS_URL:'http://localhost/gips/rest',
-    GIPS_TENANT_ROLE:'RELYING_SERVICE',
-    GIPS_API_KEY_HEADER: 'tenant-id',
-    GIPS_API_KEY_SECRET: 'gips',
-    IDPROOFING:false,
-    USE_INTERNAL_PROXY:false, // pass though internal demo-server proxy to set the 3 liveness parameters key when using demo-server with id-proofing functionnality
-    SUPPORTED_LANGUAGES: 'en,es,fr,ja' // used to translate the web pages
+  // ******************* back-end server creation *******************
+  TLS_API_PORT: 9943,
+  TLS_CERT_PATH: path.join(__dirname, 'certs/cert.pem'),
+  TLS_KEY_PATH: path.join(__dirname, 'certs/key.pem'),
+  BASE_PATH: '/demo-server',
+  SUPPORTED_LANGUAGES: 'en,es,fr,ja', // used to translate the web pages 
+  // *******************************************************************
 };

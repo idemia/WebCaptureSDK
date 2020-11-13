@@ -23,10 +23,10 @@ limitations under the License.
     <title>Passive liveness detection</title>
     <link rel="stylesheet" href="./css/bootstrap.min.css">
     <link rel="stylesheet" href="./css/style.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/apple-touch-icon.png">
-    <link rel="shortcut icon" href="./favicons/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/logo-180.png">
+    <link rel="shortcut icon" href="./favicons/logo-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/logo-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/logo-16.png">
     <link rel="manifest" href="./favicons/manifest.json">
     <link rel="mask-icon" href="./favicons/safari-pinned-tab.svg" color="#430099">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -75,7 +75,7 @@ limitations under the License.
 
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
 
                 </div>
 
@@ -107,7 +107,7 @@ limitations under the License.
         <div id="connectivity-check" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 animation">
@@ -118,7 +118,7 @@ limitations under the License.
         <div id="step-good-network" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
 
                 </div>
             </header>
@@ -144,7 +144,7 @@ limitations under the License.
 
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
 
                      <span class="skip" data-target="#application-version">?</span>
                     <div id="application-version" class="d-none version-overlay h-100 flex-column">
@@ -178,13 +178,13 @@ limitations under the License.
         <div id="step-end-tutorial-anim" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
 
                 </div>
 
             </header>
             <div class="col-12 description">
-                <span><%= __("For this task, you'll need to center your face.") %></span>
+                <span><%= __("For this task, center your face and stay still while the timer counts down.") %></span>
             </div>
             <div class="col-12 animation">
                 <div class="animation-part2 contain mobile-item"></div>
@@ -229,7 +229,7 @@ limitations under the License.
         <div id="step-access-permission" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="check-phone">
@@ -258,6 +258,11 @@ limitations under the License.
                         </button>
                     </div>
                 </div>
+                <div id="count-down"  class="row-countdown header countdown-header d-none w-100" >
+                    <div class="col">
+                        <div id="count-down-txt-id" class="count-down-txt"></div>
+                    </div>
+                </div>
                 <video id="user-video" class="w-100 h-100" style="object-fit: cover" autoplay playsinline></video>
                 <div id="darkness" class="d-none-fadeout video-overlay w-100 h-100">
                     <span class="video-msg video-msg-center align-self-center"><%= __("The place is too dark") %></span>
@@ -279,6 +284,9 @@ limitations under the License.
                 </div>
                 <div id="move-closer-animation" class="d-none-fadeout video-overlay w-100 h-100 ">
                     <span class="video-msg video-msg-center "><%= __("Move closer") %></span>
+                </div>
+                <div id="move-further-animation" class="d-none-fadeout video-overlay w-100 h-100 ">
+                    <span class="video-msg video-msg-center "><%= __("Move further") %></span>
                 </div>
                 <div id="head-rotation-animation" class="d-none-fadeout video-overlay w-100 h-100"></div>
                 <div id="positive-message" class="d-none-fadeout video-overlay w-100 h-100">
@@ -302,10 +310,10 @@ limitations under the License.
         <div id="step-liveness-ok" class="row step d-none results">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
-            <div class="col-12 animation">
+            <div class="col-12 animation success-no-ipv d-none">
                 <div class="best-image">
                     <img src="./img/success.svg" alt="success">
                 </div>
@@ -320,12 +328,41 @@ limitations under the License.
                     </div>
                 </div>
             </div>
+            <div class="col success-ipv d-none">
+                <div class="col-12 animation success-ipv-block display-block">
+                    <div class="row">
+                        <div class="col-md-11 offset-md-1 col-lg-8 offset-lg-2">
+                            <div class="success-message-ipv">
+                                <div class="row justify-content-center">
+                                    <img src="./img/success.svg" alt="success">
+                                </div>
+                                <div class="row justify-content-center">
+                                    <span class="description text-center col align-self-center"><%= __("You passed liveness!") %></span>
+                                </div>
+                            </div>
+                            <button class="col-md-4 offset-md-4 btn btn-primary btn-block reset-step reset-animations small-font-small-phone" data-target="#step-1"><%= __("restart demo") %></button>
+                        </div>
+                    </div>
+                    <div class="row padT20">
+                        <div id="debug-ipv-portrait" class="col-md-6">
+                            <button id="get-ipv-portrait" class="col-md-8 offset-md-2 wrap-text btn btn-primary btn-block reset-animations small-font-small-phone"><%= __("Get GIPS portrait - dev only !") %></button>
+                            <div class="offset-6">
+                                <img id="best-image-ipv" class="d-none">
+                            </div>
+                        </div>
+                        <div id="debug-ipv-transaction" class="col-md-6">
+                            <button id="get-ipv-transaction" class="col-md-8 offset-md-2 wrap-text btn btn-primary btn-block reset-animations small-font-small-phone"><%= __("Get GIPS transaction - dev only !") %></button>
+                            <pre id="get-ipv-status-result" class="d-none"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- Liveness Results KO/Timeout -->
         <div id="step-liveness-timeout" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 description">
@@ -352,7 +389,7 @@ limitations under the License.
         <div id="step-liveness-failed" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 description">
@@ -374,24 +411,51 @@ limitations under the License.
                 </div>
             </div>
         </div>
+
+
         <div id="step-liveness-ko" class="row step d-none results">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 animation">
                 <img src="./img/failure.svg" alt="failure">
-                <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
+                <span class="description text-center"><%= __("Liveness failed") %></span>
                 <span class="description"><small class="text-center"></small></span>
-                <button class="btn btn-primary reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+                <button class="btn btn-primary reset-animations" data-target="#step-liveness-light"><%= __("try again") %></button>
             </div>
         </div>
+
+        <div id="step-liveness-light" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span class="mobile-item"><%= __("The main light source should be in front of you, not behind or to the side.") %></span>
+                <span class="pc-item"><%= __("The main light source should be in front of you, not behind or to the side.") %></span>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain mobile-item light-image" src="./img/light.png" alt="Take a selfie">
+                <img class="contain pc-item" src="./img/light_2x.png" alt="Upload a selfie">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#step-liveness" data-delay><%= __("try again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Selfie upload -->
         <div id="step-selfie" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 description">
@@ -418,7 +482,7 @@ limitations under the License.
         <div id="step-selfie-ok" class="row step d-none results">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 animation">
@@ -431,7 +495,7 @@ limitations under the License.
         <div id="step-selfie-ko" class="row step d-none results">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo IDEMIA" src="./img/idemia-ipv-websdk-logo.png">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 animation">

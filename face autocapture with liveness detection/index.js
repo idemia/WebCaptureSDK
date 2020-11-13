@@ -31,11 +31,11 @@ packer.pack();
 
 // load certs from config folder
 const server = https.createServer({
-    key: fs.readFileSync(config.TLS_KEY_PATH),
-    cert: fs.readFileSync(config.TLS_CERT_PATH)
+  key: fs.readFileSync(config.TLS_KEY_PATH),
+  cert: fs.readFileSync(config.TLS_CERT_PATH)
 }, app).listen(config.TLS_API_PORT, () => {
-    debug('Backend server started - https://localhost:' + config.TLS_API_PORT + config.BASE_PATH);
-    debug('Total starting time: ', Date.now() - start, 'ms')
+  debug('Backend server started - https://localhost:' + config.TLS_API_PORT + config.BASE_PATH);
+  debug('Total starting time: ', Date.now() - start, 'ms');
 });
 
 // serve demos
@@ -44,64 +44,83 @@ debug('Available web applications:');
 /**
  * Manage Server liveness mode
  */
-if (config.LIVENESS_MODE === "LIVENESS_HIGH") {
-    app.use(config.BASE_PATH, serveStatic('front/home-high'));
-    debug('Home page => /');
-    app.use(config.BASE_PATH + '/high-liveness', (req, res, next) => {
-        const locale = req.acceptsLanguages()[0].split('-')[0];
-        let lang = 'en'; // default language
-        if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
-            lang = locale;
-        }
-        express.static(`front/high-liveness/${lang}/`)(req, res, next);
-    });
-    app.use('/:lang' + config.BASE_PATH + '/high-liveness', (req, res, next) => {
-        let lang = 'en'; // default language
-        if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
-            lang = req.params.lang;
-        }
-        express.static(`front/high-liveness/${lang}/`)(req, res, next);
-    });
-    debug('high liveness configured, medium mode disabled => /high-liveness');
-} else if (config.LIVENESS_MODE === "LIVENESS_PASSIVE") {
-    app.use(config.BASE_PATH, serveStatic('front/home-passive'));
+if (config.LIVENESS_MODE === 'LIVENESS_HIGH') {
+  app.use(config.BASE_PATH, serveStatic('front/home-high'));
+  debug('Home page => /');
+  app.use(config.BASE_PATH + '/high-liveness', (req, res, next) => {
+    const locale = req.acceptsLanguages()[0].split('-')[0];
+    let lang = 'en'; // default language
+    if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
+      lang = locale;
+    }
+    express.static(`front/high-liveness/${lang}/`)(req, res, next);
+  });
+  app.use('/:lang' + config.BASE_PATH + '/high-liveness', (req, res, next) => {
+    let lang = 'en'; // default language
+    if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
+      lang = req.params.lang;
+    }
+    express.static(`front/high-liveness/${lang}/`)(req, res, next);
+  });
+  debug('high liveness configured, medium mode disabled => /high-liveness');
+} else if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE') {
+  app.use(config.BASE_PATH, serveStatic('front/home-passive'));
 
-    app.use(config.BASE_PATH + '/passive-liveness', (req, res, next) => {
-        const locale = req.acceptsLanguages()[0].split('-')[0];
-        let lang = 'en'; // default language
-        if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
-            lang = locale;
-        }
-        express.static(`front/passive-liveness/${lang}/`)(req, res, next);
-    });
-    app.use('/:lang' + config.BASE_PATH + '/passive-liveness', (req, res, next) => {
-        let lang = 'en'; // default language
-        if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
-            lang = req.params.lang;
-        }
-        express.static(`front/passive-liveness/${lang}/`)(req, res, next);
-    });
-    debug('passive liveness configured => /passive-liveness');
-} else {
-    app.use(config.BASE_PATH, serveStatic('front/home-medium'));
-    debug('Home page => /');
-    app.use(config.BASE_PATH + '/medium-liveness', serveStatic('front/medium-liveness'));
-    debug('Medium liveness configured, high mode disabled => /medium-liveness');
+  app.use(config.BASE_PATH + '/passive-liveness', (req, res, next) => {
+    const locale = req.acceptsLanguages()[0].split('-')[0];
+    let lang = 'en'; // default language
+    if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
+      lang = locale;
+    }
+    express.static(`front/passive-liveness/${lang}/`)(req, res, next);
+  });
+  app.use('/:lang' + config.BASE_PATH + '/passive-liveness', (req, res, next) => {
+    let lang = 'en'; // default language
+    if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
+      lang = req.params.lang;
+    }
+    express.static(`front/passive-liveness/${lang}/`)(req, res, next);
+  });
+  debug('passive liveness configured => /passive-liveness');
+}  else {
+  app.use(config.BASE_PATH, serveStatic('front/home-medium'));
+  debug('Home page => /');
+  app.use(config.BASE_PATH + '/medium-liveness', (req, res, next) => {
+    const locale = req.acceptsLanguages()[0].split('-')[0];
+    let lang = 'en'; // default language
+    if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
+      lang = locale;
+    }
+    express.static(`front/medium-liveness/${lang}/`)(req, res, next);
+  });
+  app.use('/:lang' + config.BASE_PATH + '/medium-liveness', (req, res, next) => {
+    let lang = 'en'; // default language
+    if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
+      lang = req.params.lang;
+    }
+    express.static(`front/medium-liveness/${lang}/`)(req, res, next);
+  });
+  debug('Medium liveness configured => /medium-liveness');
 }
 
-// generate download link for source code
-app.use(config.BASE_PATH + '/download', serveStatic('download'));
+app.use(config.BASE_PATH + '/how-to', serveStatic('front/how-to'));
+debug('How to configure page => /how-to');
 
 // Parse URL-encoded bodies (as sent by HTML forms)
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
-if (config.USE_INTERNAL_PROXY) {
-    const proxyUtils = require('./server/proxyUtils');
-    // init proxy settings and requests
-    proxyUtils.initProxy(server, app);
-}
-
 // init http endPoints
 httpEndpoints.initHttpEndpoints(app);
+
+['SIGTERM', 'SIGINT'].forEach(event => {
+  process.on(event, () => {
+    // do the cleaning job, but it wouldn't
+    debug(`<<< Catch ${event} .. exiting app !`);
+    server.close(() => {
+      debug('Http server closed.');
+      process.exit(0);
+    });
+  });
+});

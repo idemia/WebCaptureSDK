@@ -66,6 +66,39 @@ main.pc {
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
     background: white;
 }
+.countdown-header {
+    padding: 0;
+    height: 49px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+    background: #4a4a4a;
+}
+.countdown-header > .col {
+    display: flex;
+    justify-content: space-between;
+    /*align-items: center;*/
+}
+.row-countdown {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+}
+.count-down-txt {
+    width: 100%;
+    height: 31px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.21;
+    font-size: 28px;
+    letter-spacing: normal;
+    text-align: center;
+    color: #ffffff;
+}
 .liveness-header {
     margin:0;
     padding:0!important;
@@ -494,8 +527,8 @@ video {background-color: black}
 .pc #step-liveness #center-head-animation {
     background-size: 50%;
 }
-
-#step-liveness #move-closer-animation {
+#step-liveness #move-closer-animation,
+#step-liveness #move-further-animation {
     background-image: url("../img/recenter_face_outline_white.png");
     background-size: 75%;
 }
@@ -510,7 +543,8 @@ video {background-color: black}
     height: 70%;
 }
 
-.pc #step-liveness #move-closer-animation {
+.pc #step-liveness #move-closer-animation,
+.pc #step-liveness #move-further-animation {
     background-size: 50%;
 }
 
@@ -685,6 +719,72 @@ video {background-color: black}
     background-size: contain;
     transition: opacity 1s ease-in;
 
+}
+
+#best-image-ipv {
+    margin: 0px 0px 20px -112px; /* because best image is 224px */
+}
+
+.success-message-ipv {
+    text-align:center;
+    margin-bottom:15px
+}
+
+.footer-ipv {
+    max-width: 100% !important;
+    position: static !important;
+}
+
+.success-ipv-block {
+    justify-content:start !important;
+    padding-top: 20px !important;
+}
+
+.success-ipv {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+}
+
+.wrap-text {
+    white-space: pre-wrap;
+}
+
+.display-block {
+    display: block !important;;
+}
+
+#get-ipv-status-result {
+    white-space: pre-wrap;
+    margin-top: 20px;
+    background-color: #ffc1071a;
+    border: ridge;
+    border-radius:10px;
+}
+
+#get-ipv-portrait {
+    margin-bottom: 20px;
+}
+
+#best-image-ipv {
+    border: ridge;
+    border-radius:10px;
+}
+
+.padT20 {
+  padding-top: 20px;
+}
+
+.light-image {
+    width: 50% !important;
+    height: 85% !important;
+    padding-bottom: 0px !important;
+}
+
+
+@media (max-width: 400px) {
+    .small-font-small-phone {
+        font-size: 10px !important;
+    }
 }
 
 /*generic*/

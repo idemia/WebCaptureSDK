@@ -5,7 +5,7 @@
   "scope": "/video-server/high-liveness-demo/",
   "icons": [
     {
-      "src": "./android-chrome-144x144.png",
+      "src": "./logo-144.png",
       "sizes": "144x144",
       "type": "image/png"
     }

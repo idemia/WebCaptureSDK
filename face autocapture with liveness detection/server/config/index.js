@@ -31,7 +31,18 @@ _.each(process.env, function (value, key) {
     values[key] = value
 })
 
-process.env.DEBUG = values.DEBUG
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = values.NODE_TLS_REJECT_UNAUTHORIZED || '0'
+
+values.VIDEO_HEALTH_PATH = values.VIDEO_HEALTH_PATH || '/v2/capabilities'; // capabilities url of video-server, should be fixed as /health on prod // TODO HEALTH ?
+values.VIDEO_SERVER_BASE_PATH = values.VIDEO_SERVER_BASE_PATH || '/video-server';
+values.DEMO_HEALTH_PATH = values.DEMO_HEALTH_PATH || '/capabilities'; // capabilities url of demo-server, should be fixed as /health on prod
+values.CODING_QUALITY_THRESHOLD = values.CODING_QUALITY_THRESHOLD || 0;
+values.MATCHING_SCORE_THRESHOLD = values.MATCHING_SCORE_THRESHOLD || 3000;
+values.ENABLE_IMAGE_COMPRESSION = values.ENABLE_IMAGE_COMPRESSION || true;
+values.GIPS_TENANT_ROLE = values.GIPS_TENANT_ROLE || 'RELYING_SERVICE';
+values.API_KEY_SECRET_BIOMETRICS = values.API_KEY_SECRET_BIOMETRICS || values.WEB_SDK_LIVENESS_ID_DOC;
+values.API_KEY_SECRET_WEBSDK = values.API_KEY_SECRET_WEBSDK || values.WEB_SDK_LIVENESS_ID_DOC;
+
+process.env.DEBUG = values.DEBUG  || '*';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = values.NODE_TLS_REJECT_UNAUTHORIZED || '0';
 process.env.UV_THREADPOOL_SIZE = values.UV_THREADPOOL_SIZE  || 10;
-module.exports = values
+module.exports = values;

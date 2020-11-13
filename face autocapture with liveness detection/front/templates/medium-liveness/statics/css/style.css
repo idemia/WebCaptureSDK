@@ -17,21 +17,21 @@ limitations under the License.
 /* load custom fonts */
 @font-face {
     font-family: Montserrat;
-    src: url(../font/Montserrat-Regular.ttf) format('truetype');
+    src: url(../font/Montserrat-Regular.woff2) format('woff2'), url(../font/Montserrat-Regular.ttf) format('ttf');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: Montserrat;
-    src: url(../font/Montserrat-Bold.ttf) format('truetype');
+    src: url(../font/Montserrat-Bold.woff2) format('woff2'), url(../font/Montserrat-Bold.ttf) format('ttf');
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: Montserrat;
-    src: url(../font/Montserrat-SemiBold.ttf) format('truetype');
+    src: url(../font/Montserrat-SemiBold.woff2) format('woff2'), url(../font/Montserrat-SemiBold.ttf) format('ttf');
     font-weight: 500;
     font-style: normal;
 }
@@ -60,24 +60,76 @@ main.pc {
     max-width: 100%;
     min-width: 1024px;
 }
-header {
-    padding: 12px;
+.header {
+    padding: 0;
     height: 49px;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+    background: white;
+}
+.liveness-header {
+    margin:0;
+    padding:0!important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999990;
+}
+.liveness-header .btn{
+    height: 30px;
+    padding: 6px 16px;
+    border-width: 1px;
+    line-height: 18px;
+}
+.liveness-header #switch-camera{
+    cursor: pointer;
+    padding: 0 10px;
+}
+.liveness-header #switch-camera img{
+    width: 34px;
+}
+.pc .liveness-header #switch-camera img {
+    width: 50px;
+}
+.pc .liveness-header .btn {
+    height: 45px;
 }
 .pc header {
     padding: 24px;
     height: 88px;
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
 }
-header > .col {
+.pc .liveness-header {
+    height: 88px;
+}
+
+.header > .col {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
 }
 
 header .logo img {
-    width: 180px
+    width: 213px;
+}
+header .logo .skip {
+    background: white;
+    text-align: center;
+    font-size: 14px;
+    color: #430099;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 15px;
+    border: solid 1px #430099;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 10px;
+    text-transform: uppercase;
+
+}
+.pointer {cursor: pointer}
+.pc header .logo .skip {
+    height: 45px;
+    line-height: 45px;
 }
 .pc header .logo img {
     width: 296px
@@ -89,22 +141,61 @@ header .logo img {
 .step {
     flex: 1;
     flex-direction: column;
+    margin:0;
+}
+.step-basis-auto {
+    flex: 1 0 auto !important;
 }
 .pc .step {
-    margin: 0px 66px;
-
+    margin: 0 66px;
 }
 .step .description,
 .step .footer {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
 }
 
 .step .description {
     font-size: 22px;
     font-weight: bold;
     line-height: 1.36;
-    color: #430099;
-    padding: 16px;
+    color: #101010;
+    padding: 16px 0;
+}
+.step .description small {
+    display: block;
+    line-height: 1.38;
+    color: #545454;
+    font-size: 70%;
+}
+small ul {
+    margin: 0; padding:0 0 0 16px;
+}
+.step .check-phone {
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 16px 0;
+}
+.check-phone img {max-height: 184px;}
+.pc .check-phone img {max-height: 250px;}
+#step-weak-network .animation,
+#connectivity-check .animation {
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+#step-weak-network .signal-value {color: #f23445}
+#step-good-network .signal-value {color: #4b9e00}
+.start-tutorial {
+    background: black;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 20px;
 }
 
 /* hide all pc items*/
@@ -121,13 +212,8 @@ header .logo img {
 }
 
 /* ** */
-
 .pc .step .description {
-    font-size: 44px;
-    font-weight: bold;
-    line-height: 1.45;
-    color: #430099;
-    padding: 16px;
+    font-size: 38px;
 }
 .step .animation {
     flex: 1 2 0;
@@ -155,20 +241,33 @@ header .logo img {
     padding: 16px;
     background-color: white;
     position: fixed;
-    bottom: 6px;
+    bottom: 0;
     max-width: 576px;
 }
-.pc .step .footer {
+.pc .step .footer, .pc .step .check-phone .btn-footer {
     position: relative;
     max-width: 500px;
+}
+.pc .step .footer .col{
+    padding-bottom: 1rem;
 }
 
 .btn {
     height: 44px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 500!important;
     text-transform: uppercase;
     border-color: #430099;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+}
+
+.btn img {
+    width: 18px;
+    margin: 0 5px;
 }
 .pc .btn {
     height: 60px;
@@ -182,9 +281,7 @@ header .logo img {
 
 .btn-outline-primary,
 .btn-outline-primary:active {
-    border-color: #430099;
     color: #430099!important;
-    font-weight: normal;
     background-color: white!important;
 }
 
@@ -238,6 +335,7 @@ header .logo img {
 .browser #opera {
     background-position: -500px 0;
 }
+
 .browser #samsung-browser {
     background-position: -600px 0;
 }
@@ -256,50 +354,71 @@ header .logo img {
 .os #linux {
     background-position: -400px 0;
 }
-
-.step .check-phone {
+.column-center {
+    flex: 0 0 auto;
+    display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding:0;
+}
+.pc .column-center {
+    align-items: flex-start;
+    max-width: 500px;
+}
+.row-center {
+    flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex: 1;
-    padding: 16px 0;
-    margin: 16px;
-}
-.check-phone img {max-height: 184px;}
-.pc .check-phone img {max-height: 250px;}
-#step-weak-network .animation,
-#connectivity-check .animation {
-    align-items: center;
     flex-direction: column;
-    justify-content: center;
-
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: 1px solid #b3babe;
+    /*max-height: 123px;*/
+    /*min-height: 106px;*/
+    cursor: pointer;
 }
-#step-weak-network .signal-value {color: #f23445}
-#step-good-network .signal-value {color: #4b9e00}
-.description small {display: block}
+.pc .row-center:hover {
+    border: 1px solid #430099;
+}
+.row-center img {
+    width: 100%;
+    height: 45px;
+    object-fit: contain;
+}
+.row-center span{
+    margin-top: 15px
+}
 /* video items*/
-.pc #step-4 {
+video {background-color: black}
+#step-liveness,.video-tut #step-tutorial {margin: 0 -15px}
+.pc #step-liveness {
     margin: 0;
     align-self: center;
     width: 700px;
 }
-#step-4 video {
-    transform: scaleX(-1); /* invert user camera */
+.pc.video-tut #step-tutorial {
+    max-width: 576px;
+    align-self: center;
+}
+#step-liveness video {
+    transform: scaleX(-1); /* invert user front camera */
 }
 
-#step-4 .animation {
+#step-liveness .animation {
     align-items: center;
     background-color: black
 }
-.pc #step-4 .animation {
+.pc #step-liveness .animation {
     justify-content: center;
     box-shadow: 0 0 10px 3px rgba(0,0,0,0.75);
 }
 
-#step-4 .video-overlay {
+#step-liveness .video-overlay {
     position: absolute;
-    top: 0;
+    top: 0 ; /* high of header */
     z-index: 99;
     display: flex;
     justify-content: center;
@@ -309,91 +428,171 @@ header .logo img {
     transition: opacity 1s ease-in;
 }
 
-#step-4 .d-none-fadeout {
+#step-liveness .d-none-fadeout {
     opacity: 0!important;
     transition: opacity 500ms ease-out;
 }
 
-#step-4 .video-msg {
+#step-liveness .video-msg {
     color: white;
     font-size: 22px;
     font-weight: bold;
     line-height: 1.36;
     text-align: center;
-    padding: 0 2vw 5vh; /*TODO: to be ajusted*/
+}
+#step-liveness .video-msg-center {
+    align-self: center;
+    font-size: 34px;
+    line-height: 1.2;
+    text-align: center;
+    word-spacing: 100vw; /* to force words wrap*/
+}
+.pc #step-liveness .video-msg-center {
+    font-size: 44px;
+}
+#step-liveness .video-msg-bottom {
+    align-self: flex-end;
+    line-height: 1.2;
+}
+.pc #step-liveness .video-msg-bottom {
+    font-size: 44px;
+}
+#step-liveness .video-msg-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    margin-top: 49px ; /* high of header */
+}
+.pc #step-liveness .video-msg-top {
+    margin-top: 88px ; /* high of header */
 }
 
-#step-4 #stop-capture {
+#stop-tutorial {
     position: absolute;
-    z-index: 999;
-    top: 0;
+    z-index: 99;
+    top: 44px;
     left: 0;
     width: 36px;
     height: 36px;
     border-radius: 50%;
     margin: 10px;
     box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.24), 0 0 4px 0 rgba(0, 0, 0, 0.12);
-    border: 0.5px solid;
+    border: 2px solid;
     background-color: #ffffff;
-    font-weight: normal;
+    font-weight: bold;
     color: #430099 !important;
+    cursor: pointer;
 }
 
-#step-4 #challenge-animation {
-    background-image: url("../img/rotating_left_right_white_bolder.gif");
-    background-size: 100%;
-}
-
-#step-4 #center-head-animation {
+#step-liveness #center-head-animation {
     background-image: url("../img/recenter_face_outline_white.png");
-    background-size: 65%;
+    background-size: 75%;
 }
 
-#step-4 #move-closer-animation {
+.pc #step-liveness #center-head-animation {
+    background-size: 50%;
+}
+
+#step-liveness #move-closer-animation,
+#step-liveness #move-further-animation {
     background-image: url("../img/recenter_face_outline_white.png");
-    background-size: 65%;
+    background-size: 75%;
 }
 
+#step-liveness #move-head-animation .animation-part3{
+    height: 60%;
+    min-height: 250px;
+}
+#step-liveness #move-phone-animation img{
+    object-fit: contain;
+    width: 100%;
+    height: 70%;
+}
 
-#step-4 #illumination-overlay, #loading {
+.pc #step-liveness #move-closer-animation,
+.pc #step-liveness #move-further-animation {
+    background-size: 50%;
+}
+
+#step-liveness #head-rotation-animation {
+    background-size: 110%;
+}
+.pc #step-liveness #head-rotation-animation {
+    background-size: 80%;
+}
+.video-msg-wrapper.d-none-fadeout{
+    margin-top: 49px ; /* high of header */
+    height: calc(100% - 49px) !important;
+}
+.pc .video-msg-wrapper.d-none-fadeout{
+    margin-top: 88px ; /* high of header */
+    height: calc(100% - 88px) !important;
+}
+#step-liveness .video-msg-wrapper {
+    z-index: 999999;
+    background-color: rgba(255,255,255,0.98);
+}
+
+#step-liveness .video-msg-wrapper .video-msg {
+    padding: 16px;
+    color:black;
+}
+
+#step-liveness .bg-green {background-color: #1e7e34}
+
+#step-liveness #illumination-overlay, #loading {
     position: fixed;
     top: 0; bottom: 0;
     left: 0; right: 0;
     background-color: white;
-    z-index: 9999999;
+    z-index: 9999;
     transition: background-color 100ms linear;
 }
-
-
-
-
-#step-4 #authentication-in-progress {
-    background: white;
+#step-liveness #loading-challenge .loader-wrapper {
+    background: rgba(0,0,0,0.5);
+    padding: 16px;
+    border-radius: 8px;
 }
-#step-4 #authentication-in-progress .loader-text {
+#step-liveness #loading-challenge .loader-text {
+    color: white;
     padding-top: 10px;
-    font-size: 20px;
-    font-weight: 500;
+    font-size: 18px;
 }
-#step-4 #authentication-in-progress.loader-text {
+.pc #step-liveness #loading-challenge .loader-text {
     font-size: 24px;
 }
 
 
 
-.pc #step-5,.pc #step-7,.pc #step-8 {
+
+#step-liveness #authentication-in-progress {
+    background: white;
+}
+#step-liveness #authentication-in-progress .loader-text {
+    padding-top: 10px;
+    font-size: 20px;
+    font-weight: 500;
+}
+.pc #step-liveness #authentication-in-progress.loader-text {
+    font-size: 24px;
+}
+
+
+
+
+.animation-full {
+    margin-bottom: 80px;
+}
+.pc .results {
     margin-left: 0;
 }
-#step-5 .animation,
-#step-7 .animation,
-#step-8 .animation {
+.results .animation{
     flex-direction: column;
     align-items: center!important;
     justify-content: center!important;
 }
-#step-5 .animation .btn,
-#step-7 .animation .btn,
-#step-8 .animation .btn {
+.results .animation .btn:not(.btn-block) {
     padding-left: 4rem;
     padding-right: 4rem;
     margin-top: 4rem;
@@ -405,9 +604,13 @@ header .logo img {
     justify-content: center;
 }
 .loader-animation {
+    width: 80px;
+    height: 80px;
+    position: relative;
+}
+.pc .loader-animation {
     width: 100px;
     height: 100px;
-    position: relative;
 }
 #loading .loader-animation {
     background: url('../img/upload_3x.png') center no-repeat;
@@ -416,8 +619,8 @@ header .logo img {
 .loader-animation > div{
     width: 100%;
     height: 100%;
-    border: 5px solid #ac85df;
-    border-top-color: #430099;
+    border: 5px solid #cccccc;
+    border-top-color: #101010;
     border-radius: 50%;
     position: relative;
     top: 0;
@@ -434,13 +637,87 @@ header .logo img {
 }
 .best-image {
     background-position: center center;
-    background-size: contain;
+    background-size: cover;
     background-repeat: no-repeat;
-    flex: 1;
-    display: flex;
-    width: 100%;
+    width: 220px;
+    height: 250px;
     justify-content: center;
     transform: scaleX(-1);
+    position: relative;
 }
-.best-image > img {transform: scaleX(-1);}
-.pc .best-image { z-index: 999;}
+.best-image img {
+    transform: scaleX(-1);
+    position: absolute;
+    top: -37px;
+    right: -30px;
+}
+
+#best-image-ipv {
+     margin: 0px 0px 20px -112px; /* because best image is 224px */
+ }
+
+.success-message-ipv {
+    text-align:center;
+    margin-bottom:15px
+}
+
+.footer-ipv {
+    max-width: 100% !important;
+    position: static !important;
+}
+
+.success-ipv-block {
+    justify-content:start !important;
+    padding-top: 20px !important;
+}
+
+.wrap-text {
+    white-space: pre-wrap;
+}
+
+.display-block {
+    display: block !important;;
+}
+
+.passed-liveness {
+    margin-left: 10px;
+}
+
+#get-ipv-status-result {
+    white-space: pre-wrap;
+    margin-top: 20px;
+    background-color: #ffc1071a;
+    border: ridge;
+    border-radius:10px;
+}
+
+#get-ipv-portrait {
+    margin-bottom: 20px;
+}
+
+#best-image-ipv {
+    border: ridge;
+    border-radius:10px;
+}
+
+.padT20 {
+    padding-top: 20px;
+}
+
+#challenge-animation {
+    background-image: url("../img/rotating_left_right_white_bolder.gif");
+    background-size: 100%;
+}
+
+.turn-head {
+    word-spacing: 0 !important;
+    height: 77% !important;
+    -webkit-text-stroke-width: 2px;
+    -webkit-text-stroke-color: black;
+}
+
+/*generic*/
+.bg-orange { background-color: #ff6700}
+.bg-green { background-color: #429400}
+.animation-tut .video-tut { display:none!important;}
+.video-tut .animation-tut { display:none!important;}

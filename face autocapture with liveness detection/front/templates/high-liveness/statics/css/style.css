@@ -494,7 +494,8 @@ video {background-color: black}
     background-size: 50%;
 }
 
-#step-liveness #move-closer-animation {
+#step-liveness #move-closer-animation,
+#step-liveness #move-further-animation {
     background-image: url("../img/recenter_face_outline_white.png");
     background-size: 75%;
 }
@@ -509,7 +510,8 @@ video {background-color: black}
     height: 70%;
 }
 
-.pc #step-liveness #move-closer-animation {
+.pc #step-liveness #move-closer-animation,
+.pc #step-liveness #move-further-animation {
     background-size: 50%;
 }
 
@@ -648,6 +650,58 @@ video {background-color: black}
     position: absolute;
     top: -37px;
     right: -30px;
+}
+
+#best-image-ipv {
+     margin: 0px 0px 20px -112px; /* because best image is 224px */
+ }
+
+.success-message-ipv {
+    text-align:center;
+    margin-bottom:15px
+}
+
+.footer-ipv {
+    max-width: 100% !important;
+    position: static !important;
+}
+
+.success-ipv-block {
+    justify-content:start !important;
+    padding-top: 20px !important;
+}
+
+.wrap-text {
+    white-space: pre-wrap;
+}
+
+.display-block {
+    display: block !important;;
+}
+
+.passed-liveness {
+    margin-left: 10px;
+}
+
+#get-ipv-status-result {
+    white-space: pre-wrap;
+    margin-top: 20px;
+    background-color: #ffc1071a;
+    border: ridge;
+    border-radius:10px;
+}
+
+#get-ipv-portrait {
+    margin-bottom: 20px;
+}
+
+#best-image-ipv {
+    border: ridge;
+    border-radius:10px;
+}
+
+.padT20 {
+    padding-top: 20px;
 }
 
 /*generic*/
