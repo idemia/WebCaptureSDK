@@ -1,0 +1,603 @@
+<!--
+Copyright 2020 Idemia Identity & Security
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!DOCTYPE html >
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Document autocapture detection</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/logo-180.png">
+    <link rel="shortcut icon" href="./favicons/logo-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/logo-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/logo-16.png">
+    <link rel="manifest" href="./favicons/manifest.json">
+    <link rel="mask-icon" href="./favicons/safari-pinned-tab.svg" color="#430099">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WebSDK">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#430099"/>
+</head>
+<body>
+    <main class="container-fluid animation-tut">
+<!-- Browser compatibility Check-->
+        <div id="step-compatibility" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <%= __("You seem to be using an unsupported browser.") %>
+            </div>
+            <div class="col-12 browsers-description">
+                <p><%= __("Please use one of following browsers for a better experience") %></p>
+            </div>
+
+            <div class="col-12 browsers-content">
+
+                <div class="browsers os-list">
+                    <div class="browser">
+                        <div id="chrome" class="browser-img"></div><span>Google Chrome Version 66+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="firefox" class="browser-img"></div><span>Mozilla Firefox Version 52+</span>
+                    </div>
+                    <div class="browser">
+                        <div id="safari" class="browser-img"></div><span>Apple Safari Version 11.2+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="opera" class="browser-img"></div><span> Opera Version 55+</span>
+                    </div>
+                    <div  class="browser">
+                        <div id="edge" class="browser-img"></div><span> Microsoft Edge Version 17+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Browser connectivity Check-->
+        <div id="step-weak-network" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center"><%= __("Checking network signal") %></span>
+            </div>
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain-gif" width="100" src="./img/wifi-weak.png" alt="Weak network signal">
+                </div>
+                <div class="text-center description">
+                    <span><%= __("Weak network signal") %> <span class="signal-value"></span></span>
+                    <small class="pt-2">
+                        <span class="download"><%= __("This process only works with a connection speed of at least") %></span>
+                        <span class="upload"><%= __("This process only works with an upload connection speed of at least") %></span>
+                        <span class="signal-min-value"></span>.
+                        <%= __("It appears your network signal is too weak.") %>
+
+                    </small>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" id="check-network"><%= __("re-test network connection") %></button>
+                </div>
+            </div>
+        </div>
+        <!--displayed just before the livess start if no response from connectivity check-->
+        <div id="connectivity-check" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div class="loader-animation"><div></div></div>
+                <span class="description text-center"><%= __("Checking network signal") %></span>
+            </div>
+        </div>
+        <div id="step-good-network" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain-gif" width="100" src="./img/wifi-medium.png" alt="Good network signal">
+                </div>
+                <div class="text-center description">
+                    <span><%= __("Good network signal") %> <span class="signal-value"></span></span>
+                    <small class="pt-2"><%= __("This process only works with a connection speed of at least") %>
+                        <span class="signal-min-value"></span>.
+                        <%= __("so make sure you maintain a good connection.") %>
+                    </small>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" data-target="#step-country-selection"><%= __("i'm ready") %></button>
+                </div>
+            </div>
+        </div>
+<!--Tutorials start-->
+        <div id="step-start-tut" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                    <span class="skip" data-target="#step-country-selection"><%= __("SKIP") %></span>
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("First, get an ID that has your picture.") %></span>
+                <small><%= __("This can be a driver’s license, state ID card, learner’s permit, or passport.") %></small>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-auth-anim-start contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#step-country-selection" data-delay><%= __("I've got one") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- Country & doc type selection -->
+        <div id="step-country-selection" class="row step ">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("What country is the ID from?") %></span>
+            </div>
+            <div class="col-12 animation flex-column">
+                    <div class="row">
+                        <div class="col-12">
+                            <input type="text" id="country-search-bar" placeholder="Search for country" title="select a country">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <ul id="countries">
+                                <li class="country-header"><%= __("Frequently searched countries") %></li>
+                            </ul>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div id="step-doctype-selection" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("What type of") %> <span id="selected-country"></span> <%= __("document is it?") %></span>
+            </div>
+            <div class="col-12 animation flex-column justify-content-start"></div>
+        </div>
+<!-- GENERIC DOC -->
+        <div id="step-scan-doc-unknown" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("Scan your document.") %></span>
+                <small><%= __("Ensure your ID is centered in the frame. Clean your device’s camera if it’s dirty.") %></small>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-scan-back-doc contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-doc-auth" data-doc-type="UNKNOWN"><%= __("Continue") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-unknown-result" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We extracted info from your document.") %></span>
+                <small><%= __("If anything is incorrect, please retake a picture of your document.") %></small>
+            </div>
+            <div class="col-12 animation justify-content-start">
+                <div class="formatted-results">
+                    <div class="result-block">
+                        <div class="result-header"><%= __("First Name") %></div>
+                        <div class="result-value"><%= __("Michael") %></div>
+                    </div>
+                    <div class="result-block">
+                        <div class="result-header"><%= __("Last Name") %></div>
+                        <div class="result-value"><%= __("Daniel") %></div>
+                    </div>
+                    <div class="result-block">
+                        <div class="result-header"><%= __("DOB") %></div>
+                        <div class="result-value"><%= __("1975-03-07") %></div>
+                    </div>
+                    <div class="result-block">
+                        <div class="result-header"><%= __("Adresse") %></div>
+                        <div class="result-value"><%= __("62 Cottonwood Rd, Anytown, MA") %></div>
+                    </div>
+                </div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col-12">
+                            <button class="btn btn-primary btn-block" data-target="#step-country-selection" data-delay><%= __("Restart Demo") %></button>
+                        </div>
+                        <div class="col-12 pt-3">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-type="UNKNOWN" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-unknown-error" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We had some difficulties to capture your document, Ensure all corners are visible.") %></span>
+                <small class="pc-text-left text-center pt-5"><%= __("Example photo") %></small>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain-gif" src="./img/doc-check-back-doc-sample.gif" alt="Computer flat on a table">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-type="UNKNOWN" data-target="#step-doc-auth"><%= __("Retry again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- BACK SIDE -->
+        <div id="step-scan-doc-back" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("Scan the back of your") %> <span class="document-name"></span>.</span>
+                <small>
+                    <%= __("Ensure your ID is centered in the frame") %>
+                    <span class="doc-rule"> <%= __("and that") %> <span class="doc-rule-value"></span> <%= __("clearly visible.") %></span> <br>
+                    <%= __("Clean your device’s camera if it’s dirty.") %>
+                </small>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-scan-back-doc contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-doc-auth" data-doc-type="BACK"><%= __("Continue") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-back-result" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We extracted info from") %>
+                    <span class="doc-rule">
+                        <%= __("the") %> <span class="doc-rule-value"> <%= __("on") %> </span>
+                    </span>
+                    <%= __("your") %> <span class="document-name"></span>.
+                </span>
+                <small><%= __("If anything is incorrect, please retake a picture of the back of your ID.") %></small>
+            </div>
+            <div class="col-12 animation justify-content-start">
+                <div class="formatted-results"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col-12">
+                            <button class="d-none btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Restart Demo") %></button>
+                            <button class="d-none btn btn-primary btn-block continue-demo" data-target="#step-scan-doc-front" data-delay><%= __("looks good, continue") %></button>
+                        </div>
+                        <div class="col-12 pt-3">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-type="BACK" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-back-error" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We had some difficulties to capture your document, Ensure all corners are visible like the example below") %></span>
+                <small class="pc-text-left text-center pt-5">Example photo</small>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain-gif" src="./img/doc-check-back-doc-sample.gif" alt="Computer flat on a table">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-doc-type="BACK" data-target="#step-doc-auth"><%= __("Retry again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- FRONT SIDE -->
+        <div id="step-scan-doc-front" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("Scan the front of your") %> <span class="document-name"></span>.</span>
+                <small>
+                    <%= __("Ensure your ID is centered in the frame") %>
+                    <span class="doc-rule"> <%= __("and that") %> <span class="doc-rule-value"></span> <%= __("clearly visible.") %></span> <br>
+                    <%= __("Clean your device’s camera if it’s dirty.") %>
+                </small>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-scan-front-doc contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-doc-auth" data-doc-type="FRONT" ><%= __("Continue") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-front-result" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We extracted info from the front of your") %> <span class="document-name"></span>.</span>
+                <small><%= __("If anything is incorrect, please retake a picture of your ID.") %></small>
+            </div>
+            <div class="col-12 animation">
+                <div class="formatted-results justify-content-start"><!-- results here --></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col-12">
+                            <button class="d-none btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Restart Demo") %></button>
+                            <button class="d-none btn btn-primary btn-block continue-demo" data-target="#step-scan-doc-back" data-delay><%= __("looks good, continue") %></button>
+                        </div>
+                        <div class="col-12 pt-3">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-type="FRONT" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-front-error" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We had some difficulties to capture your document, Ensure all corners are visible like the example below") %></span>
+                <small class="pc-text-left text-center pt-5"><%= __("Example photo") %></small>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain-gif" src="./img/doc-check-front-doc-sample.gif" alt="Check ID">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-doc-type="FRONT" data-target="#step-doc-auth"><%= __("Retry again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- PASSPORT INSIDE PAGE -->
+        <div id="step-scan-passport" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("Scan the inside page of your passport.") %></span>
+                <small>
+                    <%= __("While holding the passport with one hand, ensure the bottom info and your photo are clearly visible. Clean your phone’s camera if it’s dirty.") %>
+                </small>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-scan-passport contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-doc-auth" data-doc-type="INSIDE_PAGE" ><%= __("Continue") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-passport-result" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We extracted info from the inside page of your passport.") %></span>
+                <small><%= __("If anything is incorrect, please rescan your document.") %></small>
+            </div>
+            <div class="col-12 animation justify-content-start">
+                <div class="formatted-results"><!-- results here --></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col-12">
+                            <button class="d-none btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Restart Demo") %></button>
+                            <button class="d-none btn btn-primary btn-block continue-demo" data-target="#step-scan-doc-back" data-delay><%= __("looks good, continue") %></button>
+                        </div>
+                        <div class="col-12 pt-3">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-type="INSIDE_PAGE" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-passport-error" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description">
+                <span><%= __("We had some difficulties to capture your document, Ensure all corners are visible like the example below") %></span>
+                <small class="pc-text-left text-center pt-5"><%= __("Example photo") %></small>
+            </div>
+            <div class="col-12 animation">
+                <img class="contain-gif" src="./img/doc-check-passport-sample.gif" alt="Check ID">
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-doc-type="INSIDE_PAGE" data-target="#step-doc-auth"><%= __("Retry again") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- Document Capture-->
+        <div id="step-access-permission" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="check-phone">
+                <div class="">
+                    <img class="contain-gif" src="./img/phone-check_2x.png" alt="Check phone">
+                </div>
+                <div class="text-center description">
+                    <span><%= __("In order to authenticate your document, we need access to your phone's camera. Sound good?") %></span>
+                </div>
+                <div class="btn-footer w-100">
+                    <button class="btn btn-primary btn-block" data-target="#connectivity-check"><%= __("i accept") %></button>
+                </div>
+            </div>
+        </div>
+        <div id="step-doc-auth" class="row step d-none">
+            <div class="col-12 animation">
+                <video id="user-video" class="w-100 h-100" autoplay playsinline></video>
+                <div id="doc-auth-mask" class="rotatable-wh doc-auth-mask w-100 h-100 d-flex">
+                    <div class="doc-auth-mask-border d-flex"></div>
+                </div>
+                <div id="align-doc-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="d-none video-msg video-msg-unknown align-self-center"><%= __("Align ID in frame") %></span>
+                    <span class="d-none video-msg video-msg-inside-page align-self-center"><%= __("Align Inside page of ID in frame") %></span>
+                    <span class="d-none video-msg video-msg-front align-self-center"><%= __("Align Front of ID in frame") %></span>
+                    <span class="d-none video-msg video-msg-back align-self-center"><%= __("Align Back of ID in frame") %></span>
+                </div>
+                <div id="blurry-doc-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="video-msg align-self-center"><%= __("Keep your document still") %></span>
+                </div>
+                <div id="scanning-doc-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex flex-column">
+                    <div class="loader-animation loader-animation-authent align-self-center mb-3"><div></div></div>
+                    <span class="video-msg align-self-center"><%= __("Scanning document in progress") %></span>
+                </div>
+                <div id="hold-straight-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="video-msg align-self-center"><%= __("Hold your document straight") %></span>
+                </div>
+                <div id="doc-low-light-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="video-msg align-self-center"><%= __("Low light detected") %></span>
+                </div>
+                <div id="doc-reflection-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="video-msg align-self-center"><%= __("Reflection detected in document") %></span>
+                </div>
+                <div id="too-close-doc-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="video-msg align-self-center"><%= __("Move document further") %></span>
+                </div>
+                <div id="too-far-doc-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="video-msg align-self-center"><%= __("Move document closer") %></span>
+                </div>
+                <div id="doc-captured" class="d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <svg class="doc-captured-border">
+                        <polygon points="0,0" stroke="#ac85df" fill="rgba(67, 0, 153, 0.5)" stroke-linejoin="round" stroke-width="5"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+<!-- Loading Results -->
+        <div id="loading-doc-results" class="loading row step d-none">
+            <div class="col-12 animation">
+                <div class="loader-animation loader-animation-authent"><div></div></div>
+                <span class="description text-center"><%= __("Authenticating…") %>
+                    <small class="text-center"><%= __("Verifying your submitted document") %></small>
+                </span>
+            </div>
+        </div>
+<!-- Technical issue -->
+        <div id="step-doc-auth-ko" class="row step d-none results">
+            <div class="col-12 animation">
+                <img src="./img/failure.svg" alt="failure">
+                <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
+                <span class="description"><small class="text-center"></small></span>
+                <button class="btn btn-primary reset-animations" data-target="#step-country-selection"><%= __("Restart Demo") %></button>
+            </div>
+        </div>
+        <div id="step-doc-auth-tehnical-ko" class="row step d-none results">
+            <div class="col-12 animation">
+                <img src="./img/failure.svg" alt="failure">
+                <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
+                <span class="description"><small class="text-center"></small></span>
+            </div>
+        </div>
+    </main>
+    <script src="<%=DOCSERVER_VIDEO_URL_WITH_BASE_PATH%>/docserver-environment-api.js"></script>
+    <script src="./js/detect-env.js"></script>
+    <script src="<%=DOCSERVER_VIDEO_URL_WITH_BASE_PATH%>/docserver-video-api.js"></script>
+    <script src="<%=DOCSERVER_VIDEO_URL_WITH_BASE_PATH%>/docserver-network-check.js"></script>
+    <script src="./js/index.js"></script>
+</body>
+</html>
