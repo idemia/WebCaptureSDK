@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node . ",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run lint && echo \"WARNING: no test specified\""
   },
   "author": "Idemia",
   "license": "UNLICENSED",
@@ -26,6 +26,12 @@
     "html-webpack-plugin": "^3.2.0",
     "text-replace-html-webpack-plugin": "^1.0.3",
     "i18n-webpack-plugin": "^1.0.0",
-    "webpack": "^4.41.0"
+    "webpack": "^4.41.0",
+    "standardx": "^5.0.0"
+  },
+  "standardx": {
+    "ignore": [
+      "node_modules/**"
+    ]
   }
 }

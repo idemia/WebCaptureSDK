@@ -116,7 +116,6 @@
   "Please fill in the required fields.": "Por favor llene los campos requeridos.",
   "Great!": "¡Excelente!",
   "Terms and Conditions": "Términos y Condiciones",
-  "Please read and accept the terms and conditions to continue.": "Lea y acepte los términos y condiciones para continuar.",
   "Conditions text": "Texto de condiciones",
   "Keep still for 10 sec.": "Quédese quieto durante 10 segundos.",
   "An error occurred during the test.":"An error occurred during the test.",
@@ -130,9 +129,12 @@
   "Brown, dark brown": "Marrón, marrón oscuro",
   "Black, very dark brown": "Negro, marrón muy oscuro",
   "Idemia email required" : "Idemia email required",
-  "I have read and accept the general terms and conditions of use": "He leído y acepto los términos y condiciones generales de uso",
-  "I agree to share my skin color": "Acepto compartir mi color de piel",
   "Keep your phone still and move your head in any direction." : "Mantenga su teléfono quieto y mueva la cabeza en cualquier dirección.",
   "The main light source should be in front of you, not behind or to the side." : "La fuente de luz principal debe estar frente a usted, no detrás o al costado.",
-  "Turn your head left or right" : "Gira tu cabeza hacia la izquierda o hacia la derecha"
+  "Turn your head left or right" : "Gira tu cabeza hacia la izquierda o hacia la derecha",
+  "Thanks for joining members that help improving algorithm." : "Gracias por unirse a los miembros que ayudan a mejorar el algoritmo.",
+  "Will help a lot if you start again similar acquisition with a different device smartphone/PC/WebCam." : "Ayudará mucho si comienza de nuevo una adquisición similar con un teléfono inteligente / PC / WebCam diferente.",
+  "Too Many attempts!" : "¡Demasiados intentos!",
+  "For security reason, we have temporarily disabled access to verification." : "Por motivos de seguridad, hemos inhabilitado temporalmente el acceso a la verificación",
+  "Please try again in" : "Vuelve a intentarlo en"
 }

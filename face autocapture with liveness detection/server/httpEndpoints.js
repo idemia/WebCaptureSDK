@@ -86,6 +86,8 @@ exports.initHttpEndpoints = (app) => {
       res.status(e.status ? e.status : 500).json({ error: 'init-liveness-session failed' });
     }
   });
+
+
   //
   // Receive liveness challenge result from WebioServer
   //
@@ -295,4 +297,5 @@ exports.initHttpEndpoints = (app) => {
     maxAge: '300000'
   }));
 };
+
 

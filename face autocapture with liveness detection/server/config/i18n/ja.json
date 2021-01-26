@@ -114,7 +114,6 @@
   "Please fill in the required fields.": "必須フィールドに入力してください。",
   "Great!": "すごい！",
   "Terms and Conditions": "規約と条件",
-  "Please read and accept the terms and conditions to continue.": "続行するには、利用規約を読んで同意してください。",
   "Conditions text": "条件テキスト",
   "Keep still for 10 sec.": "10秒間静止します。",
   "An error occurred during the test.":"An error occurred during the test.",
@@ -128,9 +127,12 @@
   "Brown, dark brown": "ブラウン、ダークブラウン",
   "Black, very dark brown": "黒、非常に濃い茶色",
   "Idemia email required" : "Idemia email required",
-  "I have read and accept the general terms and conditions of use": "利用規約に同意します",
-  "I agree to share my skin color": "肌の色を共有することに同意します",
   "Keep your phone still and move your head in any direction." : "スマートフォンを動かさずに、頭を任意の方向に動かします。",
   "The main light source should be in front of you, not behind or to the side." : "主な光源は、後ろや横ではなく、目の前にある必要があります。",
-  "Turn your head left or right" : "頭を左または右に向けます"
+  "Turn your head left or right" : "頭を左または右に向けます",
+  "Thanks for joining members that help improving algorithm." : "アルゴリズムの改善に役立つメンバーに参加していただきありがとうございます。",
+  "Will help a lot if you start again similar acquisition with a different device smartphone/PC/WebCam." : "別のデバイスのスマートフォン/ PC / WebCamで同様の取得を再開すると、非常に役立ちます。",
+  "Too Many attempts!" : "試行回数が多すぎます！",
+  "For security reason, we have temporarily disabled access to verification." : "セキュリティ上の理由から、検証へのアクセスを一時的に無効にしました。",
+  "Please try again in" : "もう一度やり直してください"
 }

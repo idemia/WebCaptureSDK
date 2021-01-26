@@ -487,17 +487,17 @@ video {background-color: black}
 
 #step-liveness #center-head-animation {
     background-image: url("../img/recenter_face_outline_white.png");
-    background-size: 75%;
+    background-size: 85%;
 }
 
 .pc #step-liveness #center-head-animation {
-    background-size: 50%;
+    background-size: 60%;
 }
 
 #step-liveness #move-closer-animation,
 #step-liveness #move-further-animation {
     background-image: url("../img/recenter_face_outline_white.png");
-    background-size: 75%;
+    background-size: 85%;
 }
 
 #step-liveness #move-head-animation .animation-part3{
@@ -512,7 +512,7 @@ video {background-color: black}
 
 .pc #step-liveness #move-closer-animation,
 .pc #step-liveness #move-further-animation {
-    background-size: 50%;
+    background-size: 60%;
 }
 
 #step-liveness #head-rotation-animation {
@@ -580,6 +580,19 @@ video {background-color: black}
 
 
 
+#step-liveness #loading-initialized {
+    background: white;
+}
+#step-liveness #loading-initialized .loader-text {
+    padding-top: 10px;
+    font-size: 20px;
+    font-weight: 500;
+}
+.pc #step-liveness #loading-initialized.loader-text {
+    font-size: 24px;
+}
+
+
 
 .animation-full {
     margin-bottom: 80px;
@@ -642,14 +655,24 @@ video {background-color: black}
     width: 220px;
     height: 250px;
     justify-content: center;
-    transform: scaleX(-1);
     position: relative;
 }
 .best-image img {
-    transform: scaleX(-1);
     position: absolute;
     top: -37px;
-    right: -30px;
+    right: 180px;
+}
+
+.video-block,
+.no-header-h-100 {
+    height:calc(100% - 49px);
+    margin-top:49px;
+}
+
+.pc .video-block,
+.pc .no-header-h-100{
+    height:calc(100% - 88px);
+    margin-top:88px;
 }
 
 #best-image-ipv {
@@ -721,3 +744,56 @@ video {background-color: black}
 .bg-green { background-color: #429400}
 .animation-tut .video-tut { display:none!important;}
 .video-tut .animation-tut { display:none!important;}
+
+.retry-fp {
+    margin-top: 0px !important;
+}
+
+.too-many-attempts {
+    font-family: unset;
+    font-size: 32px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.45;
+    letter-spacing: normal;
+    text-align: center;
+    color: #101010;
+}
+.pc .too-many-attempts {
+    width: 1128px;
+    font-size: 44px;
+}
+.for-security-reason {
+    padding-top: 20px;
+    margin: 16px 178px;
+    font-family: unset;
+    font-size: 18px;
+    font-weight: 500;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.42;
+    letter-spacing: normal;
+    text-align: center;
+    color: #4a4a4a;
+}
+.pc .for-security-reason {
+    width: 772px;
+    font-size: 24px;
+}
+
+.please-try-again-in {
+    padding-top: 20px;
+    font-family: unset;
+    font-size: 18px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.42;
+    letter-spacing: normal;
+    text-align: center;
+    color: #4a4a4a;
+}
+.pc .please-try-again-in {
+    font-size: 24px;
+}

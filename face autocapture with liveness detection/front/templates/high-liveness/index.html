@@ -310,46 +310,56 @@ limitations under the License.
                         </button>
                     </div>
                 </div>
-                <video id="user-video" class="w-100 h-100" style="object-fit: cover" autoplay playsinline></video>
-                <div id="loading-challenge" class="d-none-fadeout video-overlay h-100 flex-column">
+                <div class="video-block">
+                    <video id="user-video" class="w-100 h-100" style="object-fit: cover" autoplay playsinline></video>
+                </div>
+                <div id="loading-challenge" class="d-none-fadeout video-overlay no-header-h-100 flex-column">
                     <div class="loader-wrapper d-flex flex-column">
                         <div class="loader-animation  align-self-center"><div></div></div>
                         <span class="loader-text text-center"><%= __("Please wait a moment.") %></span>
                     </div>
                 </div>
-                <div id="authentication-in-progress" class="d-none-fadeout video-overlay w-100 h-100 flex-column">
+                <div id="authentication-in-progress" class="d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
                     <div class="loader-wrapper d-flex flex-column">
                         <div class="loader-animation  align-self-center"><div></div></div>
                         <span class="loader-text text-center"><%= __("Authentication in progress") %> </span>
                     </div>
                 </div>
-                <div id="center-head-animation" class="video-overlay w-100 h-100">
+                <div id="loading-initialized" class="d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
+                    <div class="loader-wrapper d-flex flex-column">
+                        <div class="loader-animation  align-self-center"><div></div></div>
+                        <span class="loader-text text-center"><%= __("Please wait a moment.") %> </span>
+                    </div>
+                </div>
+                <div id="center-head-animation" class="d-none-fadeout video-overlay w-100 no-header-h-100">
                     <span class="video-msg video-msg-center align-self-center"><%= __("Center your face") %></span>
                 </div>
-                <div id="move-closer-animation" class="d-none-fadeout video-overlay w-100 h-100 ">
+                <div id="move-closer-animation" class="d-none-fadeout video-overlay w-100 no-header-h-100 ">
                     <span class="video-msg video-msg-center "><%= __("Move closer") %></span>
                 </div>
-                <div id="move-further-animation" class="d-none-fadeout video-overlay w-100 h-100 ">
+                <div id="move-further-animation" class="d-none-fadeout video-overlay w-100 no-header-h-100 ">
                     <span class="video-msg video-msg-center "><%= __("Move further") %></span>
                 </div>
-                <div id="head-rotation-animation" class="d-none-fadeout video-overlay w-100 h-100"></div>
-                <div id="positive-message" class="d-none-fadeout video-overlay w-100 h-100">
-                    <span class="video-msg video-msg-top bg-green w-100">
-                        <%= __("Good job! Only one more point to go.") %>
-                    </span>
+                <div id="head-rotation-animation" class="d-none-fadeout video-overlay w-100 no-header-h-100"></div>
+                <div id="positive-message" class="row-countdown header countdown-header d-none-fadeout w-100 bg-green">
+                    <div class="col">
+                        <div class="count-down-txt">
+                            <%= __("Good job! Only one more point to go.") %>
+                        </div>
+                    </div>
                 </div>
-                <div id="move-head-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 h-100 flex-column">
+                <div id="move-head-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
                     <div class="animation-part3 mobile-item align-self-center"></div>
                     <div class="animation-part3-pc contain pc-item align-self-center"></div>
                     <span id="still-face" class="video-msg align-self-center">
                         <%= __("Move the dotted line to the point by moving your head.") %>
                     </span>
                 </div>
-                <div id="move-phone-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 h-100 flex-column">
+                <div id="move-phone-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
                     <img src="./img/rotate_head_black_L.gif" width="350" alt="move head" class="align-self-center">
                     <span class="video-msg"><%= __("Move only your head, not the device.") %></span>
                 </div>
-                <div id="phone-not-vertical-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 h-100 flex-column">
+                <div id="phone-not-vertical-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
                     <img src="./img/chevrons_up.png" width="80" alt="Up" class="align-self-center">
                     <span class="video-msg align-self-center"><%= __("Please hold your phone vertically.") %></span>
                 </div>
@@ -454,6 +464,21 @@ limitations under the License.
                 <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
                 <span class="description"><small class="text-center"></small></span>
                 <button class="btn btn-primary reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+            </div>
+        </div>
+
+        <div id="step-liveness-fp-block" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/icons-product-lock-large.svg" alt="failure">
+                <span class="too-many-attempts"><%= __("Too Many attempts!") %></span>
+                <span class="for-security-reason"><%= __("For security reason, we have temporarily disabled access to verification.") %></span>
+                <span class="please-try-again-in"><%= __("Please try again in") %> <span class="fp-countdown"><small class="text-center"></small></span></span>
+                <button class="btn btn-primary reset-animations retry-fp" data-target="#step-liveness"><%= __("try again") %></button>
             </div>
         </div>
         <!-- Selfie upload -->

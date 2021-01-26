@@ -19,7 +19,7 @@
   "Bring your phone up to eye level.":"Amenez votre téléphone à hauteur des yeux.",
   "For the next task, make sure your computer is flat on a table or other surface.":"Pour la tâche suivante, assurez-vous que votre ordinateur est à plat sur une table ou une autre surface.",
   "For this task, you'll need to center your face.":"Pour cette tâche, vous devrez centrer votre visage.",
-  "For this task, center your face and stay still while the timer counts down.":"Pour cette tâche, vous devrez centrer votre visage et restez immobile pendant le compte à rebours.",
+  "For this task, center your face and stay still while the timer counts down.":"Pour cette tâche, vous devrez centrer votre visage et rester immobile pendant le compte à rebours.",
   "Are you ready to start?":"Êtes-vous prêt à commencer?",
   "If not, you can rewatch the video to learn helpful tips on how to complete it.":"Sinon, vous pouvez visionner à nouveau la vidéo pour apprendre des astuces utiles pour la compléter.",
   "i'm ready":"je suis prêt",
@@ -117,7 +117,6 @@
   "Please fill in the required fields.": "Veuillez renseigner les champs obligatoires.",
   "Great!": "Super !",
   "Terms and Conditions": "Conditions générales",
-  "Please read and accept the terms and conditions to continue.":"",
   "Keep still for 10 sec.": "Restez immobile pendant 10 sec.",
   "Get GIPS portrait - dev only !": "Récupérer l'image depuis GIPS - dev !!",
   "Get GIPS transaction - dev only !": "Récupérer la transaction GIPS - dev !!",
@@ -129,9 +128,12 @@
   "Brown, dark brown": "Marron, marron foncé",
   "Black, very dark brown": "Noir, marron très foncé",
   "Idemia email required" : "Un email Idemia est requis",
-  "I have read and accept the general terms and conditions of use": "J'ai lu et j'accepte les conditions générales d'utilisation",
-  "I agree to share my skin color": "J'accepte de partager ma couleur de peau",
   "Keep your phone still and move your head in any direction." : "Gardez votre téléphone immobile et bougez votre tête dans n'importe quelle direction.",
   "The main light source should be in front of you, not behind or to the side." : "La source lumineuse principale doit être en face de vous, pas derrière ou sur le côté.",
-  "Turn your head left or right" : "Tournez votre tête à gauche ou à droite"
+  "Turn your head left or right" : "Tournez votre tête à gauche ou à droite",
+  "Thanks for joining members that help improving algorithm." : "Merci d'avoir rejoint les membres qui aident à améliorer notre algorithme.",
+  "Will help a lot if you start again similar acquisition with a different device smartphone/PC/WebCam." : "Celà nous aidera beaucoup si vous recommencez une acquisition similaire avec un autre smartphone/PC/WebCam.",
+  "Too Many attempts!" : "Trop d'essais!",
+  "For security reason, we have temporarily disabled access to verification." : "Pour des raisons de sécurité, nous avons temporairement désactivé l'accès à la vérification.",
+  "Please try again in" : "Veuillez réessayer dans"
 }

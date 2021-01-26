@@ -37,7 +37,6 @@ values.VIDEO_SERVER_BASE_PATH = values.VIDEO_SERVER_BASE_PATH || '/video-server'
 values.DEMO_HEALTH_PATH = values.DEMO_HEALTH_PATH || '/capabilities'; // capabilities url of demo-server, should be fixed as /health on prod
 values.CODING_QUALITY_THRESHOLD = values.CODING_QUALITY_THRESHOLD || 0;
 values.MATCHING_SCORE_THRESHOLD = values.MATCHING_SCORE_THRESHOLD || 3000;
-values.ENABLE_IMAGE_COMPRESSION = values.ENABLE_IMAGE_COMPRESSION || true;
 values.GIPS_TENANT_ROLE = values.GIPS_TENANT_ROLE || 'RELYING_SERVICE';
 values.API_KEY_SECRET_BIOMETRICS = values.API_KEY_SECRET_BIOMETRICS || values.WEB_SDK_LIVENESS_ID_DOC;
 values.API_KEY_SECRET_WEBSDK = values.API_KEY_SECRET_WEBSDK || values.WEB_SDK_LIVENESS_ID_DOC;
