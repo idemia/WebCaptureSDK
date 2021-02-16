@@ -57,6 +57,12 @@ Within the dashboard `API_KEY`, the required values are:
    BIOSERVER_CORE_URL: 'https://XXXXXXXXXX/bioserver-app/v2',
    BIOSERVER_VIDEO_URL: 'https://XXXXXXXXXX',
    ```
+6. Create a TLS [keypair and certificate](./server/config/certs/README.md): You can also convert an existing key/certificate in PEM format into PKCS#12 file format, or use an existing one. Then fill the values in 'server/config/defaults.js' with the corresponding location and password. Example:
+
+   ```shell
+   TLS_KEYSTORE_PATH: path.join(__dirname, 'certs/demo-server.p12'),
+   TLS_KEYSTORE_PASSWORD: '12345678',
+   ```
 
 ### Step 3: Run and test the sample application
 
@@ -136,7 +142,7 @@ If you want to link Biometric Services with ID&V/GIPS, edit the file `/server/co
 | ./server/gips-api.js                    | Allow communication with GIPS API                            |
 | ./server/config/index.js                | Read the Server configuration file and set defaults keys     |
 | ./server/config/defaults.js             | Server configuration file                                    |
-| ./server/config/certs/*                 | Certificate files                                            |
+| ./server/config/certs/*                 | Procedure for TLS certificate generation                     |
 | ./server/config/i18n/*                  | Translation files (spanish / french / japanese)              |
 | ./front                                 | Front-end side package                                       |
 | ./front/utils/*                         | Common resources called by front-end JS                      |

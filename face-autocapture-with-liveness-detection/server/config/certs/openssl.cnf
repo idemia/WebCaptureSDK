@@ -4,9 +4,9 @@ distinguished_name = req_distinguished_name
 [req_distinguished_name]
 [ v3_req ]
 basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+keyUsage = digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = bioserver-video
-DNS.2 = bioserver-video-cluster
-DNS.3 = bioserver
+DNS.1 = localhost
+IP.1 = 127.0.0.1
+

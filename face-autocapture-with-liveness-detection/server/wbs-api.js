@@ -18,9 +18,9 @@ limitations under the License.
 
 const fetch = require('node-fetch');
 const FormData = require('form-data');
-const _ = require('lodash');
 const config = require('./config');
-const debug = require('debug')('front:app:api')
+const debug = require('debug')('front:app:api');
+const agent = require('./httpUtils').getAgent(config.WBS_TLS_TRUSTSTORE_PATH);
 
 module.exports = {
     getSession: getSession,
@@ -28,47 +28,48 @@ module.exports = {
     getLivenessChallengeResult: getLivenessChallengeResult,
     createFace: createFace,
     getFaceImage: getFaceImage,
-    doMatch: doMatch,
-}
+    doMatch: doMatch
+};
 
 function getSession() {
-    let bodyContentCallback = {
-        'imageStorageEnabled': true,
-        'livenessMode': config.LIVENESS_MODE,
-        'numberOfChallenge': config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE,
-        'callbackURL': config.SERVER_PUBLIC_ADDRESS  + config.BASE_PATH + config.LIVENESS_RESULT_CALLBACK_PATH
+    const bodyContentCallback = {
+        imageStorageEnabled: true,
+        livenessMode: config.LIVENESS_MODE,
+        numberOfChallenge: config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE,
+        callbackURL: config.SERVER_PUBLIC_ADDRESS + config.BASE_PATH + config.LIVENESS_RESULT_CALLBACK_PATH
     };
-    let bodyContentNoCallback = {
-        'imageStorageEnabled': true,
-        'livenessMode': config.LIVENESS_MODE,
-        'numberOfChallenge': config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE,
+    const bodyContentNoCallback = {
+        imageStorageEnabled: true,
+        livenessMode: config.LIVENESS_MODE,
+        numberOfChallenge: config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE
     };
-    if( config.LIVENESS_SECURITY_LEVEL){
-        bodyContentCallback.securityLevel =  config.LIVENESS_SECURITY_LEVEL;
-        bodyContentNoCallback.securityLevel =  config.LIVENESS_SECURITY_LEVEL;
+    if (config.LIVENESS_SECURITY_LEVEL) {
+        bodyContentCallback.securityLevel = config.LIVENESS_SECURITY_LEVEL;
+        bodyContentNoCallback.securityLevel = config.LIVENESS_SECURITY_LEVEL;
     }
 
     return fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + '/init-liveness-session', {
         method: 'POST',
         // if callback is disabled, don't pass the callbackURL to bioserver-core
         body: JSON.stringify(config.DISABLE_CALLBACK ? bodyContentNoCallback : bodyContentCallback),
-        headers: _.merge({'content-type': 'application/json'}, authenticationHeader(true))
+        headers: Object.assign({ 'content-type': 'application/json' }, authenticationHeader(true)),
+        agent: agent
     }).then(function (res) {
-        if (res.status !== 201) return  Promise.reject(res);
-        else return res.headers.get('location').split('/bio-sessions/')[1]
-    })
+        return res.status === 201 ? res.headers.get('location').split('/bio-sessions/')[1] : Promise.reject(res);
+    });
 }
 
 function getCapabilities() {
     return fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + config.VIDEO_HEALTH_PATH, {
         method: 'GET',
-        headers: authenticationHeader(true)
+        headers: authenticationHeader(true),
+        agent: agent
     }).then(function (res) {
-        if (res.status !== 200) return  Promise.reject(res);
-        return res.json();
-    })
+        return res.status === 200 ? res.json() : Promise.reject(res);
+    });
 }
- /**
+
+/**
  * retrieve challenge result for a given session
  * @param sessionId
  * @param livenessMode
@@ -80,23 +81,23 @@ function getLivenessChallengeResult(sessionId, livenessMode, numberOfChallenge, 
     let url = config.BIOSERVER_CORE_URL + '/bio-sessions/' + sessionId + '/liveness-challenge-result';
 
     if (livenessMode) {
-        url += "/"+livenessMode;
+        url += '/' + livenessMode;
         if (securityLevel) {
-            url += "/"+securityLevel;
+            url += '/' + securityLevel;
         }
         if (numberOfChallenge) {
-            url += "?numberOfChallenge="+numberOfChallenge;
+            url += '?numberOfChallenge=' + numberOfChallenge;
         }
     }
 
-    //debug('>> url {}', url);
+    // debug('>> url {}', url);
     return fetch(url, {
         method: 'GET',
-        headers: authenticationHeader(true)
+        headers: authenticationHeader(true),
+        agent: agent
     }).then(function (res) {
-        if (res.status !== 200) return  Promise.reject(res);
-        return res.json();
-    })
+        return res.status === 200 ? res.json() : Promise.reject(res);
+    });
 }
 
 /**
@@ -114,21 +115,21 @@ function createFace(sessionId, imageFile, imageFaceInfo = {}) {
     return fetch(config.BIOSERVER_CORE_URL + '/bio-sessions/' + sessionId + '/faces', {
         method: 'POST',
         body: formData,
-        headers: authenticationHeader(false)
-    }).then( res => {
-        if (res.status !== 201) return  Promise.reject(res);
-        else return res.headers.get('location').split('/faces/')[1]
-    }). then( faceId => {
-        return fetch(config.BIOSERVER_CORE_URL + '/bio-sessions/' + sessionId + '/faces/' + faceId , {
+        headers: authenticationHeader(false),
+        agent: agent
+    }).then(res => {
+        return res.status === 201 ? res.headers.get('location').split('/faces/')[1] : Promise.reject(res);
+    }).then(faceId => {
+        return fetch(config.BIOSERVER_CORE_URL + '/bio-sessions/' + sessionId + '/faces/' + faceId, {
             method: 'GET',
-            headers: _.merge({'content-type': 'application/json'}, authenticationHeader(false))
-        })
-    }).then( res => {
-        if (res.status !== 200) return  Promise.reject(res);
-        return res.json();
+            headers: Object.assign({ 'content-type': 'application/json' }, authenticationHeader(false)),
+            agent: agent
+        });
+    }).then(res => {
+        return res.status === 200 ? res.json() : Promise.reject(res);
     });
-
 }
+
 /**
  * retrieve face for a given session
  * @param sessionId
@@ -137,17 +138,18 @@ function createFace(sessionId, imageFile, imageFaceInfo = {}) {
  */
 function getFaceImage(sessionId, faceId) {
     let url = config.BIOSERVER_CORE_URL + '/bio-sessions/' + sessionId + '/faces/' + faceId + '/image';
-    if(config.ENABLE_IMAGE_COMPRESSION){
+    if (config.ENABLE_IMAGE_COMPRESSION) {
         url = url + '?compression=true';
     }
-    return fetch(url , {
+    return fetch(url, {
         method: 'GET',
-        headers: _.merge({'content-type': 'application/json'}, authenticationHeader(false))
-    }).then( res => {
-        if (res.status !== 200) return  Promise.reject(res);
-        return res.buffer();
+        headers: Object.assign({ 'content-type': 'application/json' }, authenticationHeader(false)),
+        agent: agent
+    }).then(res => {
+        return res.status === 200 ? res.buffer() : Promise.reject(res);
     });
 }
+
 /**
  * match reference face with faces associated to session
  * @param sessionId
@@ -155,18 +157,17 @@ function getFaceImage(sessionId, faceId) {
  * @returns match result
  */
 function doMatch(sessionId, referenceFaceId) {
-    return fetch(config.BIOSERVER_CORE_URL + '/bio-sessions/' + sessionId + '/faces/' + referenceFaceId + '/matches' , {
+    return fetch(config.BIOSERVER_CORE_URL + '/bio-sessions/' + sessionId + '/faces/' + referenceFaceId + '/matches', {
         method: 'GET',
-        headers: _.merge({'content-type': 'application/json'}, authenticationHeader(false))
-    }).then( res => {
-        if (res.status !== 200) return  Promise.reject(res);
-        return res.json();
+        headers: Object.assign({ 'content-type': 'application/json' }, authenticationHeader(false)),
+        agent: agent
+    }).then(res => {
+        return res.status === 200 ? res.json() : Promise.reject(res);
     });
 }
 
 function authenticationHeader(webSDKServices) {
     const headers = {};
-    headers['apikey'] =  webSDKServices ? config.API_KEY_SECRET_WEBSDK : config.API_KEY_SECRET_BIOMETRICS;
-
+    headers.apikey = webSDKServices ? config.API_KEY_SECRET_WEBSDK : config.API_KEY_SECRET_BIOMETRICS;
     return headers;
 }

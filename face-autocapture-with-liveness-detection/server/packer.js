@@ -22,71 +22,73 @@ const debug = require('debug')('front:packer');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TextReplaceHtmlWebpackPlugin = require('text-replace-html-webpack-plugin');
-const I18nPlugin = require("i18n-webpack-plugin");
+const I18nPlugin = require('i18n-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const languages = {en: null};
+const languages = { en: null };
 
 config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
-    try{
-        if (lang!== 'en') languages[lang] =  require(`./config/i18n/${lang}.json`);
-    } catch(err) {
+    try {
+        if (lang !== 'en') {
+            languages[lang] = require(`./config/i18n/${lang}.json`);
+        }
+    } catch (err) {
         debug(`Warning! No ${lang}.json found, fallback to english for this language`);
     }
 });
-
 
 // generate liveness package by mode
 
 exports.pack = function pack() {
     const mode = process.env.NODE_ENV ? 'production' : 'development';
     const devtool = process.env.NODE_ENV ? false : 'source-map';
-    console.log('>> process.env.NODE_ENV = ', process.env.NODE_ENV, {mode}, {devtool});
+    console.log('>> process.env.NODE_ENV = ', process.env.NODE_ENV, { mode }, { devtool });
     // generate liveness high package
-    if(config.LIVENESS_MODE=== "LIVENESS_HIGH") {
-        Object.keys(languages).map(function (language) {
-            debug(`Generating ${language} package ...`);
+    if (config.LIVENESS_MODE === 'LIVENESS_HIGH') {
+        Object.keys(languages).forEach(function (language) {
+            debug(`Generating ${language} package...`);
             webpack({
                 mode: mode,
                 name: language,
                 context: __dirname,
                 entry: {
-                    "index": "../front/templates/high-liveness/index.js",
-                    "detect-env": "../front/utils/detect-env.js"
+                    index: '../front/templates/high-liveness/index.js',
+                    'detect-env': '../front/utils/detect-env.js'
                 },
                 devtool: devtool,
                 output: {
                     path: path.join(__dirname, `../front/high-liveness/${language}/js/`),
                     publicPath: 'js',
-                    filename: `[name].js`
+                    filename: '[name].js'
                 },
                 plugins: [
                     new CleanWebpackPlugin(),
-                    new I18nPlugin(languages[language], {failOnMissing: true}),
+                    new I18nPlugin(languages[language], { failOnMissing: true }),
                     new HtmlWebpackPlugin({
                         inject: false,
-                        filename: `../index.html`, // relative to thisObj.output.path
+                        filename: '../index.html', // relative to thisObj.output.path
                         template: '../front/templates/high-liveness/index.html'
                     }),
                     new HtmlWebpackPlugin({
                         inject: false,
-                        filename: `../../../home-high/index.html`, // relative to thisObj.output.path
+                        filename: '../../../home-high/index.html', // relative to thisObj.output.path
                         template: '../front/templates/high-liveness/home.html'
                     }),
-                    new TextReplaceHtmlWebpackPlugin({ replacementArray : [
+                    new TextReplaceHtmlWebpackPlugin({
+                        replacementArray: [
                             {
-                                regex : config.IDPROOFING ? /<li><a href=".\/high-liveness\/\?enableMatching=true">High liveness with matching<\/a><\/li>/ : '',
-                                replace : ''
+                                regex: config.IDPROOFING ? /<li><a href=".\/high-liveness\/\?enableMatching=true">High liveness with matching<\/a><\/li>/ : '',
+                                replace: ''
                             }
                         ]
                     }),
                     new webpack.DefinePlugin({
-                        'BASE_PATH': JSON.stringify(config.BASE_PATH),
-                        'VIDEO_URL': JSON.stringify(config.BIOSERVER_VIDEO_URL),
-                        'VIDEO_BASE_PATH': JSON.stringify(config.VIDEO_SERVER_BASE_PATH),
-                        'JAVASCRIPT_PATH': JSON.stringify(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH),
-                        'DISABLE_CALLBACK': JSON.stringify(config.DISABLE_CALLBACK),
-                        'IDPROOFING': JSON.stringify(config.IDPROOFING)
+                        BASE_PATH: JSON.stringify(config.BASE_PATH),
+                        VIDEO_URL: JSON.stringify(config.BIOSERVER_VIDEO_URL),
+                        VIDEO_BASE_PATH: JSON.stringify(config.VIDEO_SERVER_BASE_PATH),
+                        JAVASCRIPT_PATH: JSON.stringify(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH),
+                        DISABLE_CALLBACK: JSON.stringify(config.DISABLE_CALLBACK),
+                        IDPROOFING: JSON.stringify(config.IDPROOFING)
                     }),
                     new CopyPlugin([
                         {
@@ -95,66 +97,67 @@ exports.pack = function pack() {
                         }
                     ])
                 ]
-            }).watch({poll: 1000}, (err, stats) => {
+            }).watch({ poll: 1000 }, (err, stats) => {
                 if (err) {
-                    throw err
+                    throw err;
                 }
-                const jsonStats = stats.toJson()
+                const jsonStats = stats.toJson();
                 if (jsonStats.errors.length > 0) {
-                    console.log('pack errors', jsonStats.errors.toString())
+                    console.log('pack errors', jsonStats.errors.toString());
                 }
-                debug(`>> ${language} package generated`);
+                debug(`>> ${language} package generated`);
                 if (jsonStats.warnings.length > 0) {
-                    console.log('pack warnings', jsonStats.warnings.toString())
+                    console.log('pack warnings', jsonStats.warnings.toString());
                 }
-            })
+            });
         });
     }
     // generate liveness medium package
-    if(config.LIVENESS_MODE=== "LIVENESS_MEDIUM") {
-        Object.keys(languages).map(function (language) {
-            debug(`Generating ${language} package ...`);
+    if (config.LIVENESS_MODE === 'LIVENESS_MEDIUM') {
+        Object.keys(languages).forEach(function (language) {
+            debug(`Generating ${language} package...`);
             webpack({
                 mode: mode,
                 name: language,
                 context: __dirname,
                 entry: {
-                    "index": "../front/templates/medium-liveness/index.js",
-                    "detect-env": "../front/utils/detect-env.js"
+                    index: '../front/templates/medium-liveness/index.js',
+                    'detect-env': '../front/utils/detect-env.js'
                 },
                 devtool: devtool,
                 output: {
                     path: path.join(__dirname, `../front/medium-liveness/${language}/js/`),
                     publicPath: 'js',
-                    filename: `[name].js`
+                    filename: '[name].js'
                 },
                 plugins: [
                     new CleanWebpackPlugin(),
-                    new I18nPlugin(languages[language], {failOnMissing: true}),
+                    new I18nPlugin(languages[language], { failOnMissing: true }),
                     new HtmlWebpackPlugin({
                         inject: false,
-                        filename: `../index.html`, // relative to thisObj.output.path
+                        filename: '../index.html', // relative to thisObj.output.path
                         template: '../front/templates/medium-liveness/index.html'
                     }),
                     new HtmlWebpackPlugin({
                         inject: false,
-                        filename: `../../../home-medium/index.html`, // relative to thisObj.output.path
+                        filename: '../../../home-medium/index.html', // relative to thisObj.output.path
                         template: '../front/templates/medium-liveness/home.html'
                     }),
-                    new TextReplaceHtmlWebpackPlugin({ replacementArray : [
+                    new TextReplaceHtmlWebpackPlugin({
+                        replacementArray: [
                             {
-                                regex : config.IDPROOFING ? /<li><a href=".\/medium-liveness\/\?enableMatching=true">Medium liveness with matching<\/a><\/li>/ : '',
-                                replace : ''
+                                regex: config.IDPROOFING ? /<li><a href=".\/medium-liveness\/\?enableMatching=true">Medium liveness with matching<\/a><\/li>/ : '',
+                                replace: ''
                             }
                         ]
                     }),
                     new webpack.DefinePlugin({
-                        'BASE_PATH': JSON.stringify(config.BASE_PATH),
-                        'VIDEO_URL': JSON.stringify(config.BIOSERVER_VIDEO_URL),
-                        'VIDEO_BASE_PATH': JSON.stringify(config.VIDEO_SERVER_BASE_PATH),
-                        'JAVASCRIPT_PATH': JSON.stringify(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH),
-                        'DISABLE_CALLBACK': JSON.stringify(config.DISABLE_CALLBACK),
-                        'IDPROOFING': JSON.stringify(config.IDPROOFING)
+                        BASE_PATH: JSON.stringify(config.BASE_PATH),
+                        VIDEO_URL: JSON.stringify(config.BIOSERVER_VIDEO_URL),
+                        VIDEO_BASE_PATH: JSON.stringify(config.VIDEO_SERVER_BASE_PATH),
+                        JAVASCRIPT_PATH: JSON.stringify(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH),
+                        DISABLE_CALLBACK: JSON.stringify(config.DISABLE_CALLBACK),
+                        IDPROOFING: JSON.stringify(config.IDPROOFING)
                     }),
                     new CopyPlugin([
                         {
@@ -163,68 +166,69 @@ exports.pack = function pack() {
                         }
                     ])
                 ]
-            }).watch({poll: 1000}, (err, stats) => {
+            }).watch({ poll: 1000 }, (err, stats) => {
                 if (err) {
-                    throw err
+                    throw err;
                 }
-                const jsonStats = stats.toJson()
+                const jsonStats = stats.toJson();
                 if (jsonStats.errors.length > 0) {
-                    console.log('pack errors', jsonStats.errors.toString())
+                    console.log('pack errors', jsonStats.errors.toString());
                 }
-                debug(`>> ${language} package generated`);
+                debug(`>> ${language} package generated`);
                 if (jsonStats.warnings.length > 0) {
-                    console.log('pack warnings', jsonStats.warnings.toString())
+                    console.log('pack warnings', jsonStats.warnings.toString());
                 }
-            })
+            });
         });
     }
     // generate passive liveness package
-    if(config.LIVENESS_MODE=== "LIVENESS_PASSIVE") {
-        Object.keys(languages).map(function (language) {
-            debug(`Generating ${language} package ...`);
+    if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE') {
+        Object.keys(languages).forEach(function (language) {
+            debug(`Generating ${language} package...`);
             webpack({
                 mode: mode,
                 name: language,
                 context: __dirname,
                 entry: {
-                    "index": "../front/templates/passive-liveness/index.js",
-                    "detect-env": "../front/utils/detect-env.js"
+                    index: '../front/templates/passive-liveness/index.js',
+                    'detect-env': '../front/utils/detect-env.js'
                 },
                 devtool: devtool,
                 output: {
 
                     path: path.join(__dirname, `../front/passive-liveness/${language}/js/`),
                     publicPath: 'js',
-                    filename: `[name].js`
+                    filename: '[name].js'
                 },
                 plugins: [
                     new CleanWebpackPlugin(),
-                    new I18nPlugin(languages[language], {failOnMissing: true}),
+                    new I18nPlugin(languages[language], { failOnMissing: true }),
                     new HtmlWebpackPlugin({
                         inject: false,
-                        filename: `../index.html`, // relative to thisObj.output.path
+                        filename: '../index.html', // relative to thisObj.output.path
                         template: '../front/templates/passive-liveness/index.html'
                     }),
                     new HtmlWebpackPlugin({
                         inject: false,
-                        filename: `../../../home-passive/index.html`, // relative to thisObj.output.path
+                        filename: '../../../home-passive/index.html', // relative to thisObj.output.path
                         template: '../front/templates/passive-liveness/home.html'
                     }),
-                    new TextReplaceHtmlWebpackPlugin({ replacementArray : [
+                    new TextReplaceHtmlWebpackPlugin({
+                        replacementArray: [
                             {
-                                regex : config.IDPROOFING ? /<li><a href=".\/passive-liveness\/\?enableMatching=true">Passive liveness with matching<\/a><\/li>/ : '',
-                                replace : ''
+                                regex: config.IDPROOFING ? /<li><a href=".\/passive-liveness\/\?enableMatching=true">Passive liveness with matching<\/a><\/li>/ : '',
+                                replace: ''
                             }
                         ]
                     }),
                     new webpack.DefinePlugin({
-                        'BASE_PATH': JSON.stringify(config.BASE_PATH),
-                        'VIDEO_URL': JSON.stringify(config.BIOSERVER_VIDEO_URL),
-                        'VIDEO_BASE_PATH': JSON.stringify(config.VIDEO_SERVER_BASE_PATH),
-                        'JAVASCRIPT_PATH': JSON.stringify(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH),
-                        'DISABLE_CALLBACK': JSON.stringify(config.DISABLE_CALLBACK),
-                        'DEMO_HEALTH_PATH': JSON.stringify(config.DEMO_HEALTH_PATH),
-                        'IDPROOFING': JSON.stringify(config.IDPROOFING)
+                        BASE_PATH: JSON.stringify(config.BASE_PATH),
+                        VIDEO_URL: JSON.stringify(config.BIOSERVER_VIDEO_URL),
+                        VIDEO_BASE_PATH: JSON.stringify(config.VIDEO_SERVER_BASE_PATH),
+                        JAVASCRIPT_PATH: JSON.stringify(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH),
+                        DISABLE_CALLBACK: JSON.stringify(config.DISABLE_CALLBACK),
+                        DEMO_HEALTH_PATH: JSON.stringify(config.DEMO_HEALTH_PATH),
+                        IDPROOFING: JSON.stringify(config.IDPROOFING)
                     }),
                     new CopyPlugin([
                         {
@@ -233,22 +237,22 @@ exports.pack = function pack() {
                         }
                     ])
                 ]
-            }).watch({poll: 1000}, (err, stats) => {
+            }).watch({ poll: 1000 }, (err, stats) => {
                 if (err) {
-                    throw err
+                    throw err;
                 }
-                const jsonStats = stats.toJson()
+                const jsonStats = stats.toJson();
                 if (jsonStats.errors.length > 0) {
-                    console.log('pack errors', jsonStats.errors.toString())
+                    console.log('pack errors', jsonStats.errors.toString());
                 }
 
                 if (jsonStats.warnings.length > 0) {
-                    console.log('pack warnings', jsonStats.warnings.toString())
+                    console.log('pack warnings', jsonStats.warnings.toString());
                 }
-                debug(`>> passive liveness package generated for  `, language);
+                debug('>> passive liveness package generated for ', language);
             });
         });
     }
 
     
-}
+};

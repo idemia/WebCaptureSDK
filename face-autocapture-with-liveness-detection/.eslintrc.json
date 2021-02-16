@@ -4,19 +4,25 @@
   "rules": {
     "indent": [
       "error",
-      2,
+      4,
       {
         "FunctionDeclaration": {
           "parameters": "first"
         },
-        "CallExpression": {
-          "arguments": "first"
-        }
+        "SwitchCase": 1
       }
     ],
     "semi": [
       2,
       "always"
+    ],
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "always",
+        "named": "never",
+        "asyncArrow": "always"
+      }
     ],
     "no-console": "error",
     "no-alert": "error",

@@ -19,26 +19,26 @@ limitations under the License.
  * must be ES5 compatible
  **/
 if (BioserverEnvironment) {
-    var env = BioserverEnvironment.detection();
-    var envDetectionPage = document.querySelector('#step-compatibility');
+    const env = BioserverEnvironment.detection();
+    const envDetectionPage = document.querySelector('#step-compatibility');
     if (env.envDetected) {
-        var browsersDescription = envDetectionPage.querySelector('.browsers-description ');
-        var envOS = env.envDetected.os;
-        var envBrowser = env.envDetected.browser;
+        const browsersDescription = envDetectionPage.querySelector('.browsers-description ');
+        const envOS = env.envDetected.os;
+        const envBrowser = env.envDetected.browser;
         if (!envOS.isSupported) {
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
-            envDetectionPage.querySelector('.description').textContent = __("You seem to be using an unsupported operating system.");
-            browsersDescription.textContent = __("Please use one of following operating systems for a better experience");
-            var osList = envDetectionPage.querySelector('.os-list');
-            osList.innerHTML = "";
-            for (var osIndex in envOS.supportedList) {
-                var osInfo = envOS.supportedList[osIndex];
-                var os = document.createElement('div');
+            envDetectionPage.querySelector('.description').textContent = __('You seem to be using an unsupported operating system.');
+            browsersDescription.textContent = __('Please use one of following operating systems for a better experience');
+            const osList = envDetectionPage.querySelector('.os-list');
+            osList.innerHTML = '';
+            for (const osIndex in envOS.supportedList) {
+                const osInfo = envOS.supportedList[osIndex];
+                const os = document.createElement('div');
                 os.className = 'os';
-                var osImg = document.createElement('div');
+                const osImg = document.createElement('div');
                 osImg.id = osInfo.toLowerCase().replace(' ', '-');
                 osImg.className = 'os-img';
-                var osDesc = document.createElement('span');
+                const osDesc = document.createElement('span');
                 osDesc.innerHTML = osInfo;
                 os.appendChild(osImg);
                 os.appendChild(osDesc);
@@ -46,18 +46,18 @@ if (BioserverEnvironment) {
             }
         } else if (!envBrowser.isSupported) {
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
-            envDetectionPage.querySelector('.description').textContent = __("You seem to be using an unsupported browser.");
-            browsersDescription.textContent = __("Please use one of following browsers for a better experience");
-            var browsersList = envDetectionPage.querySelector('.browsers');
-            browsersList.innerHTML = "";
-            for (var browserIndex in envBrowser.supportedList) {
-                var browserInfo = envBrowser.supportedList[browserIndex];
-                var browser = document.createElement('div');
+            envDetectionPage.querySelector('.description').textContent = __('You seem to be using an unsupported browser.');
+            browsersDescription.textContent = __('Please use one of following browsers for a better experience');
+            const browsersList = envDetectionPage.querySelector('.browsers');
+            browsersList.innerHTML = '';
+            for (const browserIndex in envBrowser.supportedList) {
+                const browserInfo = envBrowser.supportedList[browserIndex];
+                const browser = document.createElement('div');
                 browser.className = 'browser';
-                var browserImg = document.createElement('div');
+                const browserImg = document.createElement('div');
                 browserImg.id = browserInfo.name.toLowerCase().replace(' ', '-');
                 browserImg.className = 'browser-img';
-                var browserDesc = document.createElement('span');
+                const browserDesc = document.createElement('span');
                 browserDesc.innerHTML = browserInfo.name + ' Version ' + browserInfo.minimumVersion + '+';
                 browser.appendChild(browserImg);
                 browser.appendChild(browserDesc);

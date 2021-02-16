@@ -14,34 +14,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const _ = require('lodash')
+/* eslint-disable no-console */
+const defaults = require('./defaults');
+const values = Object.assign({}, defaults);
 
-const defaults = require('./defaults')
-
-const values = _.extend({}, defaults)
-// Extend default values with production values
 
 
 // Extend values with environment variables
-_.each(process.env, function (value, key) {
-  // Try to parse value in case JSON format is used
-  try {
-    value = JSON.parse(value)
-  } catch (err) {}
-    values[key] = value
-})
+for (const [key, value] of Object.entries(process.env)) {
+    // Try to parse value in case JSON format is used
+    try {
+        values[key] = JSON.parse(value);
+    } catch (err) {
+        values[key] = value;
+    }
+}
 
-
-values.VIDEO_HEALTH_PATH = values.VIDEO_HEALTH_PATH || '/v2/capabilities'; // capabilities url of video-server, should be fixed as /health on prod // TODO HEALTH ?
+// Server vars which should not change
+values.VIDEO_HEALTH_PATH = values.VIDEO_HEALTH_PATH || '/v2/capabilities';
 values.VIDEO_SERVER_BASE_PATH = values.VIDEO_SERVER_BASE_PATH || '/video-server';
-values.DEMO_HEALTH_PATH = values.DEMO_HEALTH_PATH || '/capabilities'; // capabilities url of demo-server, should be fixed as /health on prod
+values.DEMO_HEALTH_PATH = values.DEMO_HEALTH_PATH || '/capabilities';
 values.CODING_QUALITY_THRESHOLD = values.CODING_QUALITY_THRESHOLD || 0;
 values.MATCHING_SCORE_THRESHOLD = values.MATCHING_SCORE_THRESHOLD || 3000;
 values.GIPS_TENANT_ROLE = values.GIPS_TENANT_ROLE || 'RELYING_SERVICE';
 values.API_KEY_SECRET_BIOMETRICS = values.API_KEY_SECRET_BIOMETRICS || values.WEB_SDK_LIVENESS_ID_DOC;
 values.API_KEY_SECRET_WEBSDK = values.API_KEY_SECRET_WEBSDK || values.WEB_SDK_LIVENESS_ID_DOC;
+values.ENABLE_IMAGE_COMPRESSION = values.ENABLE_IMAGE_COMPRESSION || false;
+values.WBS_TLS_TRUSTSTORE_PATH = values.WBS_TLS_TRUSTSTORE_PATH || null;
+values.GIPS_TLS_TRUSTSTORE_PATH = values.GIPS_TLS_TRUSTSTORE_PATH || null;
 
-process.env.DEBUG = values.DEBUG  || '*';
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = values.NODE_TLS_REJECT_UNAUTHORIZED || '0';
-process.env.UV_THREADPOOL_SIZE = values.UV_THREADPOOL_SIZE  || 10;
+// Global Node environment vars
+process.env.DEBUG = values.DEBUG || '*';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = values.NODE_TLS_REJECT_UNAUTHORIZED || '1';
+process.env.UV_THREADPOOL_SIZE = values.UV_THREADPOOL_SIZE || 10;
+
 module.exports = values;
