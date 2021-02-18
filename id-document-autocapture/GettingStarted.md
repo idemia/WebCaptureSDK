@@ -39,9 +39,16 @@ In order to start integration, you need an API key which corresponds to a sandbo
 ### Step 2: Sample application setup
 
 -	Edit file '/server/config/default.js' :
-  -	 Add your api key by filling 'WEB_SDK_LIVENESS_ID_DOC' value
-  -	 Modify Document services with your Address (see 'Address' value in https://developer.idemia.com/dashboard/api-keys) : 
-    -	 'DOCSERVER_VIDEO_URL' for Document SDK
+-	Add your api key by filling 'WEB_SDK_LIVENESS_ID_DOC' value
+-	Modify Document services with your Address (see 'Address' value in https://developer.idemia.com/dashboard/api-keys) : 
+-	'DOCSERVER_VIDEO_URL' for Document SDK
+
+-   Create a TLS [keypair and certificate](./server/config/certs/README.md): You can also convert an existing key/certificate in PEM format into PKCS#12 file format, or use an existing one. Then fill the values in 'server/config/defaults.js' with the corresponding location and password. Example:
+
+   ```shell
+   TLS_KEYSTORE_PATH: path.join(__dirname, 'certs/demo-doc.p12'),
+   TLS_KEYSTORE_PASSWORD: '12345678',
+   ```
 
 ### Step 3: Run and test the sample application
 
@@ -69,8 +76,6 @@ All the configuration variables from the demonstration code are explained here :
 | SERVER_PUBLIC_ADDRESS         | Used in callback URL to receive results from WebDocServer (See DISABLE_CALLBACK) | https://[ip_or_servername]:[port]. Ex: https://localhost:9943 |
 | LIVENESS_RESULT_CALLBACK_PATH | Used in callback URL to receive results from WebDocServer (See DISABLE_CALLBACK) | "/liveness-result-callback                                   |
 | TLS_API_PORT                  | Port of tls server                                           | 9943                                                         |
-| TLS_CERT_PATH                 | Certificate of the server                                    | path.join(__dirname, 'certs/cert.pem')                       |
-| TLS_KEY_PATH                  | Private key of the server                                    | path.join(__dirname, 'certs/key.pem')                        |
 | BASE_PATH                     | Base path of the server                                      | '/demo-doc'                                                  |
 | SUPPORTED_LANGUAGES           | Supported language of UX                                     | 'en,es,fr,ja'                                                |
 
@@ -79,7 +84,7 @@ Description of the files from source code :
 | Filename                           | Description                                                  |
 | ---------------------------------- | ------------------------------------------------------------ |
 | ./index.js                         | NodeJS index file that initialize front-end endpoints and call the file ''./server/httpEndpoints.js" for back-end endpoints |
-| ./package.json                     | nodeJS dependancies                                          |
+| ./package.json                     | nodeJS dependencies                                          |
 | ./GettingStarted.md                | Readme markdown file                                         |
 | ./licenses                         | Licenses from the demonstration project                      |
 | ./server                           | Back-end side package                                        |
@@ -90,7 +95,7 @@ Description of the files from source code :
 | ./server/config/countries.js       | Retrieve the 3 characters string corresponding to the country of the user |
 | ./server/config/rules.js           | Retrieve the rules to apply depending on the user's document and country selection |
 | ./server/config/defaults.js        | Server configuration file                                    |
-| ./server/config/certs/*            | Certificate files                                            |
+| ./server/config/certs/*            | Procedure for TLS certificate generation                     |
 | ./server/config/i18n/*             | Translation files (spanish / french / japanese)              |
 | ./front                            | Front-end side package                                       |
 | ./front/utils/*                    | Common resources called by front-end JS                      |

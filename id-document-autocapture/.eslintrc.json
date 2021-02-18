@@ -1,0 +1,46 @@
+{
+  // to customize the conf please refer to https://eslint.org/docs/rules/
+  "extends": "standard",
+  "rules": {
+    "indent": [
+      "error",
+      4,
+      {
+        "FunctionDeclaration": {
+          "parameters": "first"
+        },
+        "SwitchCase": 1
+      }
+    ],
+    "semi": [
+      2,
+      "always"
+    ],
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "always",
+        "named": "never",
+        "asyncArrow": "always"
+      }
+    ],
+    "no-console": "error",
+    "no-alert": "error",
+    "no-var": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "vars": "local",
+        "args": "all",
+        "varsIgnorePattern": "_|(ignored)",
+        "argsIgnorePattern": "_|(ignored)",
+        "ignoreRestSiblings": true
+      }
+    ]
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
+  }
+}

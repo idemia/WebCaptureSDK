@@ -77,5 +77,7 @@
   "Move document further": "ドキュメントをさらに移動する",
   "Move document closer": "ドキュメントを近づける",
   "Authenticating…": "認証中…",
-  "Verifying your submitted document": "提出されたドキュメントの確認"
+  "Verifying your submitted document": "提出されたドキュメントの確認",
+  "Get image from GIPS - dev only !": "GIPSから画像を取得します-開発者のみ！",
+  "Get GIPS transaction - dev only !": "GIPSトランザクションを取得します-開発者のみ！"
 }

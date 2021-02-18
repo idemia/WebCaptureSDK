@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// eslint-disable-next-line no-unused-vars
 const path = require('path');
 
 /*
@@ -21,22 +22,29 @@ const path = require('path');
  */
 module.exports = {
 
-  // ******************* APIKEY/URL for DOCSERVER *******************
-  DOCSERVER_VIDEO_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io',
-  WEB_SDK_LIVENESS_ID_DOC: 'PLEASE_FILL_WITH_YOUR_APIKEY',
+    LOG_APPENDER: 'console',
+    LOG_LEVEL: 'info',
 
-  // callbackURL = SERVER_PUBLIC_ADDRESS + BASE_PATH + DOC_CAPTURE_CALLBACK_URL
-  DISABLE_CALLBACK: true, // set this key to true to disable callback functionality
-  SERVER_PUBLIC_ADDRESS: 'https://localhost',
-  DOC_CAPTURE_CALLBACK_URL: '/doccapture-result-callback',
-  // *******************************************************************
+    // ******************* APIKEY/URL for DOCSERVER/GIPS *******************
+    DOCSERVER_VIDEO_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io',
+    WEB_SDK_LIVENESS_ID_DOC: 'PLEASE_FILL_WITH_YOUR_APIKEY',
 
-  // ******************* back-end server creation *******************
-  TLS_API_PORT: 9943,
-  TLS_CERT_PATH: path.join(__dirname, 'certs/cert.pem'),
-  TLS_KEY_PATH: path.join(__dirname, 'certs/key.pem'),
-  BASE_PATH: '/demo-doc',
-  SUPPORTED_LANGUAGES: 'en,es,fr,ja' // used to translate the web pages
-  // *******************************************************************
+    // callbackURL = SERVER_PUBLIC_ADDRESS + BASE_PATH + DOC_CAPTURE_CALLBACK_URL
+    DISABLE_CALLBACK: true, // set this key to true to disable callback functionality
+    SERVER_PUBLIC_ADDRESS: 'https://localhost',
+    DOC_CAPTURE_CALLBACK_URL: '/doccapture-result-callback',
 
+    // only needed if using ID&V
+    GIPS_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443/gips',
+    GIPS_RS_API_Key: 'PLEASE_FILL_WITH_YOUR_APIKEY',
+    IDPROOFING: false, // enable ID&V integration to use ID&V for initialisation and retrieve results during the doc capture
+    // *******************************************************************
+
+    // ******************* back-end server creation *******************
+    TLS_API_PORT: 9943,
+    TLS_KEYSTORE_PATH: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PATH',
+    TLS_KEYSTORE_PASSWORD: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PASSWORD',
+    BASE_PATH: '/demo-doc',
+    SUPPORTED_LANGUAGES: 'en,es,fr,ja' // used to translate the web pages
+    // *******************************************************************
 };

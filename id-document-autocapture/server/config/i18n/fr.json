@@ -78,5 +78,7 @@
   "Move document further": "Déplacer le document plus loin",
   "Move document closer": "Rapprocher le document",
   "Authenticating…": "Authentification…",
-  "Verifying your submitted document": "Vérification de votre document soumis"
+  "Verifying your submitted document": "Vérification de votre document soumis",
+  "Get image from GIPS - dev only !": "Récupérer l'image depuis GIPS - dev !!",
+  "Get GIPS transaction - dev only !": "Récupérer la transaction GIPS - dev !!"
 }
