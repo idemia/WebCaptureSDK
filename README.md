@@ -1,23 +1,23 @@
 # WebCaptureSDK
 
-Demo app to showcase the integration of IDEMIA Web CaptureSDK for IDEMIA Identity offer
+Demo app to showcase the integration of IDEMIA Web CaptureSDK for IDEMIA Identity offering.
 
-**Face autocapture with liveness detection** : showcase FACE autocapture and liveness detection
+**Face autocapture with liveness detection** showcases face autocapture and liveness detection.
 
-For more information please consult :
+For more information, please consult:
 
-https://developer.idemia.com/capturesdks/web/39#webcapture-sdk--faceautocapture--liveness
+https://developer.idemia.com/capturesdks/web/39#webcapture-sdk---faceautocapture-and-liveness
 
-Espacially, have a loot at :
-- Getting started section
-- FAQ section 
+Especially, have a look at:
+- [Getting started](https://developer.idemia.com/capturesdks/web/39#getting-started)
+- [FAQ](https://developer.idemia.com/capturesdks/web/39#faq)
 
-**ID document autocapture** : showcase the autocapture of an ID docuemnt (passport, identity card, Driving License)
+**ID document autocapture** showcases the autocapture of an identity document, such as a passport, identity card, or driving license.
 
-For more information please consult :
+For more information, please consult:
 
 https://developer.idemia.com/capturesdks/web/39#document-webcapture-sdk--iddoc-autocapture-passportid-carddl
 
-Espacially, have a loot at :
-- Getting started section
-- FAQ section 
+Especially, have a look at:
+- [Getting started](https://developer.idemia.com/capturesdks/web/39#getting-started_1)
+- [FAQ](https://developer.idemia.com/capturesdks/web/39#faqs)
