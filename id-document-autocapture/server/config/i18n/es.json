@@ -41,6 +41,7 @@
   "Adresse": "Adresse",
   "62 Cottonwood Rd, Anytown, MA": "62 Cottonwood Rd, Ciudad cualquiera, MA",
   "Restart Demo": "Reiniciar la demostración",
+  "Confirm and continue" : "Confirmar y continuar",
   "it's incorrect, rescan document": "es incorrecto, vuelva a escanear el documento",
   "We had some difficulties to capture your document, Ensure all corners are visible.": "Tuvimos algunas dificultades para capturar su documento. Asegúrese de que todas las esquinas estén visibles.",
   "Example photo": "Foto de ejemplo",
@@ -79,5 +80,8 @@
   "Authenticating…": "Autenticando…",
   "Verifying your submitted document": "Verificando su documento enviado",
   "Get image from GIPS - dev only !": "Obtener imagen de GIPS - ¡solo para desarrolladores!",
-  "Get GIPS transaction - dev only !": "Obtenga la transacción GIPS - ¡solo para desarrolladores!"
+  "Get GIPS transaction - dev only !": "Obtenga la transacción GIPS - ¡solo para desarrolladores!",
+  "Now flip ID and scan the BACK": "Ahora voltee la carta y escanee la parte posterior",
+  "Capture Initialization...": "Captura de inicialización ...",
+  "Please wait": "Espere por favor"
 }

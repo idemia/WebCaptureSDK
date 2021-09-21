@@ -29,12 +29,11 @@ const context = [{
 }];
 
 module.exports = {
-    getCountryDocTypes: getCountryDocTypes,
-    initDocSession: initDocSession,
-    getStatus: getStatus,
-    getBestImage: getBestImage,
-    getDocCaptureResult: getDocCaptureResult
-
+    getCountryDocTypes,
+    initDocSession,
+    getStatus,
+    getBestImage,
+    getDocCaptureResult
 };
 
 /**
@@ -52,288 +51,237 @@ module.exports = {
  *  Error code 404/ 401 /
  * @returns identity id
  */
+async function createIdentity() {
+    const formData = new FormData();
+    formData.append('context', Buffer.from(context));
+    const url = `${config.GIPS_URL}/v1/identities`;
+    logger.debug(`createIdentity: POST ${url}`);
 
-function createIdentity() {
-    return new Promise((resolve, reject) => {
-        const formData = new FormData();
-        formData.append('context', Buffer.from(context));
-
-        fetch(config.GIPS_URL + '/v1/identities', {
-            method: 'POST',
-            body: formData,
-            headers: mutipartContentType(authenticationHeader()),
-            agent: agent
-        }).then(function (res) {
-            logger.info('GIPS Endpoint : POST ' + config.GIPS_URL + '/v1/identities');
-            if (res.status !== 200) {
-                logger.error('GIPS Error : ' + res.status);
-                reject(res);
-            } else {
-                resolve(res.json());
-            }
-        }).catch(err => {
-            logger.error('Failed to request gips server  - error:', err);
-            reject(err);
-        });
+    const res = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Content-Type': 'multipart/form-data', ...authenticationHeader() },
+        agent
+    }).catch(err => {
+        throw new Error(`createIdentity failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 
 /**
  * Start doc capture init session with parameters from configuration
  * response 200
-
  * POST {{url}}/v1/identities/{{identityId}}/id-documents/live-capture-session
  */
-function startDocCapture(identityId, country, type) {
-    return new Promise((resolve, reject) => {
-        const docParamerters = {
-            issuingCountry: country,
-            idDocumentType: type
-        };
+async function startDocCapture(identityId, country, type) {
+    const docParamerters = {
+        issuingCountry: country,
+        idDocumentType: type
+    };
+    const url = `${config.GIPS_URL}/v1/identities/${identityId}/id-documents/live-capture-session`;
+    logger.debug(`startDocCapture: POST ${url}`);
 
-        fetch(config.GIPS_URL + '/v1/identities/' + identityId + '/id-documents/live-capture-session', {
-            method: 'POST',
-            body: JSON.stringify(docParamerters),
-            headers: jsonContentType(authenticationHeader()),
-            agent: agent
-        }).then(function (res) {
-            logger.info('GIPS Endpoint : POST ' + config.GIPS_URL + '/v1/identities/' + identityId + '/id-documents/live-capture-session');
-            if (res.status !== 200) {
-                logger.error('GIPS Error : ' + res.status);
-                reject(res);
-            } else {
-                resolve(res.json());
-            }
-        }).catch((err) => {
-            logger.error('Failed to request gips server  - error:', err);
-            reject(err);
-        });
+    const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(docParamerters),
+        headers: { 'Content-Type': 'application/json', ...authenticationHeader() },
+        agent
+    }).catch(err => {
+        throw new Error(`startDocCapture failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 
 /**
  * Get supported evidence from GIPS configuration
  * response 200
-
  * POST {{url}}/v1/supported-evidence/countries
  */
-function getSupportedEvidences(country) {
-    return new Promise((resolve, reject) => {
-        let url = config.GIPS_URL + '/v1/supported-evidence/countries';
-        if (country) {
-            url += '/' + country;
-        }
+async function getSupportedEvidences(country) {
+    let url = `${config.GIPS_URL}/v1/supported-evidence/countries`;
+    if (country) {
+        url += '/' + country;
+    }
+    logger.debug(`getSupportedEvidences: GET ${url}`);
 
-        fetch(url, {
-            method: 'GET',
-            headers: authenticationHeader(),
-            agent: agent
-        }).then(function (res) {
-            logger.info('GIPS Endpoint : GET ' + config.GIPS_URL + '/v1/supported-evidence/countries');
-            if (res.status !== 200) {
-                logger.error('GIPS Error : ' + res.status);
-                reject(res);
-            } else {
-                resolve(res.json());
-            }
-        }).catch((err) => {
-            logger.error('Failed to request gips server  - error:', err);
-            reject(err);
-        });
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: authenticationHeader(),
+        agent
+    }).catch(err => {
+        throw new Error(`getSupportedEvidences failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 
 /**
  * Initialize the docSession from GIPS by creating identity and session
  */
-function initDocSession(countryCode, docType) {
-    return new Promise((resolve, reject) => {
-        try {
-            let identity;
-            let session;
-            let countries;
-            Promise.resolve().then(() => {
-                return createIdentity();
-            }).then((id) => {
-                identity = id;
-                return startDocCapture(identity.id, countryCode, docType);
-            }).then((sId) => {
-                session = sId;
-                return getSupportedEvidences(countryCode);
-            }).then((supportedEvidences) => {
-                countries = supportedEvidences;
-                const document = countries.documents.filter(c => c.documentType === docType);
-
-                const res = {};
-                res.docSideRules = [];
-                if (document[0].sides[0].front !== 'FORBIDDEN') {
-                    res.docSideRules.push({
-                        side: {
-                            id: 'SIDE1',
-                            name: 'FRONT'
-                        },
-                        captureFeatures: []
-                    });
-                }
-                if (document[0].sides[0].back !== 'FORBIDDEN') {
-                    res.docSideRules.push({
-                        side: {
-                            id: 'SIDE2',
-                            name: 'BACK'
-                        },
-                        captureFeatures: []
-                    });
-                }
-                res.docFormat = document[0].format;
-                res.id = session.sessionId;
-                res.identity = identity.id;
-
-                resolve(res);
+async function initDocSession(countryCode, docType) {
+    logger.debug('initDocSession');
+    try {
+        const identity = await createIdentity();
+        const session = await startDocCapture(identity.id, countryCode, docType);
+        const countries = await getSupportedEvidences(countryCode);
+        const document = countries.documents.filter(c => c.documentType === docType);
+        const res = {};
+        res.docSideRules = [];
+        if (document[0].sides[0].front !== 'FORBIDDEN') {
+            res.docSideRules.push({
+                side: {
+                    id: 'SIDE1',
+                    name: 'FRONT'
+                },
+                captureFeatures: []
             });
-        } catch (err) {
-            logger.error('Failed to request gips server  - error:', err);
-            reject(err);
         }
-    });
+        if (document[0].sides[0].back !== 'FORBIDDEN') {
+            res.docSideRules.push({
+                side: {
+                    id: 'SIDE2',
+                    name: 'BACK'
+                },
+                captureFeatures: []
+            });
+        }
+        res.docFormat = document[0].format;
+        res.id = session.sessionId;
+        res.identity = identity.id;
+        return res;
+    } catch (err) {
+        logger.error('initDocSession failed');
+        throw err;
+    }
 }
 
 /**
  * Get global status from GIPS transaction
  * GET {{url}}/v1/identities/{{identityId}}?detailed=true
  */
-function getStatus(identityId) {
-    return new Promise((resolve, reject) => {
-        fetch(config.GIPS_URL + '/v1/identities/' + identityId + '?detailed=true', {
-            method: 'GET',
-            headers: authenticationHeader(),
-            agent: agent
-        }).then(function (res) {
-            logger.info('GIPS Endpoint : GET ' + config.GIPS_URL + '/v1/identities/' + identityId + '?detailed=true');
+async function getStatus(identityId) {
+    const url = `${config.GIPS_URL}/v1/identities/${identityId}?detailed=true`;
+    logger.debug(`getStatus: GET ${url}`);
 
-            if (res.status !== 200) {
-                logger.error('GIPS Error : ' + res.status);
-                reject(res);
-            } else {
-                resolve(res.json());
-            }
-        }).catch((err) => {
-            logger.error('Failed to request gips server  - error:', err);
-            reject(err);
-        });
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: authenticationHeader(),
+        agent
+    }).catch(err => {
+        throw new Error(`getStatus failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 
 /**
  * Get image from document capture from evidenceId
  * GET {{url}}/v1/identities/{{identityId}}//id-documents//{{evidenceId}}/capture
  */
-function getBestImage(identityId, evidenceId) {
-    return new Promise((resolve, reject) => {
-        fetch(config.GIPS_URL + '/v1/identities/' + identityId + '/id-documents/' + evidenceId + '/capture', {
-            method: 'GET',
-            headers: authenticationHeader(),
-            agent: agent
-        }).then(function (res) {
-            logger.info('GIPS Endpoint : GET ' + config.GIPS_URL + '/v1/identities/' + identityId + '/id-documents/' + evidenceId + '/capture');
+async function getBestImage(identityId, evidenceId) {
+    const url = `${config.GIPS_URL}/v1/identities/${identityId}/id-documents/${evidenceId}/capture`;
+    logger.debug(`getBestImage: GET ${url}`);
 
-            if (res.status !== 200) {
-                logger.error('GIPS Error : ' + res.status);
-                reject(res);
-            } else {
-                return res.buffer();
-            }
-        }).then(body => {
-            const data = (String(body));
-            const boundary = data.split('\r')[0];
-            const parts = multipart.Parse(body, boundary.replace('--', ''));
-            resolve(parts[0].data);
-        }).catch(err => {
-            logger.error('Failed to request gips server  - error:', err);
-            reject(err);
-        });
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: authenticationHeader(),
+        agent
+    }).catch(err => {
+        throw new Error(`getBestImage failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    const body = await res.buffer();
+    const data = String(body);
+    const boundary = data.split('\r')[0];
+    const parts = multipart.Parse(body, boundary.replace('--', ''));
+    return parts[0].data;
 }
 
 async function getCountryDocTypes(countryCode) {
-    return new Promise((resolve, reject) => {
-        Promise.resolve().then(() => {
-            return getSupportedEvidences(countryCode);
-        }).then((countries) => {
-            // [{"code":"FRA","docTypes":["PASSPORT","IDENTITY_CARD","DRIVING_LICENSE","RESIDENT_CARD"]},{"code":"USA","docTypes":["PASSPORT","DRIVING_LICENSE"]},{"code":"AFG"
-            const res = [];
-            countries.map((country) => {
-                const element = {};
-                element.code = country.iso3CountryCode;
-                const acceptedTypes = [];
-                country.documents.filter(c => c.liveVideoCaptureSupported).map((document) => {
-                    acceptedTypes.push(document.documentType);
-                });
-                if (acceptedTypes.length > 0) {
-                    element.docTypes = acceptedTypes;
-                    res.push(element);
-                }
+    logger.debug('getCountryDocTypes');
+    try {
+        const countries = await getSupportedEvidences(countryCode);
+        // [{"code":"FRA","docTypes":["PASSPORT","IDENTITY_CARD","DRIVING_LICENSE","RESIDENT_CARD"]},{"code":"USA","docTypes":["PASSPORT","DRIVING_LICENSE"]},{"code":"AFG"
+        const res = [];
+        countries.map((country) => {
+            const element = {};
+            element.code = country.iso3CountryCode;
+            const acceptedTypes = [];
+            country.documents.filter(c => c.liveVideoCaptureSupported).map((document) => {
+                acceptedTypes.push(document.documentType);
             });
-            resolve(res);
-        }).catch(err => {
-            logger.debug('Failed to request gips server  - error:', err);
-            reject(err);
+            if (acceptedTypes.length > 0) {
+                element.docTypes = acceptedTypes;
+                res.push(element);
+            }
         });
-    });
+        return res;
+    } catch (err) {
+        logger.error('getCountryDocTypes failed');
+        throw err;
+    }
 }
 
-function getDocCaptureResult(gipsStatus, identityId) {
-    return new Promise((resolve, reject) => {
-        Promise.resolve().then(() => {
-            if (gipsStatus.idDocuments && gipsStatus.idDocuments.length > 0) {
-                return null;
-            }
-            return getBestImage(identityId, gipsStatus.idDocuments[gipsStatus.idDocuments.length - 1].evidenceId);
-        }).then((bestImage) => {
-            const lastDocument = (gipsStatus.idDocuments && gipsStatus.idDocuments.length > 0) ? gipsStatus.idDocuments[gipsStatus.idDocuments.length - 1] : null;
-            const idDocumentData = (lastDocument) ? lastDocument.idDocumentData : null;
-            const personalAttributes = (lastDocument && lastDocument.idDocumentData) ? lastDocument.idDocumentData.personalAttributes : null;
-            const finalResult = {};
+async function getDocCaptureResult(gipsStatus, identityId) {
+    logger.debug('getDocCaptureResult');
+    try {
+        let lastDocument = null;
+        let bestImage = null;
+        let idDocumentData = null;
+        let evidenceId = null;
+        let personalAttributes = null;
 
-            finalResult.evidenceId = (lastDocument) ? lastDocument.evidenceId : null;
-            finalResult.timeout = false;
-            finalResult.identityId = identityId;
-            finalResult.docImage = (bestImage) ? Buffer.from(bestImage).toString('base64') : null;
-            finalResult.docCorners = [];
-            finalResult.ocr = {};
-            finalResult.ocr.mrz = {};
-            finalResult.ocr.mrz.rawData = '';
-            finalResult.ocr.mrz.identity = {};
-            finalResult.ocr.mrz.documentInfo = {};
-            finalResult.ocr.rawData = '';
-            finalResult.ocr.identity = {};
-            finalResult.ocr.documentInfo = {};
+        if (gipsStatus.idDocuments && gipsStatus.idDocuments.length) {
+            lastDocument = gipsStatus.idDocuments[gipsStatus.idDocuments.length - 1];
+            bestImage = Buffer.from(await getBestImage(identityId, lastDocument.evidenceId)).toString('base64');
+            idDocumentData = lastDocument.idDocumentData;
+            evidenceId = lastDocument.evidenceId;
+            personalAttributes = idDocumentData.personalAttributes;
+        }
 
-            if (personalAttributes) {
-                finalResult.ocr.mrz.identity.gender = personalAttributes.gender ? personalAttributes.gender.value : '';
-                finalResult.ocr.mrz.identity.givenNames = personalAttributes.givenNames && personalAttributes.givenNames[0] ? [personalAttributes.givenNames[0].value] : [];
-                finalResult.ocr.mrz.identity.surname = personalAttributes.surname ? personalAttributes.surname.value : '';
-                finalResult.ocr.mrz.identity.dateOfBirth = personalAttributes.dateOfBirth ? personalAttributes.dateOfBirth.value : '';
-                finalResult.ocr.mrz.identity.fullName = finalResult.ocr.mrz.identity.givenNames[0] + ' ' + finalResult.ocr.mrz.identity.surname;
+        const finalResult = {
+            evidenceId,
+            timeout: false,
+            identityId,
+            docImage: bestImage,
+            docCorners: [],
+            ...(idDocumentData && {
+                ocr: {
+                    ...(personalAttributes ? {
+                        identity: {
+                            gender: personalAttributes.gender ? personalAttributes.gender.value : '',
+                            givenNames: personalAttributes.givenNames && personalAttributes.givenNames[0] ? [personalAttributes.givenNames[0].value] : '',
+                            surname: personalAttributes.surname ? personalAttributes.surname.value : '',
+                            dateOfBirth: personalAttributes.dateOfBirth ? personalAttributes.dateOfBirth.value : ''
+                        }
+                    } : {
+                        documentInfo: {
+                            documentNumber: idDocumentData.idDocumentNumber,
+                            issuingCountry: idDocumentData.issuingCountry
+                        }
+                    })
+                },
+                done: true
+            })
+        };
 
-                finalResult.ocr.identity.gender = personalAttributes.gender ? personalAttributes.gender.value : '';
-                finalResult.ocr.identity.givenNames = personalAttributes.givenNames && personalAttributes.givenNames[0] ? [personalAttributes.givenNames[0].value] : '';
-                finalResult.ocr.identity.surname = personalAttributes.surname ? personalAttributes.surname.value : '';
-                finalResult.ocr.identity.dateOfBirth = personalAttributes.dateOfBirth ? personalAttributes.dateOfBirth.value : '';
-            }
-
-            if (idDocumentData) {
-                finalResult.ocr.mrz.documentInfo.documentNumber = idDocumentData.idDocumentNumber;
-                finalResult.ocr.mrz.documentInfo.issuingCountry = idDocumentData.issuingCountry;
-                finalResult.ocr.documentInfo.documentNumber = idDocumentData.idDocumentNumber;
-                finalResult.ocr.documentInfo.issuingCountry = idDocumentData.issuingCountry;
-            }
-
-            resolve(finalResult);
-        }).catch(err => {
-            logger.debug('Failed to request gips server  - error:', err);
-            reject(err);
-        });
-    });
+        return finalResult;
+    } catch (err) {
+        logger.error('getDocCaptureResult failed');
+        throw err;
+    }
 }
 
 /**
@@ -347,18 +295,13 @@ function authenticationHeader() {
     return headers;
 }
 
-/**
- * add json content-type
- */
-function jsonContentType(headers) {
-    headers['Content-Type'] = 'application/json';
-    return headers;
+function formatFetchError(err) {
+    return `${err}${err.code ? ', code: ' + err.code : ''}`;
 }
 
-/**
- * add multipart header
- */
-function mutipartContentType(headers) {
-    headers['Content-Type'] = 'multipart/form-data';
-    return headers;
+function createResponseError(res) {
+    const { status, statusText, url } = res;
+    const err = new Error(`GIPS status: ${status} ${statusText}, url: ${url}`);
+    Error.captureStackTrace(err, createResponseError);
+    return Object.assign(err, { status, statusText, url });
 }

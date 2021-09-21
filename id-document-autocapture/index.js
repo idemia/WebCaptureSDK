@@ -19,20 +19,35 @@ const express = require('express');
 const config = require('./server/config');
 const https = require('https');
 const fs = require('fs');
+const path = require('path');
 const logger = require('./server/config/demoLogConf').getLogger(__filename);
 const app = express();
 const packer = require('./server/packer');
 const httpEndpoints = require('./server/httpEndpoints');
+const constants = require('crypto').constants;
 
 packer.pack();
 
 // load certs from config folder
-const server = https.createServer({
+const protocolOptionsList = (config.PROTOCOL_OPTIONS) ? config.PROTOCOL_OPTIONS.split(',') : [];
+let serverSecureOptions;
+protocolOptionsList.forEach(p => (serverSecureOptions = serverSecureOptions | constants[p]));
+
+const options = {
     pfx: fs.readFileSync(config.TLS_KEYSTORE_PATH),
-    passphrase: config.TLS_KEYSTORE_PASSWORD
-}, app).listen(config.TLS_API_PORT, () => {
+    passphrase: config.TLS_KEYSTORE_PASSWORD,
+    secureOptions: serverSecureOptions
+};
+
+logger.info(`Create a connection to the server with the secure options : ${options.secureOptions}`);
+const server = https.createServer(options, app).listen(config.TLS_API_PORT, () => {
     logger.info('Backend server started - https://localhost:%s', config.TLS_API_PORT + config.BASE_PATH);
     logger.info('Total starting time: %d %s', Date.now() - start, 'ms');
+    if (config.IDPROOFING) {
+        logger.info(`Using GIPS API on url: ${config.GIPS_URL}`);
+    } else {
+        logger.info(`Using WDS API on url: ${config.DOCSERVER_VIDEO_URL}${config.DOC_SERVER_BASE_PATH}`);
+    }
 });
 
 // serve demos
@@ -44,14 +59,14 @@ app.use(config.BASE_PATH, (req, res, next) => {
     if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
         lang = locale;
     }
-    express.static(`front/doc-auth/${lang}/`)(req, res, next);
+    express.static(path.resolve(__dirname, `./front/doc-auth/${lang}/`))(req, res, next);
 });
 app.use('/:lang' + config.BASE_PATH + '/doc-auth', (req, res, next) => {
     let lang = 'en'; // default language
     if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
         lang = req.params.lang;
     }
-    express.static(`front/doc-auth/${lang}/`)(req, res, next);
+    express.static(path.resolve(__dirname, `./front/doc-auth/${lang}/`))(req, res, next);
 });
 logger.info('Doc authentication page => %s', config.BASE_PATH);
 

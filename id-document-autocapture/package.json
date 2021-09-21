@@ -1,14 +1,16 @@
 {
   "name": "docserver-video-demo",
   "version": "1.0.0",
-  "description": "show wedocserver demos",
+  "description": "show WebDocServer demos",
   "main": "index.js",
   "scripts": {
     "start": "node . ",
+    "start:dev": "cross-env WDS_DEMO_ENV=dev SUPPORTED_LANGUAGES=en npm run start",
     "lint": "npx standardx '**/*.js' --fix",
     "test": "npm run lint && echo \"WARNING: no test specified\"",
     "coverage": "./node_modules/nyc/bin/nyc.js --check-coverage=true --reporter=lcov --reporter=text-lcov --reporter=text npm test"
   },
+  "author": "IDEMIA",
   "license": "UNLICENSED",
   "dependencies": {
     "debug": "^4.1.1",
@@ -27,11 +29,12 @@
   "devDependencies": {
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^5.1.1",
+    "cross-env": "^6.0.3",
     "html-webpack-plugin": "^3.2.0",
     "i18n-webpack-plugin": "^1.0.0",
-    "webpack": "^4.41.0",
     "nyc": "^15.0.1",
-    "standardx": "^5.0.0"
+    "standardx": "^5.0.0",
+    "webpack": "^4.41.0"
   },
   "standardx": {
     "ignore": [

@@ -31,6 +31,7 @@ function displayEnvironement(env) {
         const envOS = env.envDetected.os;
         const envBrowser = env.envDetected.browser;
         if (!envOS.isSupported) {
+            window.envBrowserOk = false;
             document.querySelector(stepCountrySelectionId).className = document.querySelector(stepCountrySelectionId).className.concat('d-none');
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
             envDetectionPage.querySelector(descriptionClass).textContent = __('You seem to be using an unsupported operating system.');
@@ -51,6 +52,7 @@ function displayEnvironement(env) {
                 osList.appendChild(os);
             }
         } else if (!envBrowser.isSupported) {
+            window.envBrowserOk = false;
             document.querySelector(stepCountrySelectionId).className = document.querySelector(stepCountrySelectionId).className.concat('d-none');
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
             envDetectionPage.querySelector(descriptionClass).textContent = __('You seem to be using an unsupported browser.');

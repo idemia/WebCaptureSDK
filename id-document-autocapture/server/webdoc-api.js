@@ -21,13 +21,12 @@ const fetch = require('node-fetch');
 const config = require('./config');
 const agent = require('./httpUtils').getAgent(config.WDS_TLS_TRUSTSTORE_PATH);
 const logger = require('./config/demoLogConf').getLogger(__filename);
-const serverErrorMessage = 'Error when requesting docserver: ';
 
 module.exports = {
-    getCountryDocTypes: getCountryDocTypes,
-    getDocSession: getDocSession,
-    initDocSession: initDocSession,
-    getDocCaptureResult: getDocCaptureResult
+    getCountryDocTypes,
+    getDocSession,
+    initDocSession,
+    getDocCaptureResult
 };
 
 /**
@@ -35,23 +34,20 @@ module.exports = {
  * @param sessionId
  * @returns {Promise<any>}
  */
-function getDocSession(sessionId) {
+async function getDocSession(sessionId) {
     const url = config.DOCSERVER_VIDEO_URL + config.DOC_SERVER_BASE_PATH + '/v1/document-sessions/' + sessionId;
-    logger.debug('GetDocSession Request: ', { sessionId, url });
-    return fetch(url, {
+    logger.info(`getDocSession: GET ${url}`, { sessionId });
+    const res = await fetch(url, {
         method: 'GET',
         headers: authenticationHeader(),
-        agent: agent
-    }).then(function (res) {
-        if (res.status !== 200) {
-            const error = { status: res.status, statusText: res.statusText };
-            return Promise.reject(error);
-        }
-        return res.json();
-    }).catch(function (error) {
-        logger.error('GetDocSession failed', { sessionId, error });
-        return Promise.reject(error);
+        agent
+    }).catch(err => {
+        throw new Error(`getDocSession failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 /**
  * Create document capture session on server
@@ -61,7 +57,7 @@ function getDocSession(sessionId) {
  * @param rules
  * @returns {*}
  */
-function initDocSession(countryCode, docType, rules) {
+async function initDocSession(countryCode, docType, rules) {
     const contentBody = {
         ttlSeconds: config.DOC_CAPTURE_SESSION_TTL,
         countryCode: countryCode
@@ -82,26 +78,24 @@ function initDocSession(countryCode, docType, rules) {
     }
 
     if (!config.DISABLE_CALLBACK) {
-        contentBody.callbackURL = config.SERVER_PUBLIC_ADDRESS + config.BASE_PATH + config.DOC_CAPTURE_CALLBACK_URL;
+        contentBody.callbackURL = config.SERVER_PUBLIC_ADDRESS + ':' + config.TLS_API_PORT + config.BASE_PATH + config.DOC_CAPTURE_CALLBACK_URL;
     }
     const url = config.DOCSERVER_VIDEO_URL + config.DOC_SERVER_BASE_PATH + '/v1/document-sessions';
-    logger.debug('2: Request %s, Parameters: %s', url, JSON.stringify(contentBody, null, 2));
-    return fetch(url, {
+    logger.debug(`initDocSession: POST ${url}, Parameters: ${JSON.stringify(contentBody, null, 2)}`);
+
+    const res = await fetch(url, {
         method: 'POST',
         // if callback is disabled, don't pass the callbackURL to docserver
         body: JSON.stringify(contentBody),
-        headers: { 'content-type': 'application/json', ...authenticationHeader() },
-        agent: agent
-    }).then(function (res) {
-        if (res.status !== 200) {
-            const error = { status: res.status, statusText: res.statusText };
-            return Promise.reject(error);
-        }
-        return res.json();
-    }).catch(function (error) {
-        logger.error(serverErrorMessage, { error });
-        return Promise.reject(error);
+        headers: { 'Content-Type': 'application/json', ...authenticationHeader() },
+        agent
+    }).catch(err => {
+        throw new Error(`initDocSession failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 
 /**
@@ -110,54 +104,58 @@ function initDocSession(countryCode, docType, rules) {
  * @param captureId
  * @returns {*}
  */
-function getDocCaptureResult(sessionId, captureId) {
+async function getDocCaptureResult(sessionId, captureId) {
     let url = config.DOCSERVER_VIDEO_URL + config.DOC_SERVER_BASE_PATH + '/v1/document-sessions/' + sessionId + '/captures';
-
     if (captureId) {
         url = url + '/' + captureId;
     }
-    logger.debug('3: Request: ', { sessionId, url });
+    logger.debug(`getDocCaptureResult: GET ${url}`, { sessionId });
 
-    return fetch(url, {
+    const res = await fetch(url, {
         method: 'GET',
         headers: authenticationHeader(),
-        agent: agent
-    }).then(function (res) {
-        if (res.status !== 200) {
-            const error = { status: res.status, statusText: res.statusText };
-            return Promise.reject(error);
-        }
-        return res.json();
-    }).catch(function (error) {
-        logger.error(serverErrorMessage, { sessionId, error });
-        return Promise.reject(error);
+        agent
+    }).catch(err => {
+        throw new Error(`getDocCaptureResult failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 
-function getCountryDocTypes(countryCode) {
+async function getCountryDocTypes(countryCode) {
     let url = config.DOCSERVER_VIDEO_URL + config.DOC_SERVER_BASE_PATH + '/v2/countries-doc-types';
     if (countryCode) {
         url = url + '/' + countryCode;
     }
-    logger.debug('1: Request %s', url);
-    return fetch(url, {
+    logger.debug(`getCountryDocTypes: GET ${url}`);
+    const res = await fetch(url, {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
-    }).then(function (res) {
-        if (res.status !== 200) {
-            const error = { status: res.status, statusText: res.statusText };
-            return Promise.reject(error);
-        }
-        return res.json();
-    }).catch(function (error) {
-        logger.error(serverErrorMessage, { error });
-        return Promise.reject(error);
+    }).catch(err => {
+        throw new Error(`getCountryDocTypes failed: ${formatFetchError(err)}`);
     });
+    if (res.status !== 200) {
+        throw createResponseError(res);
+    }
+    return res.json();
 }
 
 function authenticationHeader() {
     const headers = {};
     headers.apikey = config.WEB_SDK_LIVENESS_ID_DOC;
     return headers;
+}
+
+function formatFetchError(err) {
+    return `${err}${err.code ? ', code: ' + err.code : ''}`;
+}
+
+function createResponseError(res) {
+    const { status, statusText, url } = res;
+    const err = new Error(`WDS status: ${status} ${statusText}, url: ${url}`);
+    Error.captureStackTrace(err, createResponseError);
+    return Object.assign(err, { status, statusText, url });
 }

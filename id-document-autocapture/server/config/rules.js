@@ -31,7 +31,7 @@ const documentRules =
           format: 'ID1',
           sides: [{
               id: 'SIDE1',
-              name: 'UNKNOWN',
+              name: 'FRONT',
               captureFeatures: ['NONE']
           }
           ]
@@ -40,7 +40,7 @@ const documentRules =
           format: 'ID1',
           sides: [{
               id: 'SIDE1',
-              name: 'UNKNOWN',
+              name: 'FRONT',
               captureFeatures: ['OCR']
           }
           ]
@@ -49,7 +49,7 @@ const documentRules =
           format: 'ID1',
           sides: [{
               id: 'SIDE1',
-              name: 'UNKNOWN',
+              name: 'FRONT',
               captureFeatures: ['MRZ']
           }
           ]
@@ -59,7 +59,7 @@ const documentRules =
           format: 'ID1',
           sides: [{
               id: 'SIDE1',
-              name: 'UNKNOWN',
+              name: 'FRONT',
               captureFeatures: ['PDF417']
           }
           ]
@@ -85,7 +85,6 @@ const documentRules =
 
 /** @return CountryDocTypes */
 function findDocTypesByCountry() {
-    let countryDocTypes;
     const docTypes = [];
     documentRules
         .filter(countryRule => countryRule.countries.length === 0)
@@ -95,11 +94,11 @@ function findDocTypesByCountry() {
         });
     if (!docTypes.length) {
         logger.warn('Unsupported country');
-    } else {
-        countryDocTypes = { code: '', docTypes: docTypes };
+        return;
     }
+    const countryDocTypes = { code: '', docTypes: docTypes };
+    logger.info('found %d docTypes', countryDocTypes.docTypes.length);
     logger.debug('found docTypes: ', { countryDocTypes });
-    logger.info('found docTypes : %d', countryDocTypes.docTypes.length);
     return countryDocTypes;
 }
 
@@ -109,18 +108,18 @@ function findDocTypesByCountry() {
  * @return DocumentSideRules
  */
 function findRulesByCountryAndType(country, docType) {
-    logger.info(`Asking document rules for country=${country ? country + ', document type=' + docType : 'unknown country'}`);
+    logger.info(`Asking document rules for country: ${country || 'unknown'}, document type: ${docType}`);
     const result = documentRules
         .filter(countryRule => countryRule.countries.includes(country) || !countryRule.countries.length)
         .map(countryRule => countryRule.rules.find(rule => rule.docType === docType))
         .find(countryRule => countryRule);
-    logger.info(`Retrieve document rules for country=${country + ', document type=' + docType} : %s`, result);
+    logger.info('Retrieved document rules:', result);
     if (!result) {
         return null;
     }
     // map conf rule to object model
     return result.sides.map(({ id, name, captureFeatures }) => createDocumentSideRules({ side: { id, name }, captureFeatures }));
-};
+}
 
 function createDocumentSideRules({ side, captureFeatures } = {}) {
     const result = {};
@@ -137,6 +136,6 @@ function createSide({ id, name } = {}) {
 }
 
 module.exports = {
-    findDocTypesByCountry: findDocTypesByCountry,
-    findRulesByCountryAndType: findRulesByCountryAndType
+    findDocTypesByCountry,
+    findRulesByCountryAndType
 };

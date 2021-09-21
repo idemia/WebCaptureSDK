@@ -44,6 +44,8 @@ module.exports = {
     TLS_API_PORT: 9943,
     TLS_KEYSTORE_PATH: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PATH',
     TLS_KEYSTORE_PASSWORD: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PASSWORD',
+    // Disable unsecure protocols such as : SSL2, SSL3, TLS 1.0, TLS 1.1. Variables are separated by a comma
+    PROTOCOL_OPTIONS: 'SSL_OP_NO_SSLv2,SSL_OP_NO_SSLv3,SSL_OP_NO_TLSv1,SSL_OP_NO_TLSv1_1',
     BASE_PATH: '/demo-doc',
     SUPPORTED_LANGUAGES: 'en,es,fr,ja' // used to translate the web pages
     // *******************************************************************

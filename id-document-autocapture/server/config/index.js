@@ -22,12 +22,15 @@ const values = Object.assign({}, defaults);
 
 // Extend values with environment variables
 for (const [key, value] of Object.entries(process.env)) {
-    // Try to parse value in case JSON format is used
-    try {
-        values[key] = JSON.parse(value);
-    } catch (err) {
-        values[key] = value;
+    // Try to parse value in case JSON format is used (except for passwords and secrets)
+    if (!/PASSWORD$|SECRET$/.test(key)) {
+        try {
+            values[key] = JSON.parse(value);
+            continue;
+        } catch (err) {
+        }
     }
+    values[key] = value;
 }
 
 // Server vars which should not change

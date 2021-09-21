@@ -30,7 +30,7 @@ const allCountries = Allcountries // reorder the list of countries alphabeticall
     });
 
 let currentDocumentRule; // store current document rule as global variable - link with current session
-let currentSession; // strore current ession
+let currentSession; // store current session
 
 // Start of the process, loading supported countries  + doucment types from docserver
 // In addition predefined capture rules (store on SP server)  are also loaded in the "other country" part
@@ -144,10 +144,10 @@ if (!sessionIdParam) {
  */
 function displayCountryManagementError(extendedMsg, error) {
     console.log(extendedMsg, error);
-    $('#step-doc-auth-tehnical-ko').classList.remove('d-none');
+    $('#step-doc-auth-technical-ko').classList.remove('d-none');
     $('#step-country-selection').classList.add('d-none');
 
-    const small = $('#step-doc-auth-tehnical-ko small');
+    const small = $('#step-doc-auth-technical-ko small');
     small.textContent = extendedMsg || '';
 }
 
@@ -160,7 +160,7 @@ function displayDoctypeOrSessionError(extendedMsg, error) {
     console.log(extendedMsg, error);
     $('#step-doc-auth-ko').classList.remove('d-none');
     $('#step-doctype-selection').classList.add('d-none');
-    const small = $('#step-doc-auth-tehnical-ko small');
+    const small = $('#step-doc-auth-technical-ko small');
     small.textContent = extendedMsg || '';
 }
 
@@ -212,6 +212,8 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
                     const docRules = docCaptureSession.rules;
                     const format = docCaptureSession.format;
                     const identity = docCaptureSession.identity;
+                    // inform listener in main js that session is created
+                    document.dispatchEvent(new CustomEvent('sessionId', { detail: { sessionId: currentSession, docType: selectedDocType } }));
 
                     // Logs for debug purpose
                     console.log('Session initialized with sessionId ' + currentSession + ' and format ' + format);
@@ -283,21 +285,16 @@ function processDocType(selectedCountryCode, docRules, selectedDocType, format) 
     const sidesNumber = Object.entries(selectedDocRule).length;
     const targetResultStep = $(targetStepId + '-result');
     if (!selectedDocRule.find(rule => rule.side.name === DOC_TYPE.UNKNOWN)) { // TODO: temp ?
-        const continueDemoClass = '.continue-demo';
         const restartDemoClass = '.restart-demo';
         if (sidesNumber === 1) {
             // we do not continue to next side we have only one side
-            targetResultStep.querySelector(continueDemoClass).classList.add('d-none');
             targetResultStep.querySelector(restartDemoClass).classList.remove('d-none');
-            console.log('After this capture, all side required will be captured, you could capture this side again or restart the demo');
         } else { // we suppose we have two sides only (front & back) to scan
             const nextResultSideStep = firstSideToScan === 'front' ? $('#step-scan-doc-back-result') : $('#step-scan-doc-front-result');
-            targetResultStep.querySelector(continueDemoClass).classList.remove('d-none'); // add possibility to scan back side once front is done
             targetResultStep.querySelector(restartDemoClass).classList.add('d-none');
-            nextResultSideStep.querySelector(continueDemoClass).classList.add('d-none'); // we stop demo once last side is done
             nextResultSideStep.querySelector(restartDemoClass).classList.remove('d-none');
-            console.log('After this capture, one side will miss, you could capture this side again or capture the second one');
         }
+        console.log('After this capture, all side required for this document will be captured, you could capture this document again or restart the demo');
     }
 
     // store current document rule as global variable - link with current session

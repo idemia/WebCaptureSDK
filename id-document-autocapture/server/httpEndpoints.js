@@ -39,7 +39,7 @@ exports.initHttpEndpoints = (app) => {
     app.post(config.BASE_PATH + '/init-document-session', async (req, res) => {
         try {
             const session = req.body;
-            logger.info('Document session initialization with: ', { session });
+            logger.info('Document session initialization', { session });
 
             if (session.countryCode === '') {
                 session.rules = findRulesByCountryAndType(session.countryCode, session.docType);
@@ -62,19 +62,21 @@ exports.initHttpEndpoints = (app) => {
             }, parseInt(config.DOC_CAPTURE_SESSION_TTL) * 1000);
 
             res.json(response);
-        } catch (e) {
-            logger.error('Document session creation and rules retrieval have failed for country %s', req.params.country, { e });
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error(`Document session creation and rules retrieval have failed for country %s: ${err.stack}`, req.params.country);
+            res.status(err.status ? err.status : 500).send();
         }
     });
 
     /**
-   * Exposes api to retrieve document session
-   */
+     * Exposes api to retrieve document session
+     */
     app.get(config.BASE_PATH + '/document-sessions/:sessionId', async (req, res) => {
         const sessionId = req.params.sessionId;
         logger.info('Retrieve Document session : ', { sessionId });
-        if (!sessionId) res.status(400).json({ error: 'missing sessionId in request' });
+        if (!sessionId) {
+            res.status(400).json({ error: 'missing sessionId in request' });
+        }
         try {
             const docCaptureSession = await webDocApi.getDocSession(sessionId);
             documentCaptureResults[docCaptureSession.id] = docCaptureSession;
@@ -89,9 +91,9 @@ exports.initHttpEndpoints = (app) => {
                 docType: docCaptureSession.docType,
                 countryCode: docCaptureSession.countryCode
             });
-        } catch (e) {
-            logger.error('Retrieve Document session have failed', { sessionId, e });
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error(`Retrieve Document session have failed: ${err.stack}`, { sessionId });
+            res.status(err.status ? err.status : 500).send();
         }
     });
 
@@ -110,24 +112,24 @@ exports.initHttpEndpoints = (app) => {
             let result;
             if (config.IDPROOFING) {
                 result = await gipsApi.getCountryDocTypes(country);
-
-                logger.info('Document types and issuing countries supported: ', { result });
+                logger.info('Got Document types and issuing countries supported');
+                logger.debug('', { result });
             } else {
                 const countryDocTypes = await webDocApi.getCountryDocTypes(country);
-
-                logger.info('Document types and issuing countries supported: ', { countryDocTypes });
+                logger.info('Got Document types and issuing countries supported');
+                logger.debug('', { countryDocTypes });
 
                 const rulesAscountryDocTypes = findDocTypesByCountry();
 
-                logger.info('Document rules supported: ', { rulesAscountryDocTypes });
+                logger.info('Got Document rules supported');
+                logger.debug('', { rulesAscountryDocTypes });
 
                 result = countryDocTypes.concat(rulesAscountryDocTypes);
             }
-
             res.json(result);
-        } catch (e) {
-            logger.info('Getting country & document type failed: %s - ', req.params.country, { e });
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error(`Getting country & document type failed: ${err.stack}`);
+            res.status(err.status ? err.status : 500).send();
         }
     });
 
@@ -143,10 +145,10 @@ exports.initHttpEndpoints = (app) => {
         try {
             if (!documentCaptureResults[sessionId]) {
                 res.status(404).send({ error: 'Session not found or session timeout reached' });
-            } if (config.IDPROOFING) {
+            } else if (config.IDPROOFING) {
                 const gipsStatus = await gipsApi.getStatus(documentCaptureResults[sessionId].identity);
                 const status = gipsStatus.idDocuments[gipsStatus.idDocuments.length - 1].evidenceStatus.status;
-                logger.info('GIPS Transaction is on ' + status, { sessionId });
+                logger.info(`GIPS Transaction is on ${status}`, { sessionId });
                 // GIPS is still on PROCESSING
                 if (status === 'PROCESSING') {
                     res.status(404).send({ error: 'Result is not available' });
@@ -155,14 +157,14 @@ exports.initHttpEndpoints = (app) => {
                     const docCaptureSession = await gipsApi.getDocCaptureResult(gipsStatus, documentCaptureResults[sessionId].identity);
                     documentCaptureResults[sessionId] = docCaptureSession;
                     // finalResult = getDataToDisplay(docCaptureSession, docSide);
-                    logger.info('Document capture result for side=%s: ', req.params.docSide, { sessionId, result: removePIIDatat(docCaptureSession) });
+                    logger.info(`Document capture result for side=${req.params.docSide}:`, { sessionId, result: removePIIDatat(docCaptureSession) });
                     res.json(docCaptureSession);
                 }
             } else if (!config.DISABLE_CALLBACK && !documentCaptureResults[sessionId].callback) {
-                logger.info('Callback is not yet received for session ', { sessionId });
+                logger.info('Callback is not yet received for session', { sessionId });
                 res.status(404).send({ error: 'Result is not available' });
             } else {
-                logger.info('Retrieve document capture result (pooling): ', { sessionId, polling: polling });
+                logger.info('Retrieve document capture result (polling):', { sessionId, polling: polling });
                 if (!sessionId) {
                     const error = { error: 'Missing mandatory param sessionId' };
                     logger.error('Document capture retrieval result has failed', { error });
@@ -171,13 +173,13 @@ exports.initHttpEndpoints = (app) => {
                     const docCaptureSession = await webDocApi.getDocCaptureResult(sessionId, documentCaptureResults[sessionId].captureId);
                     documentCaptureResults[sessionId] = docCaptureSession;
                     finalResult = getDataToDisplay(docCaptureSession, docSide);
-                    logger.info('Document capture result for side=%s: ', req.params.docSide, { sessionId, result: removePIIDatat(finalResult) });
+                    logger.info(`Document capture result for side=${req.params.docSide}:`, { sessionId, result: removePIIDatat(finalResult) });
                     res.json(finalResult);
                 }
             }
-        } catch (e) {
-            logger.error('Document capture result for side ' + req.params.docSide + ' and sessionId ' + sessionId, e);
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error(`Document capture error for side ${req.params.docSide}: ${err.stack}`, { sessionId });
+            res.status(err.status ? err.status : 500).send();
         }
     });
 
@@ -188,9 +190,9 @@ exports.initHttpEndpoints = (app) => {
             const bestImage = await gipsApi.getBestImage(identityId, evidenceId);
             // res.status(200).send(Buffer.from(bestImage).toString('base64'));
             res.status(200).send(bestImage);
-        } catch (e) {
-            logger.error('getBestImage error, ', { e });
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error(`getBestImage error: ${err.stack}`);
+            res.status(err.status ? err.status : 500).send();
         }
     });
 
@@ -199,9 +201,9 @@ exports.initHttpEndpoints = (app) => {
         try {
             const gipsStatus = await gipsApi.getStatus(identityId);
             res.json(gipsStatus);
-        } catch (e) {
-            logger.error('getStatus error, ', { e });
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error(`getStatus error: ${err.stack}`);
+            res.status(err.status ? err.status : 500).send();
         }
     });
 
@@ -209,17 +211,19 @@ exports.initHttpEndpoints = (app) => {
     // Receive challenge result from docserver
     //
     app.post(config.BASE_PATH + config.DOC_CAPTURE_CALLBACK_URL, async (req, res) => {
-        const sessionId = req.body ? req.body.sessionId : undefined;
-        const captureId = req.body ? req.body.captureId : undefined;
+        const { sessionId, captureId, documentId } = req.body || {};
         logger.info('Callback reception: ' + config.DOC_CAPTURE_CALLBACK_URL, { sessionId, body: req.body });
-        if (!sessionId) {
-            const err = { error: 'Missing mandatory param sessionId' };
-            logger.error('A failure occurred during callback reception:', { err });
+        if (!sessionId || (!captureId && !documentId)) {
+            const err = { error: 'Missing mandatory param' };
+            logger.error('A failure occurred during callback reception: ', { err });
             res.status(400).send(err);
-        } else {
-            logger.info('Document capture result is available ', { sessionId });
+        } else if (captureId) {
+            logger.info('Document capture result is available', { sessionId });
             documentCaptureResults[sessionId] = { callback: true, captureId: captureId };
-
+            res.status(204).send();
+        } else if (documentId) {
+            logger.info('Document result is available', { sessionId });
+            // TODO handle document received result
             res.status(204).send();
         }
     });

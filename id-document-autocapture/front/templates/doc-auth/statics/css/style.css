@@ -153,6 +153,7 @@ small ul {
 .pc .check-phone img {max-height: 250px;}
 #step-weak-network .animation,
 #loading-doc-results .animation,
+#loading-initialization .animation,
 #connectivity-check .animation {
     align-items: center;
     flex-direction: column;
@@ -460,7 +461,7 @@ video {background-color: black}
     border: 5px solid white;
     border-radius: 15px;
     background: transparent;
-    box-shadow: 0 0 0 1000px rgba(0,0,0,0.75);
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.85);
     position: relative;
 
 }
@@ -533,7 +534,6 @@ video {background-color: black}
     main #step-doc-auth .rotatable-wh{
         transform: rotate(90deg);
         transform-origin: right top;
-        overflow-x: hidden;
         position: absolute;
         top: 100%;
         right: 0;
@@ -569,11 +569,29 @@ video {background-color: black}
 #step-doc-auth .video-msg {
     color: white;
     text-shadow: 0 0 8px rgba(67, 0, 153, 0.5);
-    font-size: 34px;
+    font-size: 28px;
     font-weight: bold;
     line-height: 1.11;
     text-align: center;
-    padding: 0 30px;
+    padding: 15px 20px 15px 20px;
+    border-radius: 8px;
+    background: rgba(47, 0, 107, 0.4);
+}
+
+.flip-background {
+    background: rgba(47, 0, 107, 0.4) !important;
+    width: 100%;
+    height: 100%;
+}
+
+.flip-message {
+    position: relative;
+    top: 2vh;
+}
+
+.doc-scan-flip {
+    transform: rotate(-90deg);
+    height: 85%;
 }
 #step-doc-auth .video-msg-center {
     align-self: center;
@@ -677,9 +695,10 @@ video {background-color: black}
     top: 0; bottom: 0;
     left: 0; right: 0;
     background-color: white;
-    z-index: 9999;
+    z-index: 10001;
     transition: background-color 100ms linear;
     background-color: rgba(255,255,255,1);
+    display: flex;
 }
 .loading .animation {
     flex-direction: column;
@@ -826,4 +845,41 @@ video {background-color: black}
 
 .front-result-footer {
     position: inherit !important;
+}
+
+#stop-capture-button {
+    width: 50px;
+    height: 50px;
+    background-color: #a7a7a7;
+    border-radius: 3px;
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10000;
+}
+
+.stop-bar-left {
+    height: 50px;
+    width: 4px;
+    margin-left: 23px;
+    background-color: black;
+    transform: rotate(
+            45deg
+    );
+    z-index: 1;
+}
+
+.stop-bar-right {
+    height: 50px;
+    width: 4px;
+    background-color: black;
+    transform: rotate(
+            90deg
+    );
+    z-index: 2;
+}
+
+#retry {
+    margin-top: 1rem;
 }

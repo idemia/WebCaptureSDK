@@ -41,6 +41,7 @@
   "Adresse": "住所",
   "62 Cottonwood Rd, Anytown, MA": "62コットンウッドロード、エニータウン、マサチューセッツ州",
   "Restart Demo": "デモを再開する",
+  "Confirm and continue" : "Confirm and continue",
   "it's incorrect, rescan document": "正しくありません、ドキュメントを再スキャンしてください",
   "We had some difficulties to capture your document, Ensure all corners are visible.": "ドキュメントをキャプチャするのにいくつかの問題がありました。すべてのコーナーが表示されていることを確認してください。",
   "Example photo": "写真の例",
@@ -79,5 +80,8 @@
   "Authenticating…": "認証中…",
   "Verifying your submitted document": "提出されたドキュメントの確認",
   "Get image from GIPS - dev only !": "GIPSから画像を取得します-開発者のみ！",
-  "Get GIPS transaction - dev only !": "GIPSトランザクションを取得します-開発者のみ！"
+  "Get GIPS transaction - dev only !": "GIPSトランザクションを取得します-開発者のみ！",
+  "Now flip ID and scan the BACK": "IDを反転し、戻るをスキャンします",
+  "Capture Initialization...": "Capture Initialization...",
+  "Please wait": "Please wait"
 }

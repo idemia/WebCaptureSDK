@@ -16,7 +16,6 @@
   "Failed to get camera device stream": "Échec de l'obtention du flux de l'appareil photo",
   "You denied camera permissions, either by accident or on purpose.": "Vous avez refusé les autorisations de la caméra, soit par accident, soit volontairement.",
   "In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings.": "Pour utiliser cette démo, vous devez activer les autorisations de la caméra dans les paramètres de votre navigateur ou dans les paramètres de votre système d'exploitation.",
-  "Failed to retrieve capture results": "Échec de la récupération des résultats de capture",
   "i accept": "J'accepte",
   "Sorry, there was an issue.": "Désolé, un problème est survenu.",
   "The selected camera doesn't support required resolution: ": "La caméra sélectionnée ne prend pas en charge la résolution requise: ",
@@ -42,6 +41,7 @@
   "Adresse": "Adresse",
   "62 Cottonwood Rd, Anytown, MA": "62 chemin Cottonwood, Anytown, MA",
   "Restart Demo": "Redémarrer la démo",
+  "Confirm and continue" : "Confirmer et continuer",
   "it's incorrect, rescan document": "c'est incorrect, numériser à nouveau le document",
   "We had some difficulties to capture your document, Ensure all corners are visible.": "Nous avons eu quelques difficultés à capturer votre document, assurez-vous que tous les coins sont visibles.",
   "Example photo": "Exemple de photo",
@@ -80,5 +80,8 @@
   "Authenticating…": "Authentification…",
   "Verifying your submitted document": "Vérification de votre document soumis",
   "Get image from GIPS - dev only !": "Récupérer l'image depuis GIPS - dev !!",
-  "Get GIPS transaction - dev only !": "Récupérer la transaction GIPS - dev !!"
+  "Get GIPS transaction - dev only !": "Récupérer la transaction GIPS - dev !!",
+  "Now flip ID and scan the BACK": "Retournez votre document afin de scanner le verso",
+  "Capture Initialization...": "Initialisation de la capture",
+  "Please wait": "Veuillez patienter"
 }

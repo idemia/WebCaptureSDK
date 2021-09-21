@@ -36,7 +36,10 @@ const lowLightDocMsg = $('#doc-low-light-msg');
 const tooCloseDocMsg = $('#too-close-doc-msg');
 const tooFarDocMsg = $('#too-far-doc-msg');
 const loadingResults = $('#loading-doc-results');
+const loadingInitialization = $('#loading-initialization');
 const videoScanOverlays = $$('#step-doc-auth .video-overlay');
+const stopCaptureButton = $('#stop-capture-button');
+const retryOnErrorButton = $('#step-doc-auth-ko #retry');
 
 const gipsImageBlock = $('#gips-image-block');
 const gipsImageButton = $('#gips-image-button');
@@ -47,18 +50,21 @@ const gipsTransactionButton = $('#gips-transaction-button');
 const gipsTransactionContent = $('#gips-transaction-content');
 
 let timeoutCheckConnectivity; // settimeout used to stop if network event received
-let connectivityOK = false; // network connectivity result even received and is enough
+let connectivityOK; // network connectivity result even received and is enough (keep undefined by default)
 let client; // let start & stop doc capture
+let clientStartTimeout; // handle the setTimeout where the client.start happens
 let identityId; // identity of the GIPS transaction (if GIPS workflow)
 let evidenceId; // evidenceId associated to a document on GIPS (if GIPS workflow)
 let bestImageURL; // best image url (in memory window.URL.createObjectURL) (if GIPS workflow)
 let videoStream; // user video camera stream
 let docSide; // current captured document type (front/back)
 let captureInProgress;
+let changeSideRequired;
 let cameraPermissionAlreadyAsked;
-let currentDocCorners;
+let imagesDocCorners;
+let countDownTimer; // flip timer
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
-
+const recordLabel = urlParams.get('videoBackup');
 const showLiveCorners = urlParams.get('showLiveCorners') === 'true';
 const sessionIdParam = urlParams.get('sessionId');
 const connectivityCheckId = '#connectivity-check';
@@ -71,60 +77,93 @@ const nameString = 'Name';
 const birthDateString = 'Birth date';
 const notSpecifiedString = 'Not specified';
 const dNoneFadeoutString = 'd-none-fadeout';
+const dNoneString = 'd-none';
 const signalValueClass = '.signal-value';
 const signalMinValueClass = '.signal-min-value';
 const networkSpeedString = '/network-speed';
 const networkLatencyString = '/network-latency';
+const dateDocSideAttribute = 'data-doc-side';
 
-/**
- * 1- init doc auth session (from backend) // TODO TBD
- * 2- init the communication with the server via socket
- * 3- get doc auth result (from backend) // TODO TBD
- */
-
-async function init(options = {}) {
-    client = undefined;
-    currentDocCorners = undefined;
-    docSide = options.docSide;
-    initDocAuthDesign(docSide.toLowerCase());
-    // get user camera video (front camera is default)
-    console.log('Get user camera video');
-    videoStream = await DocserverVideo.getDeviceStream({ video: { deviceId: options.deviceId } })
-        .catch((e) => {
-            let msg = __('Failed to get camera device stream');
-            let extendedMsg;
-            if (e.name && e.name.indexOf('NotAllowed') > -1) {
-                msg = __('You denied camera permissions, either by accident or on purpose.');
-                extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings.');
-            }
-            if (e.name && e.name.indexOf('OverconstrainedError') > -1) {
-                extendedMsg = __("The selected camera doesn't support required resolution: ") + e.extendedInfo;
-            }
-            stopVideoCaptureAndProcessResult(false, msg, extendedMsg);
-        });
-    if (!videoStream) {
+stopCaptureButton.onclick = function () {
+    if (!client) {
+        console.error('client doesn\'t exist, ignoring stop...');
         return;
     }
-    // display the video stream
-    videoOutput.srcObject = videoStream;
+    if (clientStartTimeout) {
+        clearTimeout(clientStartTimeout); // stops any future execution to start
+    }
+    console.log('client stop request sent to backend...');
+    resetDocAuthDesigns();
+    // send abort message to backend
+    client.stop();
+    videoStream = null;
+    videoOutput.srcObject = null;
+    let currentTargetStepId;
+    switch (docSide.toLowerCase()) {
+        case 'inside_page':
+            currentTargetStepId = '#step-scan-passport';
+            break;
+        case 'front':
+        case 'back': // back is not possible in fullcapture mode
+            currentTargetStepId = '#step-scan-doc-front';
+            break;
+        default:
+            currentTargetStepId = `#step-scan-doc-${docSide.toLowerCase()}`;
+            break;
+    }
+    // display the side to scan again
+    processStep('step-doc-auth', currentTargetStepId)
+        .catch((err) => {
+            console.log('Caught error calling processStep in stopCaptureButton onclick', err);
+        });
+};
 
+// once user has chosen the document type on UI
+// we trigger the capture initialization
+// this event ensure document session is created before calling the init
+document.addEventListener('sessionId', async function ({ detail: { sessionId, docType } }) {
+    console.log('<< Got session created', { sessionId, docType });
+    await initDocCaptureClient({ sessionId, docSide: docType === 'PASSPORT' ? 'INSIDE_PAGE' : 'FRONT' });
+});
+
+async function initDocCaptureClient(options = {}) {
+    if (client) {
+        console.log('captureClient already exist');
+        return;
+    }
+    imagesDocCorners = new Map();
+    docSide = options.docSide;
+    console.log('Init called in full document capture mode. Side is: ' + docSide);
+    client = undefined;
     // initialize the doc capture client with callbacks
     const docCaptureOptions = {
         docserverVideoUrl: DOCSERVER_VIDEO_URL_WITH_BASE_PATH,
+        fullDocCapture: true,
+        sessionId: options.sessionId,
+        onClientInitEnd: () => {
+            console.log('Capture client init end');
+            loadingInitialization.classList.add(dNoneString); // initialization done, remove loading for video preview
+            alignDocMsg.classList.remove(dNoneFadeoutString);
+        },
+        onChangeDocumentSide: (data) => {
+            console.log('Document side ' + docSide + ' is captured...');
+            console.log('Received onChangeDocumentSide: ', data);
+            changeSideRequired = true;
+            processStep('step-scan-doc-back', stepDocAuthId, false, 'BACK', data.delay)
+                .catch((err) => {
+                    console.log('Caught error calling processStep in onChangeDocumentSide', err);
+                    processCaptureResult(false);
+                });
+        },
         onDocCaptured: async (result) => {
-            console.log('Document side ' + docSide + ' is captured ...', result);
+            console.log('Document is captured, result received');
             captureInProgress = false;
-            const sessionId = getCurrentDocumentRule().currentSession;
+            processCaptureResult(result);
 
-            console.log('Start polling to retrieve capture result ...', result);
-            const docCaptureResult = await getDocCaptureResult(sessionId, getCurrentDocumentRule().selectedDocType, docSide)
-                .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve capture results')));
-
-            if (docCaptureResult) {
-                stopVideoCaptureAndProcessResult(docCaptureResult);
-            }
             if (client) {
-                client.disconnect();
+                videoOutput.srcObject = null;
+                videoStream = null; // it will allow to reload the stream on next capture
+                client.stop();
             }
         },
         trackingFn: (trackingInfo) => {
@@ -132,9 +171,12 @@ async function init(options = {}) {
         },
         errorFn: (error) => {
             console.log('got error', error);
+            clearTimeout(countDownTimer);
             captureInProgress = false;
-            stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
+            processCaptureResult(false, __('Sorry, there was an issue.'));
             if (client) {
+                videoOutput.srcObject = null;
+                videoStream = null; // it will allow to reload the stream on next capture
                 client.disconnect();
             }
         }
@@ -142,7 +184,29 @@ async function init(options = {}) {
     console.log('Init document capture client. Side is : ' + docSide);
     client = await DocserverVideo.initDocCaptureClient(docCaptureOptions);
 }
-
+async function retrieveUserCamera() {
+    if (videoStream) {
+        console.log('Video Stream already exist');
+        return;
+    }
+    console.log('Get user camera video');
+    try {
+        videoStream = await DocserverVideo.getDeviceStream();
+        // display the video stream
+        videoOutput.srcObject = videoStream;
+    } catch (e) {
+        let msg = __('Failed to get camera device stream');
+        let extendedMsg;
+        if (e.name && e.name.indexOf('NotAllowed') > -1) {
+            msg = __('You denied camera permissions, either by accident or on purpose.');
+            extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings.');
+        }
+        if (e.name && e.name.indexOf('OverconstrainedError') > -1) {
+            extendedMsg = __('The selected camera doesn\'t support required resolution: ') + e.extendedInfo;
+        }
+        processCaptureResult(false, msg, extendedMsg);
+    }
+}
 /**
  * Get GIPS Transaction Button activated
  **/
@@ -173,63 +237,106 @@ $$('*[data-target]')
         const sourceStep = e.path && e.path.length && e.path.find(p => p.classList.contains('step'));
         const sourceStepId = sourceStep && sourceStep.id;
         const targetStepId = btn.getAttribute('data-target');
-        await processStep(
-            sourceStepId, targetStepId,
+        await processStep(sourceStepId, targetStepId,
             btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000),
-            btn.getAttribute('data-doc-type'))
-            .catch(() => stopVideoCaptureAndProcessResult(false));
+            btn.getAttribute(dateDocSideAttribute))
+            .catch((err) => {
+                console.log('Caught error calling processStep', err);
+                processCaptureResult(false);
+            });
     }));
 
-async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide) {
+function resetVideoMsgContent() {
+    $('.video-msg-change-side').classList.add('d-none');
+    alignDocMsg.querySelectorAll('.video-msg').forEach(msg => msg.classList.add('d-none'));
+    alignDocMsg.classList.remove('video-overlay-flip'); // remove all background colors (used on flip message)
+}
+
+function displayChangeSideUI(startDelay) {
+    // Display Change message
+    resetVideoMsgContent();
+    // remove the abort/close button during the flip operation
+    removeAbortButton();
+    $('.video-msg-change-side').classList.remove('d-none');
+    alignDocMsg.classList.add('video-overlay-flip'); // add background in order to better read the message
+
+    countDownTimer = setTimeout(() => {
+        // Disable countdown
+        clearTimeout(countDownTimer);
+        // Display video message
+        resetVideoMsgContent();
+        // alignDocMsg.querySelector(`.video-msg-${docSide.replace('_', '-')}`).classList.remove('d-none');
+        alignDocMsg.classList.remove(dNoneFadeoutString);
+        displayAbortButton();
+    }, startDelay);
+}
+
+function displayAbortButton() {
+    stopCaptureButton.classList.remove(dNoneString);
+}
+
+function removeAbortButton() {
+    stopCaptureButton.classList.add(dNoneString);
+}
+
+async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide, startDelay = 3000) {
     // d-none all steps
     $$('.step').forEach(row => row.classList.add('d-none'));
     if (sessionIdParam && targetStepId === '#step-country-selection') {
         document.location.reload();
     }
     if (targetStepId === connectivityCheckId) {
-        if (!connectivityOK) { // bypass this waiting time if we are still here 5 seconds
-            document.querySelector(connectivityCheckId).classList.remove('d-none');
+        if (connectivityOK) {
+            targetStepId = stepDocAuthId; // connectivity check done & successful, move to the next step
+        } else if (connectivityOK === undefined) {
+            // connectivity check in progress, display waiting screen
+            $(connectivityCheckId).classList.remove('d-none');
             timeoutCheckConnectivity = setTimeout(() => {
                 processStep(sourceStepId, targetStepId, displayWithDelay, docSide);
             }, 1000); // call this method until we got the results from the network connectivity
         } else {
-            targetStepId = stepDocAuthId; // connectivity check done/failed, move to the next step
+            // Rare case where the connectivity error screen has been shown but covered by another 'step' screen, so show it again to avoid looping endlessly
+            networkConnectivityNotGood();
+            return;
         }
     }
-
     if (targetStepId === stepDocAuthId) { // << if client clicks on start capture
+        // we save inside the abort div and technical error, the last capture doc type, so we have one generic div for all type of document to retry
+        docSide !== 'BACK' && retryOnErrorButton.setAttribute(dateDocSideAttribute, docSide);
         if (!cameraPermissionAlreadyAsked) { // << display the camera access permission step the first time only
             cameraPermissionAlreadyAsked = true; // TODO: use localStorage ??
             targetStepId = '#step-access-permission';
             // when client accepts camera permission access > we redirect it to the document capture check
-            document.querySelector(targetStepId + ' button').setAttribute('data-doc-type', docSide);
+            $(targetStepId + ' button').setAttribute(dateDocSideAttribute, docSide);
         } else {
             $(stepDocAuthId).classList.remove('d-none');
-
-            await init({ docSide: docSide });
-            if (client) {
-                setTimeout(() => {
-                    const { currentSession, selectedDocRule } = getCurrentDocumentRule();
-                    selectedDocRule.forEach(docTypeSide => {
-                        if (docTypeSide.side.name.toUpperCase() === docSide) {
-                            docTypeSide.status = 'processing';
-                            // start in currentSession
-                            const isRetry = !!docTypeSide.side.scanned;
-                            const startCaptureRequest = { stream: videoStream, sessionId: currentSession, isRetry: isRetry };
-                            client.start(startCaptureRequest);
-
-                            captureInProgress = true;
-
-                            docTypeSide.side.scanned = captureInProgress;
-                        }
-                    });
-                }, 3000);
-            } else {
+            initDocAuthDesign(docSide.toLowerCase());
+            await retrieveUserCamera();
+            if (!client || !videoStream) {
+                console.log('client or videoStream not available, start aborted');
                 return; // no client > no process
             }
+            if (sourceStepId === 'step-scan-doc-back') {
+                displayChangeSideUI(startDelay);
+            }
+            const { selectedDocRule } = getCurrentDocumentRule();
+
+            clientStartTimeout = setTimeout(() => {
+                const docTypeSide = selectedDocRule.find(docTypeSide => docTypeSide.side.name.toUpperCase() === docSide);
+                if (docTypeSide) {
+                    docTypeSide.status = 'processing';
+                    if (!changeSideRequired) { // Start only on first side (fullDocCapture)
+                        const startCaptureRequest = { stream: videoStream  };
+                        client.start(startCaptureRequest);
+                    }
+                    changeSideRequired = false;
+                    captureInProgress = true;
+                    docTypeSide.side.scanned = captureInProgress;
+                }
+            }, docSide !== 'BACK' ? 1000 : startDelay);
         }
     }
-    const targetStep = document.querySelector(targetStepId);
+    const targetStep = $(targetStepId);
     targetStep.classList.remove('d-none');
     const targetStepFooter = targetStep.querySelector('.footer');
     if (targetStepId !== stepDocAuthId && targetStepFooter) {
@@ -242,15 +349,62 @@ async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide
         }
     }
 }
-async function stopVideoCaptureAndProcessResult(result, msg, extendedMsg) {
-    console.log('Stop capture side');
-    resetDocAuthDesigns();
-    const isPassport = docSide === 'INSIDE_PAGE';
-    const captureOnlyDocImg = getCurrentDocumentRule().selectedDocRule
-        .find(r => r.side.name === docSide).captureFeatures.includes('NONE');
+
+function processCaptureResult(result, msg, extendedMsg) {
     $$('.step').forEach(step => step.classList.add('d-none'));
+    const captures = result && result.captures;
+    if (captures) {
+        console.log('Full Document ID: ' + result.id);
+        captures.forEach((capture, index) => {
+            const stepId = processCaptureResultForSide(getDataToDisplay(capture, capture.side), capture.side.name);
+            console.log('Capture ID: ' + capture.id);
+            if (index) {
+                // Hide logo for elements after the first one
+                $(stepId + ' .header').classList.add('d-none');
+            }
+            if (index !== captures.length - 1) {
+                // Hide footer with buttons except for the last element
+                $(stepId + ' .footer').classList.add('d-none');
+            } else {
+                // Last element: Add margin to allow scrolling to the bottom of the image (otherwise it overlaps with footer)
+                addMarginForScrollingResult(stepId);
+                selectRestartButton(stepId);
+                selectRetryButton(stepId);
+            }
+        });
+    } else {
+        const stepId = processCaptureResultForSide(result, docSide, msg, extendedMsg);
+        addMarginForScrollingResult(stepId);
+        selectRestartButton(stepId);
+        selectRetryButton(stepId);
+    }
+}
+
+function addMarginForScrollingResult(stepId) {
+    // Currently only done for step-scan-doc-back-result (maybe find a better solution or add other steps...)
+    if (stepId === '#step-scan-doc-back-result' || stepId === '#step-scan-passport-result' || stepId === '#step-scan-doc-unknown-result') {
+        $(stepId + ' .formatted-results').style.marginBottom = $(stepId + ' .footer').offsetHeight + 'px';
+    }
+}
+
+function selectRestartButton(stepId) {
+    // Display the correct restart button depending of the workflow
+    const btnRestartFull = $(stepId + ' .restart-full');
+    btnRestartFull && btnRestartFull.classList.remove('d-none');
+}
+
+function selectRetryButton(stepId) {
+    // Display the correct retry button depending of the workflow
+    const btnRetryFront = $(stepId + ' .retry-front');
+    btnRetryFront && btnRetryFront.classList.remove('d-none');
+}
+
+function processCaptureResultForSide(result, side, msg, extendedMsg) {
+    console.log('Processing result for side: ' + side);
+    resetDocAuthDesigns();
+    const isPassport = side === 'INSIDE_PAGE';
     const { done, ocr, pdf417, diagnostic, docImage, docCorners } = result;
-    const stepId = isPassport ? '#step-scan-passport-result' : `#step-scan-doc-${docSide.toLowerCase()}-result`;
+    const stepId = isPassport ? '#step-scan-passport-result' : `#step-scan-doc-${side.toLowerCase()}-result`;
     const stepResult = $(stepId + ' .formatted-results');
     stepResult.innerHTML = '';
 
@@ -266,24 +420,22 @@ async function stopVideoCaptureAndProcessResult(result, msg, extendedMsg) {
             if (diagnostic) { // we cannot have diagnostic when status is done
                 appendResultsTo(stepResult, 'Diagnostic', Object.keys(diagnostic).join(', '));
             }
-            console.log('Timeout or no result found or partial result found gainst several rules', result);
-            if (isPassport) {
-                $('#step-scan-passport-error').classList.remove('d-none');
-            } else {
-                $(`#step-scan-doc-${docSide.toLowerCase()}-error`).classList.remove('d-none');
-            }
-        } else if (captureOnlyDocImg && docImage) { // we display captured doc for unknown doc - rectangle rule
-            docImageCase(docImage, stepResult, docCorners);
-            console.log('Unknown doc captured', result);
-            $(stepId).classList.remove('d-none');
-        } else {
+            console.log('Timeout or no result found or partial result found against several rules', result);
+            const errorStepId = isPassport ? '#step-scan-passport-error' : `#step-scan-doc-${side.toLowerCase()}-error`;
+            $(errorStepId).classList.remove('d-none');
+            return errorStepId;
+        } else if (pdf417 || ocr) {
             // calculate pdf417 / OCR / docImage results
             pdf417Case(pdf417, stepResult, stepId);
             const ocrFound = ocrCase(ocr, stepResult);
-            docImageCase(docImage, stepResult, docCorners); // docImage is behind ocr + pdf to have image at the bottom
+            docImageCase(docImage, stepResult, docCorners, side.toLowerCase()); // docImage is behind ocr + pdf to have image at the bottom
             if (ocrFound) {
                 $(stepId).classList.remove('d-none');
             }
+        } else if (docImage) { // we display captured doc for unknown doc - rectangle rule
+            docImageCase(docImage, stepResult, docCorners, side.toLowerCase());
+            console.log('Unknown doc captured', result);
+            $(stepId).classList.remove('d-none');
         }
     } else {
         $('#step-doc-auth-ko').classList.remove('d-none');
@@ -293,6 +445,7 @@ async function stopVideoCaptureAndProcessResult(result, msg, extendedMsg) {
         const small = $('#step-doc-auth-ko small');
         small.textContent = extendedMsg || '';
     }
+    return stepId;
 }
 
 function pdf417Case(pdf417, stepResult, stepId) {
@@ -319,7 +472,7 @@ function pdf417Case(pdf417, stepResult, stepId) {
 function ocrCase(ocr, stepResult) {
     let ocrFound = false;
     if (ocr) {
-    // got ocr or/and mrz results
+        // got ocr or/and mrz results
         if (ocr.mrz) {
             ocrFound = true;
             const { documentInfo, identity } = ocr.mrz;
@@ -364,7 +517,7 @@ function ocrCase(ocr, stepResult) {
     return ocrFound;
 }
 
-function docImageCase(docImage, stepResult, docCorners) {
+function docImageCase(docImage, stepResult, docCorners, side) {
     if (docImage && !IDPROOFING) {
         const imgLabel = document.createElement('div');
         imgLabel.className = 'result-header';
@@ -372,6 +525,8 @@ function docImageCase(docImage, stepResult, docCorners) {
         const img = document.createElement('img');
 
         const imgWrapper = document.createElement('div');
+        const id = 'result_img_' + side;
+        imgWrapper.id = id;
         imgWrapper.className = 'result-block best-image-wrapper';
         imgWrapper.appendChild(imgLabel);
         imgWrapper.appendChild(img);
@@ -380,13 +535,7 @@ function docImageCase(docImage, stepResult, docCorners) {
             const imgWrapperHeight = img.offsetHeight + 20;
             imgWrapper.style.height = imgWrapperHeight + 'px';
             if (docCorners) {
-                currentDocCorners = docCorners;
-                // display corners on the image
-                /*
-          <svg class="doc-captured-border">
-              <polygon points="0,0" stroke="#ac85df" fill="rgba(67, 0, 153, 0.5)" stroke-linejoin="round" stroke-width="10"/>
-          </svg>
-        */
+                imagesDocCorners.set(id, docCorners);
                 const svgNS = 'http://www.w3.org/2000/svg';
                 const svg = document.createElementNS(svgNS, 'svg');
                 svg.style.position = 'absolute';
@@ -418,11 +567,14 @@ function initDocAuthDesign(docSide) {
     $('main').classList.add('darker-bg');
     videoScanOverlays.forEach(overlay => overlay.classList.add(dNoneFadeoutString));
     docAuthMask.classList.remove(dNoneFadeoutString);
-    alignDocMsg.querySelectorAll('.video-msg').forEach(msg => msg.classList.add('d-none'));
+    resetVideoMsgContent();
+    if (docSide !== 'back') { // do not display initialization loader after doc-flip for back side
+        loadingInitialization.classList.remove(dNoneString);
+    }
     alignDocMsg.querySelector(`.video-msg-${docSide.replace('_', '-')}`).classList.remove('d-none');
-    alignDocMsg.classList.remove(dNoneFadeoutString);
     adjustDocumentCaptureOverlay();
 }
+
 /**
  * reset video capture elements at the end of the process
  */
@@ -433,10 +585,12 @@ function resetDocAuthDesigns() {
         window.URL.revokeObjectURL(bestImageURL);
     } // free memory
 }
+
 /**
  * display messages to user during capture (eg: move closer, center your doc ...)
  */
 let userInstructionMsgDisplayed;
+
 function displayMsg(elementToDisplay, ttl = 2000) {
     // hide all messages
     if (!userInstructionMsgDisplayed) {
@@ -489,7 +643,7 @@ function displayInstructionsToUser({ position, corners, pending }) {
         }
     }
     if (corners) {
-    // displayMsg(scanningDocMsg, 5000);
+        // displayMsg(scanningDocMsg, 5000);
         if (showLiveCorners) {
             const { x0, y0, x1, y1, x2, y2, x3, y3 } = corners;
             const coefW = videoOutput.offsetWidth / videoOutput.videoWidth;
@@ -499,8 +653,8 @@ function displayInstructionsToUser({ position, corners, pending }) {
             capturedDoc.classList.remove(dNoneFadeoutString);
         }
     }
-    if (pending) {
-    // we are waiting for results OCR
+    if (pending && !changeSideRequired) {
+        // we are waiting for results OCR
         if (userInstructionMsgDisplayed) {
             userInstructionMsgDisplayed = window.clearTimeout(userInstructionMsgDisplayed);
         }
@@ -515,16 +669,12 @@ window.envBrowserOk && $('#step-country-selection').classList.remove('d-none');
  */
 window.onload = () => {
     if (typeof DocserverNetworkCheck !== 'undefined') {
-        let ttlInProgress = window.setTimeout(function () {
-            onNetworkCheckUpdate();
-        }, 10000);
         let displayGoodSignal = false;
+
         // eslint-disable-next-line no-inner-declarations
         function onNetworkCheckUpdate(networkConnectivity) {
-            if (!ttlInProgress || !window.envBrowserOk) { // if environnement check fails, we stop here
-                return;
-            }
             if (!networkConnectivity || !networkConnectivity.goodConnectivity) {
+                connectivityOK = false;
                 networkConnectivityNotGood(networkConnectivity);
             } else if (networkConnectivity && displayGoodSignal && networkConnectivity.goodConnectivity && networkConnectivity.upload) {
                 $$('.step').forEach(s => s.classList.add('d-none'));
@@ -533,46 +683,59 @@ window.onload = () => {
                 goodNetworkCheckPage.querySelector(signalValueClass).innerHTML = '(' + networkConnectivity.upload + ' kb/s)';
                 goodNetworkCheckPage.querySelector(signalMinValueClass).innerHTML = DocserverNetworkCheck.UPLOAD_SPEED_THRESHOLD + ' kb/s';
                 displayGoodSignal = false;
-                connectivityOK = true; // connectivity results retrives + enough (specific page)
+                connectivityOK = true; // connectivity results retrieved + enough (specific page)
             } else {
-                connectivityOK = true; // connectivity results retrives + enough
+                connectivityOK = true; // connectivity results retrieved + enough
             }
+
             if (!connectivityOK) { // clear the other waiting screen since we are going to show data from network event
                 clearTimeout(timeoutCheckConnectivity); // clear the timeout connectivity check
-                document.querySelector(connectivityCheckId).classList.add('d-none'); // hide the waiting page
+                $(connectivityCheckId).classList.add('d-none'); // hide the waiting page
             }
-            ttlInProgress = window.clearTimeout(ttlInProgress);
         }
-        DocserverNetworkCheck.connectivityMeasure({
-            downloadURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkSpeedString,
-            uploadURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkSpeedString,
-            latencyURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkLatencyString,
-            onNetworkCheckUpdate: onNetworkCheckUpdate
-        });
+
+        // eslint-disable-next-line no-inner-declarations
+        function doNetworkCheck() {
+            DocserverNetworkCheck.connectivityMeasure({
+                uploadURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkSpeedString,
+                latencyURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkLatencyString,
+                onNetworkCheckUpdate: onNetworkCheckUpdate,
+                errorFn: (err) => {
+                    console.error('An error occurred while calling connectivityMeasure: ', err);
+                    onNetworkCheckUpdate();
+                }
+            });
+        }
+
+        let startCheckConn = setInterval(function () {
+            if (window.envBrowserOk) {
+                if (startCheckConn) {
+                    clearInterval(startCheckConn);
+                    startCheckConn = null;
+                }
+                doNetworkCheck();
+            }
+        }, 100);
+        window.setTimeout(() => {
+            if (startCheckConn) {
+                clearInterval(startCheckConn);
+                startCheckConn = null;
+            }
+        }, 5000);
         $('#check-network').onclick = function () {
             const weakNetworkCheckPage = $('#step-weak-network');
             weakNetworkCheckPage.querySelector('.animation').classList.remove('d-none');
             weakNetworkCheckPage.querySelector('.check-phone').classList.add('d-none');
-            ttlInProgress = window.setTimeout(function () {
-                onNetworkCheckUpdate();
-            }, 10000);
             displayGoodSignal = true;
-            window.setTimeout(function () {
-                DocserverNetworkCheck.connectivityMeasure({
-                    downloadURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkSpeedString,
-                    uploadURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkSpeedString,
-                    latencyURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkLatencyString,
-                    onNetworkCheckUpdate: onNetworkCheckUpdate
-                });
+            window.setTimeout(() => {
+                // Possibly reset connectivityOK to undefined if needed
+                doNetworkCheck();
             }, 100);
         };
     }
 };
 
 function networkConnectivityNotGood(networkConnectivity) {
-    if (!networkConnectivity && !networkConnectivity.upload) {
-        console.log('Unable to check user connectivity within 2 sec.');
-    }
     const weakNetworkCheckPage = $('#step-weak-network');
     weakNetworkCheckPage.querySelector('.animation').classList.add('d-none');
     weakNetworkCheckPage.querySelector('.check-phone').classList.remove('d-none');
@@ -590,7 +753,9 @@ function networkConnectivityNotGood(networkConnectivity) {
         if (uploadNotGood) {
             weakNetworkCheckPage.querySelector('.upload').classList.remove('d-none');
         }
-    } else { // << case of time out
+    } else { // << case of error
+        // eslint-disable-next-line no-console
+        console.warn('Unable to check user connectivity');
         weakNetworkCheckPage.querySelector(signalValueClass).innerHTML = '';
         weakNetworkCheckPage.querySelector(signalMinValueClass).innerHTML = DocserverNetworkCheck.UPLOAD_SPEED_THRESHOLD + ' kb/s';
         weakNetworkCheckPage.querySelector('.upload').classList.remove('d-none');
@@ -598,6 +763,7 @@ function networkConnectivityNotGood(networkConnectivity) {
     // close VideoCapture If Needed;
     resetDocAuthDesigns();
     if (client) {
+        videoOutput.srcObject = null;
         client.disconnect();
     }
 }
@@ -649,7 +815,17 @@ function initDocAuthAnimations() {
             animationData: require('./animations/doc-scan-front-doc.json') // the animation data
         });
     });
+    $$('.doc-scan-flip').forEach(anim => {
+        lottie.loadAnimation({
+            container: anim, // the dom element that will contain the animation
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: require('./animations/doc-scan-flip.json') // the flip animation data
+        });
+    });
 }
+
 initDocAuthAnimations();
 
 /**
@@ -696,6 +872,7 @@ function appendResultsTo(parent, title = '', text = '', rawData) {
     resultBlock.appendChild(resultValue);
     parent.appendChild(resultBlock);
 }
+
 function base64ToArrayBuffer(base64) {
     const binaryString = window.atob(base64);
     const binaryLen = binaryString.length;
@@ -704,43 +881,6 @@ function base64ToArrayBuffer(base64) {
         bytes[i] = binaryString.charCodeAt(i);
     }
     return bytes;
-}
-
-/**
- * Retrieve document capture result for specific sessionId, current document type and document side
- * @param sessionId
- * @returns {Promise<*>}
- */
-async function getDocCaptureResult(sessionId, docType, docSide, maxAttempts = 20, interval = 1000) {
-    return new Promise(function (resolve, reject) {
-        const xhttp = new window.XMLHttpRequest();
-        const path = BASE_PATH + '/doc-capture-result/' + sessionId + '/' + docType + '/' + docSide;
-
-        xhttp.open('GET', path, true);
-        xhttp.responseType = 'json';
-        xhttp.setRequestHeader('Content-type', 'application/json');
-        xhttp.onload = function () {
-            console.log('Calling ' + BASE_PATH + '/doc-capture-result/' + sessionId + '/' + docType + '/' + docSide);
-            if (xhttp.status) {
-                if (xhttp.status === 200) {
-                    resolve(xhttp.response);
-                } else if (maxAttempts) { // >> polling
-                    console.log('Document capture result retrieval, retry ...', maxAttempts);
-                    return new Promise(resolve => setTimeout(resolve, interval))
-                        .then(() => {
-                            resolve(getDocCaptureResult(sessionId, docType, docSide, maxAttempts - 1));
-                        });
-                } else {
-                    console.error('Document capture result retrieval failed, max retries reached');
-                    reject(new Error('Document capture result retrieval failed, max retries reached'));
-                }
-            }
-        };
-        xhttp.onerror = function () {
-            reject(JSON.parse(xhttp.response));
-        };
-        xhttp.send();
-    });
 }
 
 async function getGipsBestImage() {
@@ -810,38 +950,40 @@ function adjustBestImageCorners() {
         // adjust image wrapper height
         const imgWrapperHeight = img.offsetHeight + 20;
         bestImgWrapper.style.height = imgWrapperHeight + 'px';
-        if (!currentDocCorners) {
+        if (!imagesDocCorners || !imagesDocCorners.has(bestImgWrapper.id)) {
             return;
         }
+        const docCorners = imagesDocCorners.get(bestImgWrapper.id);
         // adjust corners on the image
         const svg = bestImgWrapper.querySelector('svg');
         svg.style.height = imgWrapperHeight + 'px';
         const coefW = img.offsetWidth / img.naturalWidth;
         const coefH = img.offsetHeight / img.naturalHeight;
-        const points = currentDocCorners.map(p => p[0] * coefW + ',' + p[1] * coefH).join(' ');
+        const points = docCorners.map(p => p[0] * coefW + ',' + p[1] * coefH).join(' ');
         const polygon = svg.querySelector('polygon');
         polygon.setAttribute('points', points);
     });
 }
+
 /*
     display document borders regarding it format ID1/ID2/ID3
     (refer to official dimensions https://fr.wikipedia.org/wiki/ISO/CEI_7810 )
  */
 function adjustDocumentCaptureOverlay() {
     let maskWidthRatio, maskHeightRatio;
-    const iD1 = document.querySelector('.id1');
-    const iD2 = document.querySelector('.id2');
-    const iD3 = document.querySelector('.id3');
+    const iD1 = $('.id1');
+    const iD2 = $('.id2');
+    const iD3 = $('.id3');
     if (iD1) {
-    /* ID1 ratio h=85mm.6 w=53.98mm */
+        /* ID1 ratio h=85mm.6 w=53.98mm */
         maskWidthRatio = 158.577251; /* 85.6/53.98 = 1.58577251 */
         maskHeightRatio = 63.0607476; /* 100/63.0607476 = 1.58577251 */
     } else if (iD2) {
-    /* ID2 ratio h=105mm w=74 mm */
+        /* ID2 ratio h=105mm w=74 mm */
         maskWidthRatio = 141.891892; /* 105/74 = 1.41891892 */
         maskHeightRatio = 70.4761904; /* 100/70.4761904 = 1.41891892 */
     } else if (iD3) {
-    /* ID3 ratio h=125mm w=88mm */
+        /* ID3 ratio h=125mm w=88mm */
         maskWidthRatio = 142.045455; /* 125/88 = 1.42045455 */
         maskHeightRatio = 70.3999998; /* 100/70.3999998 = 1.42045455 */
     }
@@ -853,19 +995,20 @@ function adjustDocumentCaptureOverlay() {
     let rootHeight = documentBorders.clientHeight; // window.innerHeight;
     if (rootWidth < rootHeight) { // << if portrait mode then swap the width & height
         [rootWidth, rootHeight] = [rootHeight, rootWidth];
-        document.querySelectorAll('.rotatable-wh').forEach(r => {
+        $$('.rotatable-wh').forEach(r => {
             r.classList.remove('w-100', 'h-100');
             r.style.width = window.innerHeight + 'px';
             r.style.height = window.innerWidth + 'px';
         });
     } else {
-        document.querySelectorAll('.rotatable-wh').forEach(r => {
+        $$('.rotatable-wh').forEach(r => {
             r.classList.add('w-100', 'h-100');
         });
     }
     documentBorders.style.setProperty('--mask-h-ratio', (rootWidth * maskHeightRatio / 100) + 'px');
     documentBorders.style.setProperty('--mask-w-ratio', (rootHeight * maskWidthRatio / 100) + 'px');
 }
+
 adjustDocumentCaptureOverlay();
 
 function buildFullName(identity) {
@@ -877,3 +1020,62 @@ function buildFullName(identity) {
     }
     return result;
 }
+
+/**
+ * Return expected result format to ui
+ * @param documentResult
+ * @param documentSide
+ */
+function getDataToDisplay(documentResult, documentSide) {
+    const finalResult = {};
+    let currentSideResult;
+    if (Array.isArray(documentResult)) {
+        currentSideResult = documentResult.pop();
+        while (currentSideResult.side.name.toUpperCase() !== documentSide.toUpperCase()) {
+            currentSideResult = documentResult.pop();
+        }
+    } else {
+        currentSideResult = documentResult;
+    }
+
+    // DONE = everything was success, failed or timeout or any = failed
+    finalResult.done = (currentSideResult.status === 'DONE');
+    finalResult.diagnostic = currentSideResult.diagnostic;
+    finalResult.docImage = currentSideResult.image;
+    finalResult.docCorners = currentSideResult.corners;
+    // ocr mrz ...
+    currentSideResult.rules.forEach(
+        rule => {
+            if (rule.name === 'OCR') {
+                if (finalResult.ocr) {
+                    Object.assign(finalResult.ocr, rule.result);
+                } else {
+                    finalResult.ocr = rule.result;
+                }
+            }
+            if (rule.name === 'MRZ' && rule.result) {
+                if (!finalResult.ocr) {
+                    finalResult.ocr = {};
+                }
+                Object.assign(finalResult.ocr, { mrz: rule.result });
+            }
+            if (rule.name === 'PDF417') {
+                finalResult.pdf417 = rule.result;
+            }
+        }
+    );
+
+    return finalResult;
+}
+$$('.restart-demo').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        if (client) {
+            await client.finishSession();
+            console.log('Disconnecting client socket...');
+            // stop the websocket
+            client.disconnect();
+            client = undefined;
+        }
+        videoStream = null;
+    });
+});
