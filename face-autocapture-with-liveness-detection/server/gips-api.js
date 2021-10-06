@@ -21,20 +21,21 @@ const FormData = require('form-data');
 const config = require('./config');
 const debug = require('debug')('front:gips:api');
 const multipart = require('parse-multipart');
-const agent = require('./httpUtils').getAgent(config.GIPS_TLS_TRUSTSTORE_PATH);
+const agent = require('./httpUtils').getAgent(config.GIPS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
 const context = [{
     key: 'BUSINESS_ID',
     value: 'LOA1P'
 }];
 
 const passportFRA = { jurisdiction: 'FRA', documentType: 'PASSPORT', source: 'LIVE_CAPTURE_IMAGE' };
+const PATH_V1_IDENTITY = '/v1/identities/';
 
 module.exports = {
-    getSession: getSession,
-    getLivenessChallengeResult: getLivenessChallengeResult,
-    createFace: createFace,
-    getFaceImage: getFaceImage,
-    getGipsStatus: getGipsStatus
+    getSession,
+    getLivenessChallengeResult,
+    createFace,
+    getFaceImage,
+    getGipsStatus
 };
 
 /**
@@ -193,7 +194,7 @@ function postConsent(identityId) {
         }
     }];
 
-    return fetch(config.GIPS_URL + '/v1/identities/' + identityId + '/consents', {
+    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/consents', {
         method: 'POST',
         body: JSON.stringify(consent),
         headers: jsonContentType(authenticationHeader()),
@@ -229,7 +230,7 @@ function postConsent(identityId) {
  *     ],
  *     "type": "LIVENESS_HIGH",
  *     "timeout": 0,
- *     "securityLevel": "VERY_LOW",
+ *     "securityLevel": "HIGH",
  *     "nbChallenge": 0,
  *     "useAccurateMatch": true,
  *     "matchThreshold": 0,
@@ -244,7 +245,7 @@ function startVideoCapture(identityId) {
         nbChallenge: config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE
     };
 
-    return fetch(config.GIPS_URL + '/v1/identities/' + identityId + '/attributes/portrait/live-capture-session', {
+    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/live-capture-session', {
         method: 'POST',
         body: JSON.stringify(livenessParamerters),
         headers: jsonContentType(authenticationHeader()),
@@ -267,7 +268,7 @@ function startVideoCapture(identityId) {
  * @returns {*}
  */
 function getStatus(identityId, portraitId) {
-    return fetch(config.GIPS_URL + '/v1/identities/' + identityId + '/status/' + portraitId, {
+    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/status/' + portraitId, {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
@@ -307,7 +308,7 @@ function getStatus(identityId, portraitId) {
  * @returns {*}
  */
 function getGlobalStatus(identityId) {
-    return fetch(config.GIPS_URL + '/v1/identities/' + identityId, {
+    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId, {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
@@ -327,7 +328,7 @@ function createFace(imageFile, identityId) {
     formData.append('DocumentCaptureDetails', Buffer.from(JSON.stringify(passportFRA)));
     formData.append('DocumentFront', imageFile.buffer);
 
-    return fetch(config.GIPS_URL + '/v1/identities/' + identityId + '/id-documents/capture', {
+    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/id-documents/capture', {
         method: 'POST',
         body: formData,
         headers: mutipartContentType(authenticationHeader()),
@@ -344,7 +345,7 @@ function createFace(imageFile, identityId) {
  * @returns face
  */
 function getFaceImage(identityId) {
-    const url = config.GIPS_URL + '/v1/identities/' + identityId + '/attributes/portrait/capture';
+    const url = config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/capture';
 
     return fetch(url, {
         method: 'GET',

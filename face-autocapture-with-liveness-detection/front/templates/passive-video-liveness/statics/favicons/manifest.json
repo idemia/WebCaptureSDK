@@ -1,0 +1,17 @@
+{
+  "name": "IPV WebSDK",
+  "short_name": "WebSDK",
+  "start_url": "/demo-server-passive-video/passive-video-liveness/",
+  "scope": "/demo-server-passive-video/passive-video-liveness/",
+  "icons": [
+    {
+      "src": "./logo-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#430099",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait"
+}

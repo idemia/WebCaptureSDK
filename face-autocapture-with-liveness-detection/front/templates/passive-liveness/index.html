@@ -296,17 +296,6 @@ limitations under the License.
                 <div id="move-further-animation" class="d-none-fadeout video-overlay w-100 no-header-h-100 ">
                     <span class="video-msg video-msg-center "><%= __("Move further") %></span>
                 </div>
-                <div id="head-rotation-animation" class="d-none-fadeout video-overlay w-100 no-header-h-100"></div>
-                <div id="positive-message" class="d-none-fadeout video-overlay w-100 no-header-h-100">
-                    <span class="video-msg video-msg-top bg-green w-100">
-                        <%= __("Good job! Only one more point to go.") %>
-                    </span>
-                </div>
-
-                <div id="move-phone-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
-                    <img src="./img/rotate_head_black_L.gif" width="350" alt="move head" class="align-self-center">
-                    <span class="video-msg"><%= __("Move only your head, not the device.") %></span>
-                </div>
                 <div id="phone-not-vertical-animation" class="video-msg-wrapper d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
                     <img src="./img/chevrons_up.png" width="80" alt="Up" class="align-self-center">
                     <span class="video-msg align-self-center"><%= __("Please hold your phone vertically.") %></span>
@@ -536,7 +525,6 @@ limitations under the License.
     </main>
     <script src="<%=JAVASCRIPT_PATH%>/bioserver-environment-api.js"></script>
     <script src="./js/detect-env.js"></script>
-    <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-ui.js"></script>
     <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-api.js"></script>
     <script src="<%=JAVASCRIPT_PATH%>/bioserver-network-check.js"></script>
     <script src="./js/index.js"></script>

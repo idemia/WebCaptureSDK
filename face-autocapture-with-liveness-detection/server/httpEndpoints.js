@@ -24,6 +24,7 @@ const serveStatic = require('serve-static');
 const multer = require('multer'); // for files upload
 const storage = multer.memoryStorage(); // use in memory
 const upload = multer({ storage: storage }); // a temp directory could be used instead
+const ERROR_INIT_LIVENESS_SESSION = 'init-liveness-session failed';
 
 const livenessResults = {};
 
@@ -53,7 +54,7 @@ exports.initHttpEndpoints = (app) => {
             let sessionId = req.params.sessionId;
             const identityId = req.query.identityId;
 
-            if (config.IDPROOFING && (!sessionId || sessionId == 'null')) {
+            if (config.IDPROOFING && (!sessionId || sessionId === 'null')) {
                 debug('<< sessionId not present, calling getSession..from gips api.');
                 session = await gipsApi.getSession(identityId);
                 sessionId = session.sessionId;
@@ -64,7 +65,7 @@ exports.initHttpEndpoints = (app) => {
                     portraitId: session.portraitId
                 };
             } else {
-                if (!sessionId || sessionId == 'null') {
+                if (!sessionId || sessionId === 'null') {
                     debug('<< sessionId not present, calling getSession...');
 
                     sessionId = await wbsApi.getSession();
@@ -80,9 +81,9 @@ exports.initHttpEndpoints = (app) => {
                 res.json({ sessionId: sessionId });
             }
         } catch (e) {
-            debug('init-liveness-session failed', e);
-            debug('init-liveness-session failed', e.status, e.statusText);
-            res.status(e.status ? e.status : 500).json({ error: 'init-liveness-session failed' });
+            debug(ERROR_INIT_LIVENESS_SESSION, e);
+            debug(ERROR_INIT_LIVENESS_SESSION, e.status, e.statusText);
+            res.status(e.status ? e.status : 500).json({ error: ERROR_INIT_LIVENESS_SESSION });
         }
     });
 
@@ -147,54 +148,60 @@ exports.initHttpEndpoints = (app) => {
             const error = { error: 'Missing mandatory param sessionId' };
             debug('< get liveness-challenge failed', error);
             res.status(400).json(error);
-        } else {
-            try {
-                let livenessResult = livenessResults[sessionId];
-                if (!livenessResult) {
-                    debug(sessionId, '< No liveness-challenge associated to this session');
-                    res.status(404).send(); // unknown sessionID
-                } else if (polling && livenessResult.status === 'PENDING') {
-                    debug(sessionId, '< Waiting for liveness result callback ');
-                    res.status(204).send(); // tell client that no liveness result is available for now
-                } else {
-                    if (!polling && !config.IDPROOFING) {
-                        debug(sessionId, '> No callback done, retrieve directly liveness challenge results');
+            return;
+        }
+        try {
+            let livenessResult = livenessResults[sessionId];
+            if (!livenessResult && polling) {
+                debug(sessionId, '< No liveness-challenge associated to this session');
+                res.status(404).send(); // unknown sessionID
+            } else if (polling && livenessResult.status === 'PENDING') {
+                debug(sessionId, '< Waiting for liveness result callback ');
+                res.status(204).send(); // tell client that no liveness result is available for now
+            } else {
+                if (!polling && !config.IDPROOFING) {
+                    debug(sessionId, '> No callback done, retrieve directly liveness challenge results');
 
-                        // DONT FORGET TO REVERT
-                        livenessResult = await wbsApi.getLivenessChallengeResult(sessionId,
-                            config.LIVENESS_MODE,
-                            config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE, config.LIVENESS_SECURITY_LEVEL);
-                    }
-                    delete livenessResults[sessionId];
-                    debug(sessionId, '< Got liveness-challenge result', { livenessResult });
-                    const result = { isLivenessSucceeded: false, message: 'Something was wrong' };
-                    if (livenessResult.livenessStatus === 'SUCCESS') {
+                    // DONT FORGET TO REVERT
+                    livenessResult = await wbsApi.getLivenessChallengeResult(sessionId,
+                        config.LIVENESS_MODE,
+                        config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE, config.LIVENESS_SECURITY_LEVEL);
+                }
+                delete livenessResults[sessionId];
+                debug(sessionId, '< Got liveness-challenge result', { livenessResult });
+                const result = { isLivenessSucceeded: false, message: 'Something was wrong' };
+                switch (livenessResult.livenessStatus) {
+                    case 'SUCCESS' :
                         result.message = 'Liveness succeeded';
                         result.isLivenessSucceeded = true;
                         result.bestImageId = livenessResult.bestImageId;
-                    } else if (livenessResult.livenessStatus === 'SPOOF' || livenessResult.livenessStatus === 'SPOOF_JS') {
+                        break;
+                    case 'SPOOF' :
                         result.message = 'Liveness failed';
-                    } else if (livenessResult.livenessStatus === 'TIMEOUT') {
+                        break;
+                    case 'TIMEOUT' :
                         result.message = 'Timeout has expired';
-                    } else if (livenessResult.livenessStatus === 'ERROR') {
+                        break;
+                    case 'ERROR' :
+                    default :
                         result.message = 'Something was wrong';
-                    }
-
-                    // add diagnostic field if present
-                    if (livenessResult.diagnostic) {
-                        result.diagnostic = livenessResult.diagnostic;
-                    }
-                    res.send(result);
+                        break;
                 }
-            } catch (e) {
-                debug(sessionId, 'get liveness-challenge failed', e.status, e.statusText, e);
-                res.status(e.status ? e.status : 500).json({ error: 'get liveness-challenge failed' });
+
+                // add diagnostic field if present
+                if (livenessResult.diagnostic) {
+                    result.diagnostic = livenessResult.diagnostic;
+                }
+                res.send(result);
             }
+        } catch (e) {
+            debug(sessionId, 'get liveness-challenge failed', e.status, e.statusText, e);
+            res.status(e.status ? e.status : 500).json({ error: 'get liveness-challenge failed' });
         }
     });
 
     const wait = async (ttl) => {
-        return new Promise((resolve, error) =>
+        return new Promise((resolve, _) =>
             setTimeout(() => resolve(), ttl)
         );
     };

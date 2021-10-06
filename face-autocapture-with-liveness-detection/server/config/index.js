@@ -22,12 +22,15 @@ const values = Object.assign({}, defaults);
 
 // Extend values with environment variables
 for (const [key, value] of Object.entries(process.env)) {
-    // Try to parse value in case JSON format is used
-    try {
-        values[key] = JSON.parse(value);
-    } catch (err) {
-        values[key] = value;
+    // Try to parse value in case JSON format is used (except for passwords and secrets)
+    if (!/PASSWORD$|SECRET$/.test(key)) {
+        try {
+            values[key] = JSON.parse(value);
+            continue;
+        } catch (err) {
+        }
     }
+    values[key] = value;
 }
 
 // Server vars which should not change
@@ -42,9 +45,10 @@ values.API_KEY_SECRET_WEBSDK = values.API_KEY_SECRET_WEBSDK || values.WEB_SDK_LI
 values.ENABLE_IMAGE_COMPRESSION = values.ENABLE_IMAGE_COMPRESSION || false;
 values.WBS_TLS_TRUSTSTORE_PATH = values.WBS_TLS_TRUSTSTORE_PATH || null;
 values.GIPS_TLS_TRUSTSTORE_PATH = values.GIPS_TLS_TRUSTSTORE_PATH || null;
+values.PROXY_URL = values.PROXY_URL || null;
 
 // Global Node environment vars
-process.env.DEBUG = values.DEBUG || '*';
+process.env.DEBUG = values.DEBUG || 'front:*';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = values.NODE_TLS_REJECT_UNAUTHORIZED || '1';
 process.env.UV_THREADPOOL_SIZE = values.UV_THREADPOOL_SIZE || 10;
 

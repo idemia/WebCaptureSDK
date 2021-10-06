@@ -14,20 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/**
- * Check user environment support
- * must be ES5 compatible
- **/
-if (BioserverEnvironment) {
+/* global BioserverEnvironment, __ */
+/* eslint-disable no-console */
+
+if (typeof BioserverEnvironment === 'object') {
     const env = BioserverEnvironment.detection();
     const envDetectionPage = document.querySelector('#step-compatibility');
+    const description = envDetectionPage.querySelector('.description');
     if (env.envDetected) {
         const browsersDescription = envDetectionPage.querySelector('.browsers-description ');
         const envOS = env.envDetected.os;
         const envBrowser = env.envDetected.browser;
         if (!envOS.isSupported) {
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
-            envDetectionPage.querySelector('.description').textContent = __('You seem to be using an unsupported operating system.');
+            description.textContent = __('You seem to be using an unsupported operating system.');
             browsersDescription.textContent = __('Please use one of following operating systems for a better experience');
             const osList = envDetectionPage.querySelector('.os-list');
             osList.innerHTML = '';
@@ -46,7 +46,7 @@ if (BioserverEnvironment) {
             }
         } else if (!envBrowser.isSupported) {
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
-            envDetectionPage.querySelector('.description').textContent = __('You seem to be using an unsupported browser.');
+            description.textContent = __('You seem to be using an unsupported browser.');
             browsersDescription.textContent = __('Please use one of following browsers for a better experience');
             const browsersList = envDetectionPage.querySelector('.browsers');
             browsersList.innerHTML = '';
@@ -71,6 +71,8 @@ if (BioserverEnvironment) {
             }
         }
     } else {
-        envDetectionPage.querySelector('.description').textContent = env.message;
+        description.textContent = env.message;
     }
+} else {
+    console.warn('Failed to detect environment compatibility, no api found!');
 }
