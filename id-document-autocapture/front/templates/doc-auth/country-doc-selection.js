@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2021 Idemia Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ const allCountries = Allcountries // reorder the list of countries alphabeticall
 
 let currentDocumentRule; // store current document rule as global variable - link with current session
 let currentSession; // store current session
+let identityId; // store identity of the GIPS transaction (if GIPS workflow)
 
 // Start of the process, loading supported countries  + doucment types from docserver
 // In addition predefined capture rules (store on SP server)  are also loaded in the "other country" part
@@ -219,6 +220,7 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
                     console.log('Session initialized with sessionId ' + currentSession + ' and format ' + format);
                     if (identity) {
                         console.log('Session initialized with GIPS transactionId ' + identity);
+                        identityId = identity;
                     }
 
                     // Process document type selection event
@@ -298,7 +300,7 @@ function processDocType(selectedCountryCode, docRules, selectedDocType, format) 
     }
 
     // store current document rule as global variable - link with current session
-    currentDocumentRule = { currentSession, selectedCountryCode, selectedDocType, selectedDocRule };
+    currentDocumentRule = { currentSession, selectedCountryCode, selectedDocType, selectedDocRule, identityId };
     console.log('Document rule to be applied', { currentDocumentRule });
     // set current doc type format to adapt UI
     const selectedDocFormat = (!format || format === 'UNKNOWN') ? 'id2' : format.toLowerCase();

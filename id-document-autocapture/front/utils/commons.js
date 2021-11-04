@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2021 Idemia Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/* global __ */
 /* eslint no-console: ["error", { allow: ["log", "error"] }] */
 exports.DOC_SIDE = {
     BACK: 'BACK',
@@ -71,31 +72,34 @@ exports.snakeCaseToTitleCase = (camelCaseTxt, capital) => {
     const result = camelCaseTxt.toLowerCase();
     switch (result) {
         case 'document_only':
-            return 'Document Only';
+            return __('Document Only');
         case 'document_with_ocr':
-            return 'OCR Only';
+            return __('OCR Only');
         case 'document_with_mrz':
-            return 'MRZ Only';
+            return __('MRZ Only');
         case 'document_with_pdf417':
-            return 'Barcode Only';
+            return __('Barcode Only');
         case 'document_with_mrz_pdf417':
-            return 'MRZ & Barcode';
+            return __('MRZ & Barcode');
         case 'document_with_mrz_ocr':
-            return 'MRZ & OCR';
+            return __('MRZ & OCR');
         case 'document_with_ocr_pdf417':
-            return 'OCR & Barcode';
+            return __('OCR & Barcode');
         case 'document_with_mrz_ocr_pdf417':
-            return 'MRZ & OCR & Barcode';
-        case 'driving_license' :
-            return capital ? 'Driver\'s License' : 'driver\'s license';
+            return __('MRZ & OCR & Barcode');
         case 'document_with_ocr_on_side1_pdf417_on_side2' :
-            return 'OCR on first side & Barcode on second side';
+            return __('OCR on first side & Barcode on second side');
+        case 'identity_card' :
+            return capital ? __('Identity Card') : __('identity card');
+        case 'driving_license' :
+            return capital ? __('Driver\'s License') : __('driver\'s license');
+        case 'passport' :
+            return capital ? __('Passport') : __('passport');
+        case 'resident_card' :
+            return capital ? __('Resident Card') : __('resident card');
         default:
             return result.split('_')
-                .map(txt => {
-                    return capital ? txt.charAt(0)
-                        .toUpperCase() + txt.slice(1) : txt;
-                })
+                .map(txt => capital ? txt.charAt(0).toUpperCase() + txt.slice(1) : txt)
                 .join(' ');
     }
 };
@@ -149,8 +153,8 @@ exports.getRulesInText = (rules, extraTxt) => {
             case this.DOC_SIDE_RULE.MRZ:
                 return 'MRZ';
             case this.DOC_SIDE_RULE.FACE:
-                return false; // 'portrait'
             default:
+                return false; // 'portrait'
         }
     }).filter(txt => txt)
         .map((txt, i, arr) => {

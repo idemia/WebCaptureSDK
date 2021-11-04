@@ -829,6 +829,12 @@ video {background-color: black}
     border-radius:10px;
 }
 
+.gips-image-content {
+    border-radius:10px;
+    width: inherit;
+    margin-top: 15px;
+}
+
 #gips-image-content {
     border-radius:10px;
     width: inherit;

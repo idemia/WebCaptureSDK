@@ -1,6 +1,7 @@
 {
   // to customize the conf please refer to https://eslint.org/docs/rules/
   "extends": "standard",
+  "parser": "@babel/eslint-parser",
   "rules": {
     "indent": [
       "error",

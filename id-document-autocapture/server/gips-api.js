@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2021 Idemia Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 /*
  * File used to allow communication with WebDocserver API. This file can be used by integrator as it is.
  */
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const FormData = require('form-data');
 const config = require('./config');
 const multipart = require('parse-multipart');
@@ -206,7 +206,13 @@ async function getBestImage(identityId, evidenceId) {
     const data = String(body);
     const boundary = data.split('\r')[0];
     const parts = multipart.Parse(body, boundary.replace('--', ''));
-    return parts[0].data;
+    const images = [];
+    if (parts && parts.length) {
+        for (const item of parts) {
+            images.push({ name: item.name, data: item.data && item.data.toString('base64') });
+        }
+    }
+    return images;
 }
 
 async function getCountryDocTypes(countryCode) {
@@ -215,11 +221,11 @@ async function getCountryDocTypes(countryCode) {
         const countries = await getSupportedEvidences(countryCode);
         // [{"code":"FRA","docTypes":["PASSPORT","IDENTITY_CARD","DRIVING_LICENSE","RESIDENT_CARD"]},{"code":"USA","docTypes":["PASSPORT","DRIVING_LICENSE"]},{"code":"AFG"
         const res = [];
-        countries.map((country) => {
+        countries.forEach((country) => {
             const element = {};
             element.code = country.iso3CountryCode;
             const acceptedTypes = [];
-            country.documents.filter(c => c.liveVideoCaptureSupported).map((document) => {
+            country.documents.filter(c => c.liveVideoCaptureSupported).forEach((document) => {
                 acceptedTypes.push(document.documentType);
             });
             if (acceptedTypes.length > 0) {
@@ -259,19 +265,21 @@ async function getDocCaptureResult(gipsStatus, identityId) {
             docCorners: [],
             ...(idDocumentData && {
                 ocr: {
-                    ...(personalAttributes ? {
-                        identity: {
-                            gender: personalAttributes.gender ? personalAttributes.gender.value : '',
-                            givenNames: personalAttributes.givenNames && personalAttributes.givenNames[0] ? [personalAttributes.givenNames[0].value] : '',
-                            surname: personalAttributes.surname ? personalAttributes.surname.value : '',
-                            dateOfBirth: personalAttributes.dateOfBirth ? personalAttributes.dateOfBirth.value : ''
+                    ...(personalAttributes
+                        ? {
+                            identity: {
+                                gender: personalAttributes.gender ? personalAttributes.gender.value : '',
+                                givenNames: personalAttributes.givenNames && personalAttributes.givenNames[0] ? [personalAttributes.givenNames[0].value] : '',
+                                surname: personalAttributes.surname ? personalAttributes.surname.value : '',
+                                dateOfBirth: personalAttributes.dateOfBirth ? personalAttributes.dateOfBirth.value : ''
+                            }
                         }
-                    } : {
-                        documentInfo: {
-                            documentNumber: idDocumentData.idDocumentNumber,
-                            issuingCountry: idDocumentData.issuingCountry
-                        }
-                    })
+                        : {
+                            documentInfo: {
+                                documentNumber: idDocumentData.idDocumentNumber,
+                                issuingCountry: idDocumentData.issuingCountry
+                            }
+                        })
                 },
                 done: true
             })

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2021 Idemia Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,10 +43,15 @@ const retryOnErrorButton = $('#step-doc-auth-ko #retry');
 
 const gipsImageBlock = $('#gips-image-block');
 const gipsImageButton = $('#gips-image-button');
-const gipsImageContent = $('#gips-image-content');
+const continueButtonBack = $('#back-button-continue');
+const continueButtonFront = $('#front-button-continue');
+const continueButtonPassport = $('#button-continue-passport');
+const continueButtonUnknown = $('#unknown-button-continue');
+const gipsLoadingProcessing = $('#gips-loading-processing');
 
 const gipsTransactionBlock = $('#gips-transaction-block');
 const gipsTransactionButton = $('#gips-transaction-button');
+const gipsContinueButton = $('#gips-continue-button');
 const gipsTransactionContent = $('#gips-transaction-content');
 
 let timeoutCheckConnectivity; // settimeout used to stop if network event received
@@ -208,6 +213,16 @@ async function retrieveUserCamera() {
     }
 }
 /**
+ * Get GIPS continue Button activated
+ **/
+gipsContinueButton.addEventListener('click', async () => {
+    console.log('User clicked on getGipsContine button');
+    gipsTransactionContent.innerHTML = '';
+    gipsImageBlock.querySelectorAll('img')
+        .forEach(img => { img.src = ''; });
+});
+
+/**
  * Get GIPS Transaction Button activated
  **/
 gipsTransactionButton.addEventListener('click', async () => {
@@ -220,15 +235,44 @@ gipsTransactionButton.addEventListener('click', async () => {
 });
 
 /**
- * Get GIPS Transaction Button activated
+ * Get GIPS Image Button activated
  **/
 gipsImageButton.addEventListener('click', async () => {
-    console.log('User clicked on getIpvPortrait button');
-    gipsImageContent.src = '';
-    const docImg = await getGipsBestImage(identityId, evidenceId);
-    bestImageURL = window.URL.createObjectURL(docImg);
-    gipsImageContent.src = bestImageURL;
-    gipsImageContent.classList.remove('d-none');
+    gipsImageBlock.querySelectorAll('img').forEach(img => { img.src = ''; });
+    gipsLoadingProcessing.classList.remove('d-none');
+    let transaction = {};
+    let i = 0;
+    // here we try each 4 seconds to recover gips best image
+    const intervalId = window.setInterval(async () => {
+        transaction = await getGipsTransaction();
+        if (transaction && transaction.globalStatus && transaction.globalStatus.status === 'EXPECTING_INPUT') {
+            // status is EXCPECTING_INPUT so we can display gips best image
+            clearInterval(intervalId);
+            gipsLoadingProcessing.classList.add('d-none');
+            if (transaction.idDocuments && transaction.idDocuments.length) {
+                const lastDocument = transaction.idDocuments[transaction.idDocuments.length - 1];
+                evidenceId = lastDocument.evidenceId;
+            }
+            const docImages = await getGipsBestImage(identityId, evidenceId);
+            if (docImages && docImages.length) {
+                for (const item of docImages) {
+                    const elem = document.createElement('img');
+                    elem.src = 'data:image/jpeg;base64, ' + item.data;
+                    elem.setAttribute('class', 'gips-image-content');
+                    gipsImageBlock.appendChild(elem);
+                }
+            }
+        }
+        if (i === 20) {
+            // retrieving image lasts more than 80 seconds
+            gipsLoadingProcessing.classList.add('d-none');
+            $('#step-scan-gips-result').classList.add('d-none');
+            $('#step-doc-auth-ko').classList.remove('d-none');
+            clearInterval(intervalId);
+            return;
+        }
+        i++;
+    }, 4000);
 });
 
 // when next button is clicked go to targeted step
@@ -366,17 +410,17 @@ function processCaptureResult(result, msg, extendedMsg) {
                 // Hide footer with buttons except for the last element
                 $(stepId + ' .footer').classList.add('d-none');
             } else {
-                // Last element: Add margin to allow scrolling to the bottom of the image (otherwise it overlaps with footer)
-                addMarginForScrollingResult(stepId);
                 selectRestartButton(stepId);
                 selectRetryButton(stepId);
+                // Last element: Add margin to allow scrolling to the bottom of the image (otherwise it overlaps with footer)
+                addMarginForScrollingResult(stepId);
             }
         });
     } else {
         const stepId = processCaptureResultForSide(result, docSide, msg, extendedMsg);
-        addMarginForScrollingResult(stepId);
         selectRestartButton(stepId);
         selectRetryButton(stepId);
+        addMarginForScrollingResult(stepId);
     }
 }
 
@@ -391,6 +435,9 @@ function selectRestartButton(stepId) {
     // Display the correct restart button depending of the workflow
     const btnRestartFull = $(stepId + ' .restart-full');
     btnRestartFull && btnRestartFull.classList.remove('d-none');
+
+    const btnRestartDemo = $(stepId + ' .restart-demo');
+    btnRestartDemo && btnRestartDemo.classList.remove('d-none');
 }
 
 function selectRetryButton(stepId) {
@@ -410,10 +457,19 @@ function processCaptureResultForSide(result, side, msg, extendedMsg) {
 
     if (result) {
         if (IDPROOFING) {
-            identityId = result.identityId;
+            identityId = getCurrentDocumentRule().identityId;
             evidenceId = result.evidenceId;
             gipsImageBlock.classList.remove('d-none');
             gipsTransactionBlock.classList.remove('d-none');
+            continueButtonBack.setAttribute('data-target', '#step-scan-gips-result');
+            continueButtonFront.setAttribute('data-target', '#step-scan-gips-result');
+            continueButtonPassport.setAttribute('data-target', '#step-scan-gips-result');
+            continueButtonUnknown.setAttribute('data-target', '#step-scan-gips-result');
+        } else {
+            continueButtonBack.setAttribute('data-target', '#step-country-selection');
+            continueButtonFront.setAttribute('data-target', '#step-country-selection');
+            continueButtonPassport.setAttribute('data-target', '#step-country-selection');
+            continueButtonUnknown.setAttribute('data-target', '#step-country-selection');
         }
 
         if (!done) { // if status is not done => failed/timeout/aborted
@@ -518,7 +574,7 @@ function ocrCase(ocr, stepResult) {
 }
 
 function docImageCase(docImage, stepResult, docCorners, side) {
-    if (docImage && !IDPROOFING) {
+    if (docImage) {
         const imgLabel = document.createElement('div');
         imgLabel.className = 'result-header';
         imgLabel.innerText = 'Extracted image :';
@@ -563,6 +619,7 @@ function docImageCase(docImage, stepResult, docCorners, side) {
 function initDocAuthDesign(docSide) {
     gipsImageBlock.classList.add('d-none');
     gipsTransactionBlock.classList.add('d-none');
+    continueButtonUnknown.classList.add('d-none');
     $('header').classList.add('d-none');
     $('main').classList.add('darker-bg');
     videoScanOverlays.forEach(overlay => overlay.classList.add(dNoneFadeoutString));
@@ -622,7 +679,11 @@ function displayMsg(elementToDisplay, ttl = 2000) {
 function displayInstructionsToUser({ position, corners, pending }) {
     // Event list: badFraming, glare, blur, tooClose, tooFar, holdStraight, lowlight
     if (position) { // << got some message related to document position
-        if (position.pdf417) {
+        if (position.tooClose) {
+            displayMsg(tooCloseDocMsg);
+        } else if (position.tooFar) {
+            displayMsg(tooFarDocMsg);
+        } else if (position.pdf417) {
             displayMsg(blurryDocMsg);
         } else if (position.holdStraight) {
             displayMsg(holdStraightDocMsg);
@@ -632,10 +693,6 @@ function displayInstructionsToUser({ position, corners, pending }) {
             displayMsg(lowLightDocMsg);
         } else if (position.reflection) {
             displayMsg(reflectionDocMsg);
-        } else if (position.tooClose) {
-            displayMsg(tooCloseDocMsg);
-        } else if (position.tooFar) {
-            displayMsg(tooFarDocMsg);
         } else if (position.blur) {
             displayMsg(blurryDocMsg);
         } else {
@@ -889,7 +946,7 @@ async function getGipsBestImage() {
         const path = BASE_PATH + '/gips-best-image/' + identityId + '/' + evidenceId;
 
         xhttp.open('GET', path, true);
-        xhttp.responseType = 'blob';
+        xhttp.responseType = 'json';
         xhttp.setRequestHeader('Content-type', 'application/json');
         xhttp.onload = function () {
             console.log('Calling ' + BASE_PATH + '/gips-best-image/' + identityId + '/' + evidenceId);
@@ -1016,7 +1073,8 @@ function buildFullName(identity) {
     if (identity.fullName && identity.fullName.trim() !== '') {
         result = identity.fullName;
     } else {
-        result = identity.surname + ' ' + (Array.isArray(identity.givenNames) ? identity.givenNames.join(' ') : '');
+        result = Array.isArray(identity.givenNames) ? identity.givenNames.join(' ') + ' ' : '';
+        result += identity.surname ? identity.surname : '';
     }
     return result;
 }

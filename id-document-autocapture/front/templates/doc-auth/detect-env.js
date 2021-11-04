@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2021 Idemia Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,34 +18,35 @@ limitations under the License.
  */
 /* global DocserverEnvironment, __ */
 /* eslint no-console: ["error", { allow: ["log", "error"] }] */
+/* eslint-disable no-var */
 /**
  * Check user environment support
  * must be ES5 compatible
  **/
 function displayEnvironement(env) {
-    const envDetectionPage = document.querySelector('#step-compatibility');
-    const descriptionClass = '.description';
-    const stepCountrySelectionId = '#step-country-selection';
+    var envDetectionPage = document.querySelector('#step-compatibility');
+    var descriptionClass = '.description';
+    var stepCountrySelectionId = '#step-country-selection';
     if (env.envDetected) {
-        const browsersDescription = envDetectionPage.querySelector('.browsers-description ');
-        const envOS = env.envDetected.os;
-        const envBrowser = env.envDetected.browser;
+        var browsersDescription = envDetectionPage.querySelector('.browsers-description ');
+        var envOS = env.envDetected.os;
+        var envBrowser = env.envDetected.browser;
         if (!envOS.isSupported) {
             window.envBrowserOk = false;
-            document.querySelector(stepCountrySelectionId).className = document.querySelector(stepCountrySelectionId).className.concat('d-none');
+            document.querySelector(stepCountrySelectionId).className = document.querySelector(stepCountrySelectionId).className.concat(' d-none');
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
             envDetectionPage.querySelector(descriptionClass).textContent = __('You seem to be using an unsupported operating system.');
             browsersDescription.textContent = __('Please use one of following operating systems for a better experience');
-            const osList = envDetectionPage.querySelector('.os-list');
+            var osList = envDetectionPage.querySelector('.os-list');
             osList.innerHTML = '';
-            for (const osIndex in envOS.supportedList) {
-                const osInfo = envOS.supportedList[osIndex];
-                const os = document.createElement('div');
+            for (var osIndex in envOS.supportedList) {
+                var osInfo = envOS.supportedList[osIndex];
+                var os = document.createElement('div');
                 os.className = 'os';
-                const osImg = document.createElement('div');
+                var osImg = document.createElement('div');
                 osImg.id = osInfo.toLowerCase().replace(' ', '-');
                 osImg.className = 'os-img';
-                const osDesc = document.createElement('span');
+                var osDesc = document.createElement('span');
                 osDesc.innerHTML = osInfo;
                 os.appendChild(osImg);
                 os.appendChild(osDesc);
@@ -53,20 +54,20 @@ function displayEnvironement(env) {
             }
         } else if (!envBrowser.isSupported) {
             window.envBrowserOk = false;
-            document.querySelector(stepCountrySelectionId).className = document.querySelector(stepCountrySelectionId).className.concat('d-none');
+            document.querySelector(stepCountrySelectionId).className = document.querySelector(stepCountrySelectionId).className.concat(' d-none');
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
             envDetectionPage.querySelector(descriptionClass).textContent = __('You seem to be using an unsupported browser.');
             browsersDescription.textContent = __('Please use one of following browsers for a better experience');
-            const browsersList = envDetectionPage.querySelector('.browsers');
+            var browsersList = envDetectionPage.querySelector('.browsers');
             browsersList.innerHTML = '';
-            for (const browserIndex in envBrowser.supportedList) {
-                const browserInfo = envBrowser.supportedList[browserIndex];
-                const browser = document.createElement('div');
+            for (var browserIndex in envBrowser.supportedList) {
+                var browserInfo = envBrowser.supportedList[browserIndex];
+                var browser = document.createElement('div');
                 browser.className = 'browser';
-                const browserImg = document.createElement('div');
+                var browserImg = document.createElement('div');
                 browserImg.id = browserInfo.name.toLowerCase().replace(' ', '-');
                 browserImg.className = 'browser-img';
-                const browserDesc = document.createElement('span');
+                var browserDesc = document.createElement('span');
                 browserDesc.innerHTML = browserInfo.name + ' Version ' + browserInfo.minimumVersion + '+';
                 browser.appendChild(browserImg);
                 browser.appendChild(browserDesc);

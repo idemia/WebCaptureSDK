@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2021 Idemia Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 /*
  * File used to allow communication with WebDocserver API. This file can be used by integrator as it is.
  */
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const config = require('./config');
 const agent = require('./httpUtils').getAgent(config.WDS_TLS_TRUSTSTORE_PATH);
 const logger = require('./config/demoLogConf').getLogger(__filename);

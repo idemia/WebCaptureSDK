@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2021 Idemia Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,12 +26,10 @@ const { findDocTypesByCountry, findRulesByCountryAndType } = require('./config/r
 
 let token; const documentCaptureResults = {}; // TODO use some distributed cache
 
-exports = module.exports;
-
-exports.getToken = () => {
+module.exports.getToken = () => {
     return token;
 };
-exports.initHttpEndpoints = (app) => {
+module.exports.initHttpEndpoints = (app) => {
     /**
      * Exposes api to create docserver session by country + document type or rules
      * Retrieves document capture rules to apply to selected country + document type
@@ -187,9 +185,8 @@ exports.initHttpEndpoints = (app) => {
         const identityId = req.params.identityId;
         const evidenceId = req.params.evidenceId;
         try {
-            const bestImage = await gipsApi.getBestImage(identityId, evidenceId);
-            // res.status(200).send(Buffer.from(bestImage).toString('base64'));
-            res.status(200).send(bestImage);
+            const bestImages = await gipsApi.getBestImage(identityId, evidenceId);
+            res.json(bestImages);
         } catch (err) {
             logger.error(`getBestImage error: ${err.stack}`);
             res.status(err.status ? err.status : 500).send();
