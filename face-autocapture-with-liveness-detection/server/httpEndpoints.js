@@ -28,6 +28,7 @@ const ERROR_INIT_LIVENESS_SESSION = 'init-liveness-session failed';
 
 const livenessResults = {};
 
+// eslint-disable-next-line node/no-exports-assign
 exports = module.exports;
 
 exports.initHttpEndpoints = (app) => {
@@ -201,6 +202,7 @@ exports.initHttpEndpoints = (app) => {
     });
 
     const wait = async (ttl) => {
+        // eslint-disable-next-line promise/param-names
         return new Promise((resolve, _) =>
             setTimeout(() => resolve(), ttl)
         );

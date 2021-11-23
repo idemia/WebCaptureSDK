@@ -135,13 +135,14 @@ async function init(options = {}) {
 
     // request a sessionId from backend (if we are switching camera we use the same session)
     if (!sessionId || !options.switchCamera) {
-        const session = await commonutils.initLivenessSession(basePath, sessionIdParam || '', identityIdParam || '')
-            .catch(() => {
-                sessionId = false;
-                stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
-            });
-        sessionId = session.sessionId;
-        identityId = session.identityId;
+        try {
+            const session = await commonutils.initLivenessSession(basePath, sessionIdParam || '', identityIdParam || '');
+            sessionId = session.sessionId;
+            identityId = session.identityId;
+        } catch (err) {
+            sessionId = false;
+            await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
+        }
     }
     if (!sessionId) {
         return;
@@ -684,9 +685,9 @@ function faceTarget({ w, h, targetInfo: { targetX, targetY, targetR } }, videoSi
     const coefW = videoSize.width / w;
     const coefH = videoSize.height / h;
     const isPc = document.querySelector('main').classList.contains('pc');
-    console.log("Ellipse : videoSize.width="+videoSize.width+", videoSize.height="+videoSize.height+", w="+w+", h="+h) ;
+    console.log('Ellipse : videoSize.width=' + videoSize.width + ', videoSize.height=' + videoSize.height + ', w=' + w + ', h=' + h);
     const computedTargetR = (isPc) ? targetR * coefH : targetR * 1.2 * coefH;
-    console.log("Ellipse : targetR="+targetR+" => "+computedTargetR) ;
+    console.log('Ellipse : targetR=' + targetR + ' => ' + computedTargetR);
     return {
         targetX: targetX * coefW,
         targetY: targetY * coefH,

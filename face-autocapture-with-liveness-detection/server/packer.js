@@ -21,12 +21,12 @@ const config = require('./config');
 const debug = require('debug')('front:packer');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const TextReplaceHtmlWebpackPlugin = require('text-replace-html-webpack-plugin');
-const I18nPlugin = require('i18n-webpack-plugin');
+const I18nPlugin = require('@zainulbr/i18n-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const languages = { en: null };
 const MODE = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const DEVTOOL = process.env.NODE_ENV === 'production' ? false : 'source-map';
 
 const PATH_DETECT_ENV = '../front/utils/detect-env.js';
@@ -62,6 +62,7 @@ exports.pack = function pack() {
 function livenessPackage(liveness) {
     Object.keys(languages).forEach(function (language) {
         debug(`Generating ${language} package...`);
+        // eslint-disable-next-line no-unused-expressions
         webpack({
             mode: MODE,
             name: language,
@@ -75,10 +76,10 @@ function livenessPackage(liveness) {
                 minimize: MODE === 'production'
             },
             output: {
-
                 path: path.join(__dirname, `../front/${liveness}-liveness/${language}/js/`),
                 publicPath: 'js',
-                filename: '[name].js'
+                filename: '[name].js',
+                hashFunction: 'sha256'
             },
             module: {
                 rules: [
@@ -107,26 +108,26 @@ function livenessPackage(liveness) {
                     filename: `../../../home-${liveness}/index.html`, // relative to thisObj.output.path
                     template: `${PATH_TEMPLATE}${liveness}-liveness/home.html`
                 }),
-                new TextReplaceHtmlWebpackPlugin({
-                    replacementArray: [
+                new HtmlReplaceWebpackPlugin(
+                    [
                         {
-                            regex: config.IDPROOFING ? /<li><a href=".\/high-liveness\/\?enableMatching=true">High liveness with matching<\/a><\/li>/ : '',
-                            replace: ''
+                            pattern: config.IDPROOFING ? /<li><a href=".\/high-liveness\/\?enableMatching=true">High liveness with matching<\/a><\/li>/ : '',
+                            replacement: ''
                         },
                         {
-                            regex: config.IDPROOFING ? /<li><a href=".\/medium-liveness\/\?enableMatching=true">Medium liveness with matching<\/a><\/li>/ : '',
-                            replace: ''
+                            pattern: config.IDPROOFING ? /<li><a href=".\/medium-liveness\/\?enableMatching=true">Medium liveness with matching<\/a><\/li>/ : '',
+                            replacement: ''
                         },
                         {
-                            regex: config.IDPROOFING ? /<li><a href=".\/passive-liveness\/\?enableMatching=true">Passive liveness with matching<\/a><\/li>/ : '',
-                            replace: ''
+                            pattern: config.IDPROOFING ? /<li><a href=".\/passive-liveness\/\?enableMatching=true">Passive liveness with matching<\/a><\/li>/ : '',
+                            replacement: ''
                         },
                         {
-                            regex: config.IDPROOFING ? /<li><a href=".\/passive-video-liveness\/\?enableMatching=true">Passive video liveness with matching<\/a><\/li>/ : '',
-                            replace: ''
+                            pattern: config.IDPROOFING ? /<li><a href=".\/passive-video-liveness\/\?enableMatching=true">Passive video liveness with matching<\/a><\/li>/ : '',
+                            replacement: ''
                         }
                     ]
-                }),
+                ),
                 new webpack.DefinePlugin({
                     BASE_PATH: JSON.stringify(config.BASE_PATH),
                     VIDEO_URL: JSON.stringify(config.BIOSERVER_VIDEO_URL),
@@ -136,24 +137,28 @@ function livenessPackage(liveness) {
                     DEMO_HEALTH_PATH: JSON.stringify(config.DEMO_HEALTH_PATH),
                     IDPROOFING: JSON.stringify(config.IDPROOFING)
                 }),
-                new CopyPlugin([
+                new CopyPlugin(
                     {
-                        from: `${PATH_TEMPLATE}${liveness}-liveness/statics/`,
-                        to: path.join(__dirname, `../front/${liveness}-liveness/${language}/`)
+                        patterns: [
+                            {
+                                from: `${PATH_TEMPLATE}${liveness}-liveness/statics/`,
+                                to: path.join(__dirname, `../front/${liveness}-liveness/${language}/`)
+                            }
+                        ]
                     }
-                ])
+                )
             ]
-        }).watch({ poll: 1000 }, (err, stats) => {
+        }, (err, stats) => {
             if (err) {
-                throw err;
+                debug('Failed to pack assets with error', err);
+                return;
             }
             const jsonStats = stats.toJson();
             if (jsonStats.errors.length > 0) {
-                debug(PACK_ERRORS, jsonStats.errors.toString());
+                debug(PACK_ERRORS, jsonStats.errors);
             }
-
             if (jsonStats.warnings.length > 0) {
-                debug(PACK_WARNINGS, jsonStats.warnings.toString());
+                debug(PACK_WARNINGS, jsonStats.warnings);
             }
             debug(`>> ${liveness} liveness package generated for ${language}`);
         });

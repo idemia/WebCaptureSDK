@@ -16,6 +16,7 @@ limitations under the License.
 
 // eslint-disable-next-line no-unused-vars
 const path = require('path');
+const fs = require('fs');
 
 // this file contains configuration of sample app
 module.exports = {
@@ -65,7 +66,7 @@ module.exports = {
     // Path to the server's server SSL certificate
     TLS_KEYSTORE_PATH: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PATH',
     // Password for the server's server SSL certificate
-    TLS_KEYSTORE_PASSWORD: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PASSWORD',
+    TLS_KEYSTORE_PASSWORD: loadSecretFromFile(path.join(__dirname, 'secrets/tls_keystore_password.txt')),
     // Path used to expose server. Used in callback URL to receive liveness result from WebioServercallback
     BASE_PATH: '/demo-server',
     // Disable unsecure protocols such as : SSL2, SSL3, TLS 1.0, TLS 1.1. Values are separated by a comma
@@ -77,3 +78,15 @@ module.exports = {
     
 
 };
+
+/**
+ * Read a secret from a file. Only the first line will be read, line breaks are not returned.
+ * @param {string?} filePath the path of the file containing the secret to load
+ * @return the secret read or null of no path was supplied
+ */
+function loadSecretFromFile(filePath) {
+    if (!filePath) {
+        return null;
+    }
+    return fs.readFileSync(filePath, { encoding: 'utf-8' }).split(/\r?\n/)[0];
+}

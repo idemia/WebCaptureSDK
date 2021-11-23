@@ -16,7 +16,7 @@ limitations under the License.
 
 // this controllers allow you to interact with Biometric services
 
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const FormData = require('form-data');
 const config = require('./config');
 // const debug = require('debug')('front:app:api');

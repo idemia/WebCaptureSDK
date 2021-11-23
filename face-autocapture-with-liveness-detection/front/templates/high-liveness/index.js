@@ -133,13 +133,14 @@ async function init(options = {}) {
 
     // request a sessionId from backend (if we are switching camera we use the same session)
     if (!session.sessionId || !options.switchCamera) {
-        const createdSession = await commonutils.initLivenessSession(settings.basePath, session.sessionIdParam || '', session.identityIdParam || '')
-            .catch(() => {
-                session.sessionId = false;
-                stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
-            });
-        session.sessionId = createdSession.sessionId;
-        session.identityId = createdSession.identityId;
+        try {
+            const createdSession = await commonutils.initLivenessSession(settings.basePath, session.sessionIdParam || '', session.identityIdParam || '');
+            session.sessionId = createdSession.sessionId;
+            session.identityId = createdSession.identityId;
+        } catch (err) {
+            session.sessionId = false;
+            await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
+        }
     }
     if (!session.sessionId) {
         return;

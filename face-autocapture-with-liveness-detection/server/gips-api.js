@@ -16,7 +16,7 @@ limitations under the License.
 
 // this controllers allows you to interact with Biometric services through GIPS (IPV) calls
 
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const FormData = require('form-data');
 const config = require('./config');
 const debug = require('debug')('front:gips:api');
@@ -56,7 +56,7 @@ async function getSession(identityId) {
     }
     const result = await postConsent(identity.id);
 
-    if (!result[0].consentId || result[0].type != 'PORTRAIT') {
+    if (!result[0].consentId || result[0].type !== 'PORTRAIT') {
         throw Error('Unable to create PORTRAIT Consent');
     }
 
@@ -177,10 +177,10 @@ function createIdentity() {
  * response 200
  * [{
  *   "approved": true,
- *	"type": "PORTRAIT",
- *	"validityPeriod": {
- *		"from": "2018-01-01"
- *	}
+ *   "type": "PORTRAIT",
+ *   "validityPeriod": {
+ *       "from": "2018-01-01"
+ *  }
  * }]
  * @returns  Boolean true / false
  *  Error code 404/ 401 /

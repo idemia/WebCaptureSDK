@@ -52,6 +52,7 @@ const countDown = document.querySelector('#count-down');
 commonutils.getCapabilities(settings.basePath, settings.healthPath).then(
     (response) => {
         if (response && response.version) {
+            // eslint-disable-next-line no-return-assign
             monitoring.forEach((element) => element.innerHTML = `${response.version}`);
         }
     }
@@ -122,16 +123,16 @@ function getFaceCaptureOptions() {
 async function init(options = {}) {
     session.client = undefined;
     initLivenessDesign();
-
     // request a sessionId from backend (if we are switching camera we use the same session)
     if (!session.sessionId || !options.switchCamera) {
-        const createdSession = await commonutils.initLivenessSession(settings.basePath, session.sessionIdParam || '', session.identityIdParam || '')
-            .catch(() => {
-                session.sessionId = false;
-                stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
-            });
-        session.sessionId = createdSession.sessionId;
-        session.identityId = createdSession.identityId;
+        try {
+            const createdSession = await commonutils.initLivenessSession(settings.basePath, session.sessionIdParam || '', session.identityIdParam || '');
+            session.sessionId = createdSession.sessionId;
+            session.identityId = createdSession.identityId;
+        } catch (err) {
+            session.sessionId = false;
+            await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
+        }
     }
     if (!session.sessionId) {
         return;
@@ -212,8 +213,8 @@ async function processStep(targetStepId, displayWithDelay) {
                 targetStepId = '#step-access-permission';
                 // when client accepts camera permission access > we redirect it to the liveness check
                 document.querySelector(`${targetStepId} button`).classList.add('start-capture');
-            } else {
-                await processLivenessStep();
+            } else if (!await processLivenessStep()) {
+                return;
             }
         }
         const targetStep = document.querySelector(targetStepId);
@@ -252,8 +253,10 @@ async function processLivenessStep() {
         setTimeout(() => {
             session.client.start(session.videoStream);
         }, 4000);
+        return true;
     } else {
         console.log('client or videoStream not available, start aborted');
+        return false;
     }
 }
 

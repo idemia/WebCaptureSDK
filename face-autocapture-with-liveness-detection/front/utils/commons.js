@@ -70,11 +70,14 @@ exports.getCapabilities = async function (basePath, healthPath) {
                 resolve(xhttp.response);
             } else {
                 console.error('getMonitoring failed');
+                // eslint-disable-next-line prefer-promise-reject-errors
                 reject('getMonitoring failed');
             }
         };
         xhttp.onerror = function () {
+            // eslint-disable-next-line no-undef
             console.log('Error ' + httpError.status + '  ' + httpError.code);
+            // eslint-disable-next-line no-undef
             reject(httpError);
         };
         xhttp.send();
@@ -100,10 +103,12 @@ exports.initLivenessSession = async function (basePath, sessionId = '', identity
                 resolve(xhttp.response);
             } else {
                 console.error('initLivenessSession failed');
+                // eslint-disable-next-line prefer-promise-reject-errors
                 reject();
             }
         };
         xhttp.onerror = function () {
+            // eslint-disable-next-line prefer-promise-reject-errors
             reject();
         };
         xhttp.send();
@@ -129,12 +134,15 @@ exports.getGipsStatus = async function (basePath, identityId) {
                     resolve(xhttp.response);
                 } else {
                     console.error('getGipsStatus failed...');
+                    // eslint-disable-next-line prefer-promise-reject-errors
                     reject();
                 }
             }
         };
 
+        // eslint-disable-next-line no-unused-vars
         xhttp.onerror = function (e) {
+            // eslint-disable-next-line prefer-promise-reject-errors
             reject();
         };
         xhttp.send();
@@ -160,18 +168,21 @@ exports.getLivenessChallengeResult = async function (basePath, enablePolling, se
                     resolve(xhttp.response);
                 } else if (maxAttempts) { // >> polling
                     console.log('getLivenessChallengeResult retry ...', maxAttempts);
+                    // eslint-disable-next-line promise/param-names
                     return new Promise((r) => setTimeout(r, interval))
                         .then(() => {
                             resolve(this.getLivenessChallengeResult(basePath, enablePolling, sessionId, maxAttempts - 1));
                         });
                 } else {
                     console.error('getLivenessChallengeResult failed, max retries reached');
+                    // eslint-disable-next-line prefer-promise-reject-errors
                     reject();
                 }
             }
         };
 
         xhttp.onerror = function (_) {
+            // eslint-disable-next-line prefer-promise-reject-errors
             reject();
         };
         xhttp.send();
@@ -190,22 +201,23 @@ exports.pushFaceAndDoMatch = async function (basePath, sessionId, bestImageId, s
         document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
         if (matches.matching === 'ok') {
             const matchingOKDescription = document.querySelector('#step-selfie-ok .description');
-            if(matchingOKDescription) {
-               matchingOKDescription.innerHTML = __('Matching succeeded <br> score: ') + matches.score;
+            if (matchingOKDescription) {
+                // eslint-disable-next-line no-undef
+                matchingOKDescription.innerHTML = __('Matching succeeded <br> score: ') + matches.score;
             }
             document.querySelector('#step-selfie-ok').classList.remove('d-none');
-            
+
             const bestImgMatching = document.querySelector('#step-selfie-ok .best-image');
-            if(bestImgMatching) {
-              const faceImg = await this.getFaceImage(basePath, sessionId, bestImageId);
-              let bestImageURL = window.URL.createObjectURL(faceImg);
-              bestImgMatching.style.backgroundImage = `url(${bestImageURL})`;
+            if (bestImgMatching) {
+                const faceImg = await this.getFaceImage(basePath, sessionId, bestImageId);
+                const bestImageURL = window.URL.createObjectURL(faceImg);
+                bestImgMatching.style.backgroundImage = `url(${bestImageURL})`;
             }
-                       
         } else {
             document.querySelector('#step-selfie-ko').classList.remove('d-none');
             const matchingNOKDescription = document.querySelector('#step-selfie-ko .description');
             if (matches.score && matchingNOKDescription) {
+                // eslint-disable-next-line no-undef
                 matchingNOKDescription.innerHTML = __('Matching failed <br> score: ') + matches.score || '';
             }
         }
@@ -215,7 +227,7 @@ exports.pushFaceAndDoMatch = async function (basePath, sessionId, bestImageId, s
         document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
         document.querySelector('#step-selfie-ko').classList.remove('d-none'); // Should be technical issue
         const matchingNOKDescription = document.querySelector('#step-selfie-ko .description');
-        if(matchingNOKDescription) {
+        if (matchingNOKDescription) {
             matchingNOKDescription.innerHTML = 'Matching failed';
         }
     }
@@ -242,6 +254,7 @@ exports.createFace = async function (basePath, sessionId, imageFile, faceInfo = 
                 resolve(xhttp.response);
             } else {
                 console.error(ERROR_CREATE_FACE);
+                // eslint-disable-next-line prefer-promise-reject-errors
                 reject();
             }
         };
@@ -269,6 +282,7 @@ exports.getFaceImage = async function (basePath, sessionId, faceId) {
                 resolve(xhttp.response);
             } else {
                 console.error(ERROR_CREATE_FACE);
+                // eslint-disable-next-line prefer-promise-reject-errors
                 reject();
             }
         };
@@ -296,6 +310,7 @@ exports.getMatches = async function (basePath, sessionId, referenceFaceId, candi
                 resolve(xhttp.response);
             } else {
                 console.error(ERROR_CREATE_FACE);
+                // eslint-disable-next-line prefer-promise-reject-errors
                 reject();
             }
         };
@@ -672,6 +687,7 @@ exports.stopVideoCaptureAndProcessResult = async function (session, settings, re
     } else {
         document.querySelector('#step-liveness-ko').classList.remove('d-none');
         if (msg) {
+            // eslint-disable-next-line no-undef
             document.querySelector('#step-liveness-ko .description').textContent = __('Liveness failed');
         }
         const small = document.querySelector('#step-liveness-ko small');
