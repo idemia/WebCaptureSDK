@@ -132,6 +132,7 @@ async function init(options = {}) {
     }
     client = undefined;
     initCalled = true;
+    videoOutput.disablePictureInPicture = true;
 
     // request a sessionId from backend (if we are switching camera we use the same session)
     if (!sessionId || !options.switchCamera) {
@@ -684,12 +685,15 @@ function displayMsgAndCircle(elementToDisplay, trackingInfo) {
 function faceTarget({ w, h, targetInfo: { targetX, targetY, targetR } }, videoSize) {
     const coefW = videoSize.width / w;
     const coefH = videoSize.height / h;
+    // On some devices with small screen size, the video width does not fit full width.
+    // So there is an offset to add to center properly the circle
+    const offsetX = (stepLiveness.offsetWidth - videoSize.width) / 2;
     const isPc = document.querySelector('main').classList.contains('pc');
-    console.log('Ellipse : videoSize.width=' + videoSize.width + ', videoSize.height=' + videoSize.height + ', w=' + w + ', h=' + h);
+    // console.log('Ellipse : videoSize.width=' + videoSize.width + ', videoSize.height=' + videoSize.height + ', w=' + w + ', h=' + h);
     const computedTargetR = (isPc) ? targetR * coefH : targetR * 1.2 * coefH;
-    console.log('Ellipse : targetR=' + targetR + ' => ' + computedTargetR);
+    // console.log('Ellipse : targetR=' + targetR + ' => ' + computedTargetR);
     return {
-        targetX: targetX * coefW,
+        targetX: targetX * coefW + offsetX,
         targetY: targetY * coefH,
         // Final radius computation description
         // ------------------------------------

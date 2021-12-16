@@ -18,6 +18,7 @@ limitations under the License.
 
 const start = Date.now();
 const express = require('express');
+const compression = require('compression');
 const config = require('./server/config');
 const https = require('https');
 const fs = require('fs');
@@ -41,6 +42,7 @@ packer.pack();
     };
     debug(`Creating server with secure options: ${options.secureOptions}`);
     const app = express();
+    app.use(compression());
     // serve demos
     debug('Available web applications:');
 
@@ -67,7 +69,7 @@ packer.pack();
             }
             express.static(path.resolve(__dirname, `front/${mode}-liveness/${lang}/`))(req, res, next);
         });
-    }
+    };
 
     if (config.LIVENESS_MODE === 'LIVENESS_HIGH') {
         manageServerLivenessMode('high');

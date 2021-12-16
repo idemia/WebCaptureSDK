@@ -715,6 +715,7 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
 
     session.bestImgElement = document.querySelector('#step-liveness-ok .best-image');
     session.videoOutput = document.querySelector('#user-video');
+    session.videoOutput.disablePictureInPicture = true;
 
     const ID_GET_IPV_STATUS_RESULT = '#get-ipv-status-result';
     const ID_BEST_IMAGE_IPV = '#best-image-ipv';
