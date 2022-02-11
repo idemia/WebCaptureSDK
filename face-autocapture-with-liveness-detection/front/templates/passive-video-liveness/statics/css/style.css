@@ -393,6 +393,11 @@ small ul {
 .browser #samsung-browser {
     background-position: -600px 0;
 }
+
+.browser #huaweibrowser {
+    background-position: -600px 0;
+}
+
 .os #windows {
     background-position: 0 0;
 }
