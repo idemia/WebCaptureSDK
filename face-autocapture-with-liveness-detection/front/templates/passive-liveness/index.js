@@ -39,6 +39,7 @@ commonutils.initComponents(session, settings, resetLivenessDesign);
 
 const monitoring = document.querySelectorAll('.monitoring');
 const countDown = document.querySelector('#count-down');
+let tooManyAttempts = false;
 
 /**
  * 1- init liveness session (from backend)
@@ -59,7 +60,6 @@ commonutils.getCapabilities(settings.basePath, settings.healthPath).then(
 ).catch(() => {
     stopVideoCaptureAndProcessResult(false, 'Service unavailable');
 });
-
 function getFaceCaptureOptions() {
     let challengeInProgress = false;
     return {
@@ -102,7 +102,8 @@ function getFaceCaptureOptions() {
             console.log('got error', error);
             challengeInProgress = false;
             if (error.code && error.code === 429) { //  enduser is blocked
-            // we reset the session when we finished the liveness check real session
+                tooManyAttempts = true;
+                // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
 
@@ -142,6 +143,7 @@ async function init(options = {}) {
     faceCaptureOptions.wspath = settings.videoBasePath + '/engine.io';
     faceCaptureOptions.bioserverVideoUrl = settings.videoUrl;
     faceCaptureOptions.rtcConfigurationPath = settings.videoUrlWithBasePath + '/coturnService?bioSessionId=' + encodeURIComponent(session.sessionId);
+    
     session.client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
 
     if (session.client) {
@@ -173,7 +175,7 @@ document.querySelectorAll('*[data-target]')
     .forEach((btn) => btn.addEventListener('click', async () => {
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
-            .catch(() => stopVideoCaptureAndProcessResult(false));
+            .catch(() => { if (!tooManyAttempts) stopVideoCaptureAndProcessResult(false); });
     }));
 
 async function processStep(targetStepId, displayWithDelay) {
@@ -251,7 +253,7 @@ async function processLivenessStep() {
             timeleft -= 1;
         }, 1000);
         setTimeout(() => {
-            session.client.start(session.videoStream);
+            session.client.startCapture({ stream: session.videoStream });
         }, 4000);
         return true;
     } else {

@@ -16,7 +16,7 @@ limitations under the License.
 
 // this file is the main program that uses video server api for passive liveness
 
-/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, __ */
+/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, BioserverVideoUI __ */
 /* eslint-disable no-console */
 const commonutils = require('../../utils/commons');
 
@@ -25,17 +25,18 @@ const ID_STEP_LIVENESS = '#step-liveness';
 const D_NONE_FADEOUT = 'd-none-fadeout';
 const CLASS_SIGNAL_VALUE = '.signal-value';
 const CLASS_MIN_SIGNAL_VALUE = '.signal-min-value';
-const CLASS_CIRCLE_ANIMATION = 'circle-anim-run';
-const ID_CONNECTIVITY_CHECK = '#connectivity-check';
 
-// define html elements
-const bestImageIPV = document.querySelector('#best-image-ipv');
+const ID_CONNECTIVITY_CHECK = '#connectivity-check';
+const VIDEO_ID = 'user-video';
+const BEST_IMG_ID = 'best-image';
+const BEST_IMG_IPV_ID = 'best-image-ipv';
+const bestImageIPV = document.querySelector('#' + BEST_IMG_IPV_ID);
 const getIPVStatus = document.querySelector('#get-ipv-status-result');
 const connectivityCheck = document.querySelector(ID_CONNECTIVITY_CHECK);
 const socketInitDocument = document.querySelector(ID_SOCKET_INIT);
 const stepLiveness = document.querySelector(ID_STEP_LIVENESS);
 
-const videoOutput = document.querySelector('#user-video');
+const videoOutput = document.querySelector('#' + VIDEO_ID);
 const monitoring = document.querySelectorAll('.monitoring');
 
 const retryFp = document.querySelector('.retry-fp');
@@ -55,17 +56,12 @@ const phoneNotVerticalMsg = document.querySelector('#phone-not-vertical-animatio
 const loadingChallenge = document.querySelector('#loading-challenge');
 const loadingInitialized = document.querySelector('#loading-initialized');
 const loadingResults = document.querySelector('#loading-results');
-const svgCircleContainer = document.querySelector('#svg-circle-container');
-const bestImgElement = document.querySelector('#step-liveness-ok .best-image');
+
 const selfieInput = document.querySelector('#selfieInput');
 const weakNetworkCheckPage = document.querySelector('#step-weak-network');
 const goodNetworkCheckPage = document.querySelector('#step-good-network');
 const videoLoadingMsgOverlays = document.querySelectorAll('#step-liveness .video-overlay');
 const videoInstructionMsgOverlays = document.querySelectorAll('#step-liveness .move-message');
-
-const circleLiveness = document.querySelector('#circle-liveness');
-const circleLivenessMask = document.querySelector('#mask-circle');
-const circleLivenessAnimate = document.querySelector('#circle-liveness-animate');
 
 let timeoutCheckConnectivity; // settimeout used to stop if network event received
 let connectivityOK = false;
@@ -73,14 +69,12 @@ let client; // let start & stop face capture
 let videoStream; // user video camera stream
 let sessionId; // current sessionId
 let bestImageId; // best image captured from user video stream
-let bestImageURL; // best image url (in memory window.URL.createObjectURL)
 let cameraPermissionAlreadyAsked;
 let identityId;
 let initCalled; // used to avoid double call to init
 let bestImageInfo;
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
 const isMatchingEnabled = urlParams.get('enableMatching') === 'true';
-// const isVideoTutEnabled = urlParams.get('videoTutorial') === 'true';
 
 
 const sessionIdParam = urlParams.get('sessionId');
@@ -93,6 +87,8 @@ const videoUrl = VIDEO_URL;
 const enablePolling = !DISABLE_CALLBACK;
 const healthPath = DEMO_HEALTH_PATH;
 const idProofingWorkflow = IDPROOFING;
+
+commonutils.initLivenessPassiveVideoTutorial();
 
 /**
  * 1- init liveness session (from backend)
@@ -130,6 +126,10 @@ async function init(options = {}) {
     if (initCalled) {
         return;
     }
+    // Disconnect any existing client
+    if (client) {
+        client.disconnect();
+    }
     client = undefined;
     initCalled = true;
     videoOutput.disablePictureInPicture = true;
@@ -141,6 +141,8 @@ async function init(options = {}) {
             sessionId = session.sessionId;
             identityId = session.identityId;
         } catch (err) {
+            clearTimeout(timeoutCheckConnectivity);
+            initCalled = false; // force init next time
             sessionId = false;
             await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
         }
@@ -156,9 +158,9 @@ async function init(options = {}) {
         onClientInitEnd: () => {
             console.warn('init ended');
             loadingInitialized.classList.add(D_NONE_FADEOUT); // initialization successfully, remove loading for video
-            svgCircleContainer.classList.remove(D_NONE_FADEOUT, D_NONE); // display
             headStartPositionOutline.classList.remove(D_NONE_FADEOUT);
             stopCapture.classList.remove(D_NONE_FADEOUT); // display
+            BioserverVideoUI.initPassiveVideoGraphics(VIDEO_ID);
         },
         showChallengeInstruction: (challengeInstruction) => {
             if (challengeInstruction === 'TRACKER_CHALLENGE_PENDING') {
@@ -180,7 +182,7 @@ async function init(options = {}) {
             bestImageInfo = result && result.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const livenessResult = await commonutils.getLivenessChallengeResult(basePath, enablePolling, sessionId)
                 .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
-            console.log('Liveness result ', livenessResult);
+            console.log('Liveness result : ' + livenessResult.message, livenessResult);
             // result.diagnostic not currently set as last param of stopVideoCaptureAndProcessResult(), as we need to know the impact of displaying it to the user
             if (livenessResult) {
                 stopVideoCaptureAndProcessResult(livenessResult.isLivenessSucceeded, livenessResult.message, livenessResult.bestImageId);
@@ -194,6 +196,7 @@ async function init(options = {}) {
             displayInstructionsToUser(trackingInfo, challengeInProgress);
         },
         errorFn: (error) => {
+            clearTimeout(timeoutCheckConnectivity);
             initCalled = false; // force init next time
             console.log('got error', error);
             challengeInProgress = false;
@@ -214,6 +217,7 @@ async function init(options = {}) {
     faceCaptureOptions.wspath = videoBasePath + '/engine.io';
     faceCaptureOptions.bioserverVideoUrl = videoUrl;
     faceCaptureOptions.rtcConfigurationPath = videoUrlWithBasePath + '/coturnService?bioSessionId=' + encodeURIComponent(sessionId);
+    
     client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
 }
 
@@ -221,7 +225,7 @@ async function initStream(options = {}) {
     initLivenessDesign();
     if (client) {
         // get user camera video (front camera is default)
-        videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video', video: { deviceId: options.deviceId } })
+        videoStream = await BioserverVideo.getMediaStream({ videoId: VIDEO_ID, video: { deviceId: options.deviceId } })
             .catch((e) => {
                 let msg = __('Failed to get camera device stream');
                 let extendedMsg;
@@ -258,12 +262,21 @@ getIpvTransactionButton.addEventListener('click', async () => {
  **/
 getIpvPortraitButton.addEventListener('click', async () => {
     console.log('calling getIpvPortraitButton ');
-    bestImageIPV.src = '';
+    // bestImageIPV.src = '';
     const faceImg = await commonutils.getFaceImage(basePath, sessionId, bestImageId);
-    bestImageURL = window.URL.createObjectURL(faceImg);
-    bestImageIPV.src = `${bestImageURL}`;
+    // bestImageIPVbestImageURL = window.URL.createObjectURL(faceImg);
+    // bestImageIPV.src = `${bestImageURL}`;
+    BioserverVideoUI.displayBestImage(faceImg, bestImageInfo, BEST_IMG_IPV_ID);
     bestImageIPV.classList.remove(D_NONE);
-    centerBestImage();
+    /* console.log('centering best image with info ', bestImageInfo);
+    const { w, boxX, boxY, boxW, boxH } = bestImageInfo;
+    const sizeCoeff = bestImgElement.offsetWidth / boxW;
+    bestImgElement.style.backgroundSize = (w * sizeCoeff).toFixed() + 'px';
+    // adjust Y position to fit oval shape ( oval form ==>  height = width x 1.3)
+    // as height is 30% bigger so we center face on Y axis by adding the half of the 30% of surface that exceeds
+    bestImgElement.style.backgroundPositionY = -((boxY - 0.3 * boxH / 2) * sizeCoeff).toFixed() + 'px';
+    bestImgElement.style.backgroundPositionX = -(boxX * sizeCoeff).toFixed() + 'px';
+    */
 });
 
 // when next button is clicked go to targeted step
@@ -303,9 +316,12 @@ async function processStep(targetStepId, displayWithDelay) {
     }
     hideAllSteps();
     if (targetStepId === '#step-1') {
-        initCalled = false; // if we come to this page, we reinitialise the initCalled to false
-        init(); // no need to wait the end of the init
-        // Connectivity page
+        scrollTo(0, 0);
+        initCalled = false; // if we come to this page, we reinitialise the initCalled to false so that next call to init is forced
+    } else if (targetStepId === '#step-1-restore') {
+        // We come from the tutorial or another step where we 'restore' the initial step (without forcing init call)
+        scrollTo(0, 0);
+        targetStepId = '#step-1';
     } else if (targetStepId === ID_CONNECTIVITY_CHECK) { // << if client clicks on start capture or start training
         if (!connectivityOK) { // bypass this waiting time if we are still here 5 seconds
             connectivityCheck.classList.remove(D_NONE);
@@ -338,9 +354,7 @@ async function processStep(targetStepId, displayWithDelay) {
             stepLiveness.classList.remove(D_NONE);
             await initStream();
             if (client && videoStream) {
-                setTimeout(() => {
-                    client.start(videoStream);
-                }, 2000); // to avoid totally black screen on backend
+                client.startCapture({ stream: videoStream });
             } else {
                 console.log('client or videoStream not available, start aborted');
                 return;
@@ -354,6 +368,7 @@ async function processStep(targetStepId, displayWithDelay) {
 // gif animations are played only once, this will make them play again
 document.querySelectorAll('.reset-animations').forEach((btn) => {
     btn.addEventListener('click', () => {
+        console.log('Click on reset animation');
         refreshImgAnimations();
     });
 });
@@ -373,7 +388,7 @@ function refreshImgAnimations() {
  * suspend video camera and return result
  */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
-    console.log('Stop video capture: message=' + msg + ', success=' + success);
+    console.log('Stop video capture: message=' + msg + 'reset-animations, success=' + success);
     bestImageId = faceId;
     // we reset the session when we finished the liveness check real session
     resetLivenessDesign();
@@ -384,13 +399,11 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
             // display loader while loading best image
             loadingResults.classList.remove(D_NONE);
             const faceImg = await commonutils.getFaceImage(basePath, sessionId, faceId);
-            bestImageURL = window.URL.createObjectURL(faceImg);
-            bestImgElement.style.backgroundImage = `url(${bestImageURL})`;
-            loadingResults.classList.add(D_NONE);
             document.querySelector('#step-liveness-ok').classList.remove(D_NONE);
             document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add(D_NONE));
             document.querySelector('.success-no-ipv').classList.remove(D_NONE);
-            centerBestImage();
+            loadingResults.classList.add(D_NONE);
+            BioserverVideoUI.displayPassiveVideoBestImage(faceImg, bestImageInfo, BEST_IMG_ID);
         } else {
             document.querySelector('#step-liveness-ok').classList.remove(D_NONE);
             document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add(D_NONE));
@@ -409,7 +422,6 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
         setTimeout(() => {
             document.querySelector('#step-liveness-timeout .footer').classList.remove(D_NONE);
         }, 2000);
-        
 
         // Liveness fails
     } else if (msg && (msg.indexOf('Liveness failed') > -1)) {
@@ -498,12 +510,10 @@ function countTimeLeft(timeLeft) {
 function initLivenessDesign() {
     document.querySelector('header').classList.add(D_NONE);
     document.querySelector('main').classList.add('darker-bg');
-    svgCircleContainer.classList.add(D_NONE); // remove
     videoInstructionMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
     videoLoadingMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
     loadingInitialized.classList.remove(D_NONE_FADEOUT); // display loading until initialization is done
-    circleLivenessAnimate.classList.add(D_NONE_FADEOUT); // remove
-    circleLivenessAnimate.classList.remove(CLASS_CIRCLE_ANIMATION);
+    BioserverVideoUI.stopPassiveVideoAnimation();
 }
 
 /**
@@ -512,10 +522,8 @@ function initLivenessDesign() {
 function resetLivenessDesign() {
     document.querySelector('header').classList.remove(D_NONE);
     document.querySelector('main').classList.remove('darker-bg');
-    if (bestImageURL) {
-        window.URL.revokeObjectURL(bestImageURL); // free memory
-    }
-    bestImgElement.style.backgroundImage = null;
+
+    BioserverVideoUI.resetBestImage();
 
     if (headAnimationOn || headAnimationOff) {
         window.clearTimeout(headAnimationOn);
@@ -523,9 +531,11 @@ function resetLivenessDesign() {
     }
     stopCapture.classList.add(D_NONE_FADEOUT); // remove
 }
+
 function hideAllSteps() {
     document.querySelectorAll('.step').forEach(step => step.classList.add(D_NONE));
 }
+
 function displayStep(step) {
     hideAllSteps();
     typeof step === 'string' ? document.querySelector(step).classList.remove(D_NONE) : step.classList.remove(D_NONE);
@@ -622,10 +632,7 @@ window.onload = () => {
                     videoOutput.srcObject = null;
                     client.disconnect();
                 }
-            } else if (networkConnectivity &&
-                displayGoodSignal &&
-                networkConnectivity.goodConnectivity &&
-                networkConnectivity.upload) {
+            } else if (networkConnectivity && displayGoodSignal && networkConnectivity.goodConnectivity && networkConnectivity.upload) {
                 goodNetworkCheckPage.querySelector(CLASS_SIGNAL_VALUE).innerHTML = '(' + networkConnectivity.upload + ' kb/s)';
                 goodNetworkCheckPage.querySelector(CLASS_MIN_SIGNAL_VALUE).innerHTML = BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD + ' kb/s';
                 displayStep(goodNetworkCheckPage);
@@ -673,76 +680,7 @@ window.onload = () => {
 
 function displayMsgAndCircle(elementToDisplay, trackingInfo) {
     elementToDisplay.classList.remove(D_NONE_FADEOUT); // add
-    const [width, height] = [videoOutput.offsetWidth, videoOutput.offsetHeight];
-    if (trackingInfo && trackingInfo.targetInfo) {
-        const circleTarget = faceTarget(trackingInfo, { width, height });
-        displayCircle(circleTarget.targetX, circleTarget.targetY, circleTarget.targetR);
-    } else {
-        console.log('No circle to display');
-    }
-}
-
-function faceTarget({ w, h, targetInfo: { targetX, targetY, targetR } }, videoSize) {
-    const coefW = videoSize.width / w;
-    const coefH = videoSize.height / h;
-    // On some devices with small screen size, the video width does not fit full width.
-    // So there is an offset to add to center properly the circle
-    const offsetX = (stepLiveness.offsetWidth - videoSize.width) / 2;
-    const isPc = document.querySelector('main').classList.contains('pc');
-    // console.log('Ellipse : videoSize.width=' + videoSize.width + ', videoSize.height=' + videoSize.height + ', w=' + w + ', h=' + h);
-    const computedTargetR = (isPc) ? targetR * coefH : targetR * 1.2 * coefH;
-    // console.log('Ellipse : targetR=' + targetR + ' => ' + computedTargetR);
-    return {
-        targetX: targetX * coefW + offsetX,
-        targetY: targetY * coefH,
-        // Final radius computation description
-        // ------------------------------------
-        // Computation 1 (mobile) : targetR * 1.2 * coefH
-        // * coefH : Here because of the video zoom, we cannot use coefW. But videoSize.height has a correct value. So we can use coefH
-        // * 1.2 : a zoom 20% is applied on mobile device
-        // ------------------------------------
-        // Computation 2 (laptop) : targetR * coefH
-        // * coefH : Here because of the video zoom, we cannot use coefW. But videoSize.height has a correct value. So we can use coefH
-        // No zoom is applied on laptop device
-        // ------------------------------------
-        // Computation 3 :  videoSize.width /2 - 8 (8 is equals to the ellipse border)
-        // Just in case radius is much more the current screen
-        targetR: Math.min(computedTargetR, (videoSize.width / 2) - 8)
-    };
-}
-
-function displayCircleElement(elementToDisplay, x, y, r) {
-    if (Number(elementToDisplay.getAttribute('rx')) !== r) { // avoid to excessively update element with same value
-        const ellipseCoef = 1.3;
-        elementToDisplay.setAttribute('cx', x);
-        elementToDisplay.setAttribute('cy', y);
-        elementToDisplay.setAttribute('rx', r);
-        const ry = r * ellipseCoef;
-        elementToDisplay.setAttribute('ry', ry);
-        console.log('Ellipse coordinates (rx=' + r + ', ry=' + ry + ' (ellipse coef=' + ellipseCoef + '),x=' + x + ', y=' + y + ')');
-    }
-}
-
-function displayCircle(x, y, r) {
-    // Transparent mask
-    displayCircleElement(circleLivenessMask, x, y, r);
-    // Liveness circle
-    displayCircleElement(circleLiveness, x, y, r);
-    // Animated circle
-    displayCircleElement(circleLivenessAnimate, x, y, r);
-    animateCircle();
-}
-
-function animateCircle() {
-    if (!circleLivenessAnimate.classList.contains(CLASS_CIRCLE_ANIMATION)) { // avoid to excessively update element with same value
-        const a = Math.max(circleLivenessAnimate.getAttribute('rx'), circleLivenessAnimate.getAttribute('ry'));
-        const b = Math.min(circleLivenessAnimate.getAttribute('rx'), circleLivenessAnimate.getAttribute('ry'));
-        const circenferenceEllipse = Math.PI * Math.sqrt(2 * (Math.pow(a, 2) + Math.pow(b, 2)) - 0.5 * Math.pow(a - b, 2));
-        const dashPercentageToDisplay = 0.25; // 25%
-        circleLivenessAnimate.style.strokeDashoffset = circenferenceEllipse;
-        circleLivenessAnimate.style.strokeDasharray = circenferenceEllipse * dashPercentageToDisplay + ' ' + circenferenceEllipse * (1 - dashPercentageToDisplay);
-        circleLivenessAnimate.classList.add('circle-anim', CLASS_CIRCLE_ANIMATION);
-    }
+    BioserverVideoUI.displayPassiveVideoAnimation(trackingInfo);
 }
 
 /**
@@ -804,18 +742,6 @@ function handlePositionInfo(trackingInfo) {
     // Circle Animation management
     if (trackingInfo.targetInfo && trackingInfo.targetInfo.stability && trackingInfo.targetInfo.stability > 0) {
         logText = logText + 'Stability ... ' + trackingInfo.targetInfo.stability;
-        circleLivenessAnimate.classList.remove(D_NONE_FADEOUT); // display
     }
     console.log(logText);
-}
-
-function centerBestImage() {
-    console.log('centering best image with info ', bestImageInfo);
-    const { w, boxX, boxY, boxW, boxH } = bestImageInfo;
-    const sizeCoeff = bestImgElement.offsetWidth / boxW;
-    bestImgElement.style.backgroundSize = (w * sizeCoeff).toFixed() + 'px';
-    // adjust Y position to fit oval shape ( oval form ==>  height = width x 1.3)
-    // as height is 30% bigger so we center face on Y axis by adding the half of the 30% of surface that exceeds
-    bestImgElement.style.backgroundPositionY = -((boxY - 0.3 * boxH / 2) * sizeCoeff).toFixed() + 'px';
-    bestImgElement.style.backgroundPositionX = -(boxX * sizeCoeff).toFixed() + 'px';
 }

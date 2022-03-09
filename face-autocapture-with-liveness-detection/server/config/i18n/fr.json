@@ -4,7 +4,7 @@
   "Good network signal": "Bon signal de réseau",
   "This process only works with a connection speed of at least":"Ce processus ne fonctionne qu'avec une vitesse de téléchargement d'au moins",
   "This process only works with an upload connection speed of at least":"Ce processus ne fonctionne qu'avec une vitesse de chargement d'au moins",
-  "so make sure you maintain a good connection.":"alors assurez-vous de maintenir une bonne connexion.",
+  "So make sure you maintain a good connection.":"Alors assurez-vous de maintenir une bonne connexion.",
   "It appears your network signal is too weak.":"Il semble que le signal de votre réseau soit trop faible.",
   "re-test network connection":"re-tester la connexion réseau",
   "You seem to be using an unsupported browser.": "Vous semblez utiliser un navigateur non supporté.",
@@ -92,7 +92,7 @@
   "Please start by indicating what lighting you have right now. Is it natural light (sun) or artificial light (lamps or overhead lights) ?": "Veuillez commencer par indiquer l'éclairage dont vous disposez actuellement. S'agit-il de la lumière naturelle (soleil) ou artificielle (lampes ou plafonniers) ?",
   "Natural light (sun)": "Lumière naturelle (soleil)",
   "Artificial light": "Lumière artificielle",
-  "Continue": "Continue",
+  "Continue": "Continuer",
   "Are you outside or inside right now?": "Vous êtes dehors ou à l'intérieur en ce moment ?",
   "I'm outside": "Je suis dehors" ,
   "I'm inside": "Je suis à l'intérieur",
@@ -144,7 +144,7 @@
   "Something went wrong" : "Une erreur est survenue",
   "Please restart your liveness by clicking Try again.": "Veuillez redémarrer votre liveness en cliquant sur Réessayer.",
   "Take a selfie": "Prenez une photo",
-  "Matching successed": "Le matching a réussi",
+  "Matching succeeded": "Le matching a réussi",
   "Oops !" : "Oops !",
   "initialization in progress, please wait..." : "Initialisation en cours, veuillez patienter...",
   "Camera Access" : "Accès à la camera",
@@ -153,5 +153,9 @@
   "Matching failed. Please try again..." : "Le matching a échoué. Essayez encore...",
   "No camera access" : "Pas d'accès à l'appareil photo",
   "We need access to your phone’s camera. Click Allow on the popup or enable it in your privacy settings.": "Nous avons besoin d'accéder à l'appareil photo de votre téléphone. Cliquez sur Autoriser dans la fenêtre popup ou activez-le dans vos paramètres de confidentialité.",
-  "Loading results ...": "Chargement des résultats ..."
+  "Loading results ...": "Chargement des résultats ...",
+  "Bring your phone up to eye level.": "Mettez votre téléphone à hauteur des yeux.",
+  "Center your face inside the oval and follow the on-screen instructions.": "Centrez votre visage à l'intérieur de l'ovale et suivez les instructions à l'écran.",
+  "Ok, I got it": "OK j'ai compris",
+  "Watch tutorial": "Regarder le tutoriel"
 }

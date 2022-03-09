@@ -74,7 +74,7 @@ module.exports = {
 
     // *** LANGUAGES
     // Supported languages. Used to translate the web pages
-    SUPPORTED_LANGUAGES: 'en,es,fr,ja',
+    SUPPORTED_LANGUAGES: 'en,es,fr',
     
 
 };

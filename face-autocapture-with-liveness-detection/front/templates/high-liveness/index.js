@@ -45,6 +45,8 @@ const positiveMessage = document.querySelector('#positive-message');
 
 const isGifOverlayEnabled = new URLSearchParams(window.location.search).get('gifOverlay') === 'true';
 
+let tooManyAttempts = false;
+
 function getFaceCaptureOptions() {
     let challengeInProgress = false;
     let challengePending = false;
@@ -104,7 +106,8 @@ function getFaceCaptureOptions() {
             console.log('got error', error);
             challengeInProgress = false;
             if (error.code && error.code === 429) { //  enduser is blocked
-            // we reset the session when we finished the liveness check real session
+                tooManyAttempts = true;
+                // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
                 commonutils.userBlockInterval(new Date(error.unlockDateTime).getTime());
@@ -150,6 +153,7 @@ async function init(options = {}) {
     faceCaptureOptions.wspath = settings.videoBasePath + '/engine.io';
     faceCaptureOptions.bioserverVideoUrl = settings.videoUrl;
     faceCaptureOptions.rtcConfigurationPath = settings.videoUrlWithBasePath + '/coturnService?bioSessionId=' + encodeURIComponent(session.sessionId);
+    
     session.client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
 
     if (session.client) {
@@ -192,7 +196,7 @@ document.querySelectorAll('*[data-target]')
     .forEach((btn) => btn.addEventListener('click', async () => {
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
-            .catch(() => stopVideoCaptureAndProcessResult(false));
+            .catch(() => { if (!tooManyAttempts) stopVideoCaptureAndProcessResult(false); });
     }));
 
 async function processStep(targetStepId, displayWithDelay) {
@@ -233,9 +237,7 @@ async function processStep(targetStepId, displayWithDelay) {
             session.livenessHeader.classList.remove('d-none');
             await init();
             if (session.client && session.videoStream) {
-                setTimeout(() => {
-                    session.client.start(session.videoStream);
-                }, 2000);
+                session.client.startCapture({ stream: session.videoStream });
             } else {
                 console.log('client or videoStream not available, start aborted');
                 return;

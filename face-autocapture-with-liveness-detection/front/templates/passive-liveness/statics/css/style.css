@@ -473,7 +473,7 @@ video {background-color: black}
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
-    transition: opacity 1s ease-in;
+    transition: opacity 500ms ease-in;
 }
 
 #step-liveness .d-none-fadeout {

@@ -4,7 +4,7 @@
   "Good network signal":"Buena señal de red",
   "This process only works with a connection speed of at least":"Este proceso solo funciona con una velocidad de conexión de al menos",
   "This process only works with an upload connection speed of at least":"Este proceso solo funciona con una velocidad de conexión de carga (subida) de al menos",
-  "so make sure you maintain a good connection.":"así que asegúrate de mantener una buena conexión.",
+  "So make sure you maintain a good connection.":"Así que asegúrate de mantener una buena conexión.",
   "It appears your network signal is too weak.":"Parece que su señal de red es demasiado débil.",
   "re-test network connection":"volver a probar la conexión de red",
   "You seem to be using an unsupported browser.":"Parece que estás usando un navegador no compatible.",
@@ -91,7 +91,7 @@
   "Please start by indicating what lighting you have right now. Is it natural light (sun) or artificial light (lamps or overhead lights) ?": "Por favor, empieza indicando qué iluminación tienes ahora mismo. ¿Es luz natural (sol) o artificial (lámparas o luces de techo)?",
   "Natural light (sun)": "Luz natural (sol)",
   "Artificial light": "La luz artificial",
-  "Continue": "Continúa",
+  "Continue": "Continuar",
   "Are you outside or inside right now?": "¿Estás afuera o adentro ahora mismo?",
   "I'm outside": "Estoy afuera",
   "I'm inside": "Estoy dentro",
@@ -145,7 +145,7 @@
   "Something went wrong" : "Une erreur est survenue",
   "Please restart your liveness by clicking Try again.": "Please restart your liveness by clicking Try again.",
   "Take a selfie": "Take a selfie",
-  "Matching successed": "Matching successed",
+  "Matching succeeded": "Matching succeeded",
   "Oops !" : "Oops !",
   "initialization in progress, please wait..." : "Inicialización en curso, espere ...",
   "Camera Access" : "Acceso a la cámara",
@@ -154,5 +154,9 @@
   "Matching failed. Please try again..." : "Matching failed. Please try again...",
   "No camera access" : "No camera access",
   "We need access to your phone’s camera. Click Allow on the popup or enable it in your privacy settings.": "We need access to your phone’s camera. Click Allow on the popup or enable it in your privacy settings.",
-  "Loading results ...": "Cargando resultados ..."
+  "Loading results ...": "Cargando resultados ...",
+  "Bring your phone up to eye level.": "Lleva tu teléfono al nivel de los ojos.",
+  "Center your face inside the oval and follow the on-screen instructions.": "Centre su rostro dentro del óvalo y siga las instrucciones en pantalla.",
+  "Ok, I got it": "De acuerdo, lo entiendo.",
+  "Watch tutorial": "Ver el tutorial"
 }

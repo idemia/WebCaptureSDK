@@ -584,6 +584,18 @@ exports.initLivenessAnimationsPartFull = function () {
     });
 };
 
+exports.initLivenessPassiveVideoTutorial = function () {
+    document.querySelectorAll('.liveness-passive-video-tutorial').forEach((element) => {
+        lottie.loadAnimation({
+            container: element, // the dom element that will contain the animation
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: require('./animations/liveness-passive-video-tutorial.json') // the animation data
+        });
+    });
+};
+
 function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessMediumOrHigh = false) {
     // hide all messages
     document.querySelectorAll(CLASS_VIDEO_OVERLAY).forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));

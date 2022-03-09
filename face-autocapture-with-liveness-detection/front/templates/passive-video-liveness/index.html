@@ -88,22 +88,26 @@ limitations under the License.
                         <span class="animation-title-text text-center"><%= __("Checking network signal") %></span>
                     </div>
                 </div>
-                <div class="check-phone">
-                    <div class="">
-                        <img class="contain" width="100" src="./img/wifi-weak.png" alt="Weak network signal">
-                    </div>
-                    <div class="animation-text">
+                <div class="check-phone animation">
+                    <div class="animation-content">
+                        <div class="">
+                            <img width="100" src="./img/wifi-weak.png" alt="Weak network signal">
+                        </div>
                         <div class="animation-title-text text-center"><span><%= __("Weak network signal") %> <span
                                 class="signal-value"></span></span></div>
-
-                        <span class="download animation-text"><%= __("This process only works with a connection speed of at least") %></span>
-                        <span class="upload animation-text"><%= __("This process only works with an upload connection speed of at least") %></span>
-                        <span class="signal-min-value"></span>.
-                        <span class="animation-text"><%= __("It appears your network signal is too weak.") %></span>
+                        <div class="animation-text">
+                            <span class="download"><%= __("This process only works with a connection speed of at least") %></span>
+                            <span class="upload"><%= __("This process only works with an upload connection speed of at least") %></span>
+                            <span class="signal-min-value"></span>.
+                            <span class=""><%= __("It appears your network signal is too weak.") %></span>
+                        </div>
                     </div>
-                    <div class="btn-footer w-100">
-                        <button class="btn btn-primary btn-block" id="check-network"><%= __("re-test network connection") %>
-                        </button>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-primary btn-block" id="check-network"><%= __("re-test network connection") %></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,25 +132,31 @@ limitations under the License.
                         <img alt="Logo" src="./img/logo-passive-video.png">
                     </div>
                 </header>
-                <div class="check-phone">
-                    <div class="">
-                        <img class="contain" width="100" src="./img/wifi-medium.png" alt="Good network signal">
-                    </div>
-                    <div class="text-center description">
-                        <div class="animation-title-text text-center"><span><%= __("Good network signal") %> <span
-                                class="signal-value"></span></span>
+                <div class="check-phone animation">
+                    <div class="animation-content">
+                        <div class="">
+                            <img width="100" src="./img/wifi-medium.png" alt="Good network signal">
                         </div>
-                        <span class="animation-text"><%= __("This process only works with a connection speed of at least") %></span>
-                        <span class="signal-min-value nimation-text"></span>.
-                        <span class="animation-text"><%= __("so make sure you maintain a good connection.") %></span>
+                            <div class="animation-title-text text-center"><span><%= __("Good network signal") %> <span
+                                    class="signal-value"></span></span>
+                            </div>
+                        <div class="animation-text">
+                            <span class=""><%= __("This process only works with a connection speed of at least") %></span>
+                            <span class="signal-min-value"></span>.
+                            <span class=""><%= __("So make sure you maintain a good connection.") %></span>
+                        </div>
                     </div>
-                    <div class="btn-footer w-100">
-                        <button class="btn btn-primary btn-block" data-target="#step-1"><%= __("i'm ready") %></button>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-primary btn-block" data-target="#step-1-restore"><%= __("i'm ready") %></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tutorial -->
+            <!-- landing page -->
             <div id="step-1-anim" class="row step d-none">
                 <header class="row header">
                     <div class="col logo">
@@ -172,7 +182,44 @@ limitations under the License.
                         <div class="row">
                             <div class="col">
                                 <button class="btn btn-primary btn-block" data-target="#connectivity-check" data-delay>
-                                    <%= __("Next") %>
+                                    <%= __("Continue") %>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="watch-tutorial-link">
+                                    <img alt="Play tutorial" src="./img/play-tutorial.svg">
+                                    <a class="watch-tutorial-text" data-target="#tutorial-anim"><%= __("Watch tutorial") %></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- watch tutorial -->
+            <div id="tutorial-anim" class="row step d-none">
+                <header class="row header">
+                    <div class="col logo">
+                        <img alt="Logo" src="./img/logo-passive-video.png">
+                    </div>
+                </header>
+                <div class="animation">
+                    <div class="animation-content">
+                        <div class="liveness-passive-video-tutorial"></div>
+                        <div class="animation-text">
+                            <span><%= __("Bring your phone up to eye level.") %></span>
+                        </div>
+                        <div class="animation-text">
+                            <span><%= __("Center your face inside the oval and follow the on-screen instructions.") %></span>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-primary btn-block" data-target="#step-1-restore">
+                                    <%= __("Ok, I got it") %>
                                 </button>
                             </div>
                         </div>
@@ -244,25 +291,13 @@ limitations under the License.
             <div id="step-liveness" class="row step d-none">
                 <div class="col-12 animation">
                     <div class="video-block video-opacity">
+                        <!-- Cross to stop the capture -->
                         <div id="stop-capture" data-target="#step-1" class="d-none-fadeout btn btn-outline-primary">
                             <img id="back_cross" src="./img/back_cross.svg" alt="back">
                         </div>
                         <!-- Video management -->
                         <video id="user-video" class="w-100 h-100" style="object-fit: cover" autoplay playsinline></video>
-                        <!-- Circle management -->
-                        <div id="svg-circle-container" class="d-none">
-                            <svg id="svg-liveness">
-                                <defs>
-                                    <mask id="mask" x="0" y="0" width="100%" height="100%">
-                                        <rect id="mask-rect" x="0" y="0" width="100%" height="1000"/>
-                                        <ellipse id="mask-circle" cx="0" cy="0" rx="0" ry="0"/>
-                                    </mask>
-                                </defs>
-                                <rect id="circle-background" x="0" y="0" width="100%" height="100%" mask="url(#mask)"/>
-                                <ellipse id="circle-liveness" cx="0" cy="0" rx="0" ry="0"/>
-                                <ellipse id="circle-liveness-animate" cx="0" cy="0" rx="0" ry="0"/>
-                            </svg>
-                        </div>
+
                     </div>
                     <div id="dont-move-animation" class="d-none-fadeout move-message w-100 no-header-h-100">
                         <span class="video-msg"><%= __("Great !") %> <%= __("Stay within the oval") %></span>
@@ -272,9 +307,11 @@ limitations under the License.
                     </div>
                     <!-- Loading finish -->
                     <div id="loading-challenge" class="d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
-                        <div class="row header liveness-header">
-                            <div class="col logo"><img alt="Logo" src="./img/logo-passive-video.png"></div>
-                        </div>
+                        <header class="row header liveness-header">
+                            <div class="col logo">
+                                <img alt="Logo" src="./img/logo-passive-video.png">
+                            </div>
+                        </header>
                         <div class="loader-wrapper d-flex flex-column">
                             <div class="loader-animation align-self-center">
                                 <div></div>
@@ -285,9 +322,11 @@ limitations under the License.
                     </div>
                     <!-- Loading init -->
                     <div id="loading-initialized" class="d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
-                        <div class="row header liveness-header">
-                            <div class="col logo"><img alt="Logo" src="./img/logo-passive-video.png"></div>
-                        </div>
+                        <header class="row header liveness-header">
+                            <div class="col logo">
+                                <img alt="Logo" src="./img/logo-passive-video.png">
+                            </div>
+                        </header>
                         <div class="loader-wrapper d-flex flex-column">
                             <div class="loader-animation align-self-center">
                                 <div></div>
@@ -311,11 +350,11 @@ limitations under the License.
                     <!-- Phone position management -->
                     <div id="phone-not-vertical-animation"
                          class="video-msg-wrapper d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
-                        <div class="row header">
+                        <header class="row header liveness-header">
                             <div class="col logo">
                                 <img alt="Logo" src="./img/logo-passive-video.png">
                             </div>
-                        </div>
+                        </header>
                         <div class="animation d-flex flex-column">
                             <div class="animation-content">
                                 <div class="animation-image">
@@ -338,7 +377,7 @@ limitations under the License.
                 </header>
                 <div class="animation success-no-ipv d-none">
                     <div class="animation-content">
-                        <div class="best-image">
+                        <div id="best-image">
                             <img src="./img/success_tick.svg" alt="success">
                         </div>
                         <span class="animation-title-text"><%= __("Good Job !")%></span>
@@ -416,21 +455,27 @@ limitations under the License.
                             <span><%= __("Oops! There are a few issues with your liveness") %></span>
                         </div>
                         <div class="animation-liveness-instructions">
-                            <table class="table-liveness-instructions">  <!-- TODO: do not use table use div instead -->
+                            <table class="table-liveness-instructions"><!-- TODO: do not use table use div instead -->
                                 <tr>
-                                    <td class="table-img-liveness-instructions" rowspan="3">
-                                        <img src="./img/livenessInstructions.svg" alt="Liveness instructions">
+                                    <td class="table-img-liveness-instructions">
+                                        <img src="./img/light.svg" alt="Liveness instruction light">
                                     </td>
                                     <td class="table-txt-liveness-instructions">
                                         <span><%= __("The light source should be in front of your face.") %></span>
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td class="table-img-liveness-instructions">
+                                        <img src="./img/eyes-level.svg" alt="Liveness instruction eyes level">
+                                    </td>
                                     <td class="table-txt-liveness-instructions">
                                         <span><%= __("Hold your device level with your eyes.") %></span>
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td class="table-img-liveness-instructions">
+                                        <img src="./img/person.svg" alt="Liveness instruction person">
+                                    </td>
                                     <td class="table-txt-liveness-instructions">
                                         <span><%= __("Make sure that you are the only person in the camera.") %></span>
                                     </td>
@@ -467,19 +512,25 @@ limitations under the License.
                         <div class="animation-liveness-instructions">
                             <table class="table-liveness-instructions"><!-- TODO: do not use table use div instead -->
                                 <tr>
-                                    <td class="table-img-liveness-instructions" rowspan="3">
-                                        <img src="./img/livenessInstructions.svg" alt="Liveness instructions">
+                                    <td class="table-img-liveness-instructions">
+                                        <img src="./img/light.svg" alt="Liveness instruction light">
                                     </td>
                                     <td class="table-txt-liveness-instructions">
                                         <span><%= __("The light source should be in front of your face.") %></span>
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td class="table-img-liveness-instructions">
+                                        <img src="./img/eyes-level.svg" alt="Liveness instruction eyes level">
+                                    </td>
                                     <td class="table-txt-liveness-instructions">
                                         <span><%= __("Hold your device level with your eyes.") %></span>
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td class="table-img-liveness-instructions">
+                                        <img src="./img/person.svg" alt="Liveness instruction person">
+                                    </td>
                                     <td class="table-txt-liveness-instructions">
                                         <span><%= __("Make sure that you are the only person in the camera.") %></span>
                                     </td>
@@ -595,7 +646,7 @@ limitations under the License.
                             <img src="./img/success_tick.svg" alt="success">
                         </div>
                         <span class="animation-title-text"><%= __("Good Job !")%></span><br>
-                        <span class="animation-text"><%= __("Matching successed") %></span>
+                        <span class="animation-text"><%= __("Matching succeeded") %></span>
                     </div>
                     <div class="footer">
                         <div class="row">
@@ -640,6 +691,11 @@ limitations under the License.
             </div>
             <!-- loading -->
             <div id="loading" class="loading row step d-none">
+                <header class="row header">
+                    <div class="col logo">
+                        <img alt="Logo" src="./img/logo-passive-video.png">
+                    </div>
+                </header>
                 <div class="col-12 animation">
                     <div class="loader-animation">
                         <div></div>
@@ -648,6 +704,11 @@ limitations under the License.
                 </div>
             </div>
             <div id="loading-results" class="loading row step d-none">
+                <header class="row header">
+                    <div class="col logo">
+                        <img alt="Logo" src="./img/logo-passive-video.png">
+                    </div>
+                </header>
                 <div class="col-12 animation">
                     <div class="loader-animation">
                         <div></div>
@@ -676,6 +737,7 @@ limitations under the License.
         <script src="./js/detect-env.js"></script>
         <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-api.js"></script>
         <script src="<%=JAVASCRIPT_PATH%>/bioserver-network-check.js"></script>
+        <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-ui.js"></script>
         <script src="./js/index.js"></script>
     </body>
 </html>
