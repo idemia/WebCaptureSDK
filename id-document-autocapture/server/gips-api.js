@@ -27,6 +27,22 @@ const context = [{
     key: 'BUSINESS_ID',
     value: 'LOA1P'
 }];
+const FRONT = 'FRONT';
+const BACK = 'BACK';
+const frontRule = {
+    side: {
+        id: 'SIDE1',
+        name: FRONT
+    },
+    captureFeatures: []
+};
+const backRule = {
+    side: {
+        id: 'SIDE2',
+        name: BACK
+    },
+    captureFeatures: []
+};
 
 module.exports = {
     getCountryDocTypes,
@@ -78,9 +94,11 @@ async function createIdentity() {
  */
 async function startDocCapture(identityId, country, type) {
     const docParamerters = {
-        issuingCountry: country,
         idDocumentType: type
     };
+    if (country) {
+        docParamerters.issuingCountry = country;
+    }
     const url = `${config.GIPS_URL}/v1/identities/${identityId}/id-documents/live-capture-session`;
     logger.debug(`startDocCapture: POST ${url}`);
 
@@ -128,34 +146,34 @@ async function getSupportedEvidences(country) {
  */
 async function initDocSession(countryCode, docType) {
     logger.debug('initDocSession');
+
     try {
         const identity = await createIdentity();
-        const session = await startDocCapture(identity.id, countryCode, docType);
-        const countries = await getSupportedEvidences(countryCode);
-        const document = countries.documents.filter(c => c.documentType === docType);
+        const gipsCaptureSession = await startDocCapture(identity.id, countryCode, docType);
+        if (!gipsCaptureSession || !Array.isArray(gipsCaptureSession.sidesToCapture)) {
+            const errMessage = 'live-capture-session request returned null response or response without sidesToCapture array';
+            logger.error(errMessage);
+            throw new Error(errMessage);
+        }
+
         const res = {};
         res.docSideRules = [];
-        if (document[0].sides[0].front !== 'FORBIDDEN') {
-            res.docSideRules.push({
-                side: {
-                    id: 'SIDE1',
-                    name: 'FRONT'
-                },
-                captureFeatures: []
-            });
-        }
-        if (document[0].sides[0].back !== 'FORBIDDEN') {
-            res.docSideRules.push({
-                side: {
-                    id: 'SIDE2',
-                    name: 'BACK'
-                },
-                captureFeatures: []
-            });
-        }
-        res.docFormat = document[0].format;
-        res.id = session.sessionId;
+        res.id = gipsCaptureSession.sessionId;
         res.identity = identity.id;
+        if (gipsCaptureSession.sidesToCapture.includes(FRONT)) {
+            res.docSideRules.push(frontRule);
+        }
+        if (gipsCaptureSession.sidesToCapture.includes(BACK)) {
+            res.docSideRules.push(backRule);
+        }
+
+        // get document format when country was defined, in the future the format should be sent by GIPS...
+        if (countryCode) {
+            const countries = await getSupportedEvidences(countryCode);
+            const document = countries.documents.filter(c => c.documentType === docType);
+            res.docFormat = document[0].format;
+        }
+
         return res;
     } catch (err) {
         logger.error('initDocSession failed');
@@ -232,6 +250,16 @@ async function getCountryDocTypes(countryCode) {
                 element.docTypes = acceptedTypes;
                 res.push(element);
             }
+        });
+        // In additionnal to existing country, we add an empty country allowing the UX to process a generic docType capture
+        res.push({
+            code: '',
+            docTypes: [
+                'IDENTITY_CARD',
+                'RESIDENT_CARD',
+                'PASSPORT',
+                'DRIVING_LICENSE'
+            ]
         });
         return res;
     } catch (err) {

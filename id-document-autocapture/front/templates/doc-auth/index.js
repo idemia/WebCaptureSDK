@@ -35,6 +35,9 @@ const reflectionDocMsg = $('#doc-reflection-msg');
 const lowLightDocMsg = $('#doc-low-light-msg');
 const tooCloseDocMsg = $('#too-close-doc-msg');
 const tooFarDocMsg = $('#too-far-doc-msg');
+const uploadingCaptures = $('#uploading-doc-captures');
+const uploadingInfinite = $('#uploading-infinite');
+const uploadingProgress = $('#uploading-progress');
 const loadingResults = $('#loading-doc-results');
 const loadingInitialization = $('#loading-initialization');
 const videoScanOverlays = $$('#step-doc-auth .video-overlay');
@@ -88,6 +91,12 @@ const signalMinValueClass = '.signal-min-value';
 const networkSpeedString = '/network-speed';
 const networkLatencyString = '/network-latency';
 const dateDocSideAttribute = 'data-doc-side';
+
+// TODO read these values from css file
+const progressBarBackgroundColor = '#D1C4E3';
+const progressBarColor = '#430099';
+
+const conicGradientSupported = CSS.supports('background: conic-gradient(white, black)');
 
 stopCaptureButton.onclick = function () {
     if (!client) {
@@ -168,7 +177,7 @@ async function initDocCaptureClient(options = {}) {
             if (client) {
                 videoOutput.srcObject = null;
                 videoStream = null; // it will allow to reload the stream on next capture
-                client.stop();
+                client.disconnect();
             }
         },
         trackingFn: (trackingInfo) => {
@@ -305,6 +314,7 @@ function displayChangeSideUI(startDelay) {
     alignDocMsg.classList.add('video-overlay-flip'); // add background in order to better read the message
 
     countDownTimer = setTimeout(() => {
+        console.log('New side ready to capture');
         // Disable countdown
         clearTimeout(countDownTimer);
         // Display video message
@@ -326,9 +336,6 @@ function removeAbortButton() {
 async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide, startDelay = 3000) {
     // d-none all steps
     $$('.step').forEach(row => row.classList.add('d-none'));
-    if (sessionIdParam && targetStepId === '#step-country-selection') {
-        document.location.reload();
-    }
     if (targetStepId === connectivityCheckId) {
         if (connectivityOK) {
             targetStepId = stepDocAuthId; // connectivity check done & successful, move to the next step
@@ -457,7 +464,9 @@ function processCaptureResultForSide(result, side, msg, extendedMsg) {
 
     if (result) {
         if (IDPROOFING) {
-            identityId = getCurrentDocumentRule().identityId;
+            if (!urlParams.get('identityId')) {
+                identityId = getCurrentDocumentRule().identityId;
+            }
             evidenceId = result.evidenceId;
             gipsImageBlock.classList.remove('d-none');
             gipsTransactionBlock.classList.remove('d-none');
@@ -674,25 +683,26 @@ function displayMsg(elementToDisplay, ttl = 2000) {
  * @param {boolean} position.goodPosition
  * @param {boolean} position.bestImage
  * @param {Object} corners {w,h,x0,y0,x1,y1,x2,y2,x3,y3}
- * @param pending
+ * @param {boolean} pending
+ * @param {number} uploadProgress
  */
-function displayInstructionsToUser({ position, corners, pending }) {
+function displayInstructionsToUser({ position, corners, pending, uploadProgress }) {
     // Event list: badFraming, glare, blur, tooClose, tooFar, holdStraight, lowlight
     if (position) { // << got some message related to document position
         if (position.tooClose) {
             displayMsg(tooCloseDocMsg);
         } else if (position.tooFar) {
             displayMsg(tooFarDocMsg);
-        } else if (position.pdf417) {
-            displayMsg(blurryDocMsg);
+        } else if (position.lowlight) {
+            displayMsg(lowLightDocMsg);
         } else if (position.holdStraight) {
             displayMsg(holdStraightDocMsg);
         } else if (position.badFraming) {
             displayMsg(alignDocMsg);
-        } else if (position.lowlight) {
-            displayMsg(lowLightDocMsg);
         } else if (position.reflection) {
             displayMsg(reflectionDocMsg);
+        } else if (position.pdf417) {
+            displayMsg(blurryDocMsg);
         } else if (position.blur) {
             displayMsg(blurryDocMsg);
         } else {
@@ -716,7 +726,28 @@ function displayInstructionsToUser({ position, corners, pending }) {
             userInstructionMsgDisplayed = window.clearTimeout(userInstructionMsgDisplayed);
         }
         $$('.step').forEach(step => step.classList.add('d-none'));
-        loadingResults.classList.remove('d-none');
+        uploadingCaptures.classList.remove('d-none');
+        // Display infinite loader first, hide progress bar since we don't know yet the percentage
+        uploadingInfinite.classList.remove('d-none');
+        uploadingProgress.classList.add('d-none');
+    }
+
+    if (uploadProgress) {
+        // Display progress bar with percentage only if conic-gradient is supported
+        if (conicGradientSupported) {
+            const progress = Number(uploadProgress * 100).toFixed(0);
+            // Now we have percentage, update progress value
+            setProgress(progress);
+            // Hide infinite loader, display progress bar
+            uploadingInfinite.classList.add('d-none');
+            uploadingProgress.classList.remove('d-none');
+        }
+
+        // When progress has reached 100%, we can switch to next screen
+        if (uploadProgress === 1) {
+            $$('.step').forEach(step => step.classList.add('d-none'));
+            loadingResults.classList.remove('d-none');
+        }
     }
 }
 
@@ -725,6 +756,14 @@ window.envBrowserOk && $('#step-country-selection').classList.remove('d-none');
  * check user connectivity (latency, download speed, upload speed)
  */
 window.onload = () => {
+    if (sessionIdParam) {
+        const sessionId = sessionIdParam;
+        initDocCaptureClient({ sessionId }); // since we doesn't reach the listener that call this init, we should call it here
+        // try to read the identityId from query param only if sessionId is also given as input
+        if (urlParams.get('identityId')) {
+            identityId = urlParams.get('identityId');
+        }
+    }
     if (typeof DocserverNetworkCheck !== 'undefined') {
         let displayGoodSignal = false;
 
@@ -1137,3 +1176,8 @@ $$('.restart-demo').forEach(btn => {
         videoStream = null;
     });
 });
+
+function setProgress(progress) {
+    $('#progress-spinner').style.background = `conic-gradient(${progressBarColor} ${progress}%,${progressBarBackgroundColor} ${progress}%)`;
+    $('#middle-circle').innerHTML = progress.toString() + '%';
+}

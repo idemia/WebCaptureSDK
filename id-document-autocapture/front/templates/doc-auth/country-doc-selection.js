@@ -33,7 +33,7 @@ let currentDocumentRule; // store current document rule as global variable - lin
 let currentSession; // store current session
 let identityId; // store identity of the GIPS transaction (if GIPS workflow)
 
-// Start of the process, loading supported countries  + doucment types from docserver
+// Start of the process, loading supported countries + document types from docserver
 // In addition predefined capture rules (store on SP server)  are also loaded in the "other country" part
 if (!sessionIdParam) {
     retrieveCountryDocTypes().then(function (res) {

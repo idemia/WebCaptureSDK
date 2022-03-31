@@ -61,8 +61,8 @@ exports.pack = function pack() {
             devtool,
             watch,
             watchOptions,
-            // this will increase default maxSize from default one 244kB to 550kB because of gif animation files
-            performance: { maxEntrypointSize: 550 * 1024, maxAssetSize: 550 * 1024 },
+            // this will increase default maxSize from default one 244kB to 560kB because of gif animation files
+            performance: { maxEntrypointSize: 560 * 1024, maxAssetSize: 560 * 1024 },
             output: {
                 path: path.join(__dirname, '../front/doc-auth/' + language + '/js/'),
                 publicPath: 'js',

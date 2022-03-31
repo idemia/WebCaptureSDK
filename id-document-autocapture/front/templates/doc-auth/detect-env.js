@@ -58,20 +58,30 @@ function displayEnvironement(env) {
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
             envDetectionPage.querySelector(descriptionClass).textContent = __('You seem to be using an unsupported browser.');
             browsersDescription.textContent = __('Please use one of following browsers for a better experience');
-            var browsersList = envDetectionPage.querySelector('.browsers');
-            browsersList.innerHTML = '';
+            var browsersTable = envDetectionPage.querySelector('.browsers');
+            browsersTable.innerHTML = '';
             for (var browserIndex in envBrowser.supportedList) {
                 var browserInfo = envBrowser.supportedList[browserIndex];
-                var browser = document.createElement('div');
-                browser.className = 'browser';
-                var browserImg = document.createElement('div');
-                browserImg.id = browserInfo.name.toLowerCase().replace(' ', '-');
-                browserImg.className = 'browser-img';
+                var browserName = browserInfo.name.toLowerCase().replace(' ', '-');
+
+                // logo image td part
+                var imgLogo = document.createElement('img');
+                imgLogo.src = './img/browsers/' + browserName + '.png';
+                imgLogo.className = 'browser-logo';
+                var tdLogo = document.createElement('td');
+                tdLogo.appendChild(imgLogo);
+
+                // description td part
+                var tdDesc = document.createElement('td');
                 var browserDesc = document.createElement('span');
                 browserDesc.innerHTML = browserInfo.name + ' Version ' + browserInfo.minimumVersion + '+';
-                browser.appendChild(browserImg);
-                browser.appendChild(browserDesc);
-                browsersList.appendChild(browser);
+                tdDesc.appendChild(browserDesc);
+
+                // construct each tr with previous tds
+                var trElement = document.createElement('tr');
+                trElement.appendChild(tdLogo);
+                trElement.appendChild(tdDesc);
+                browsersTable.appendChild(trElement);
             }
         } else {
             envDetectionPage.className = envDetectionPage.className.concat(' d-none');

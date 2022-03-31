@@ -42,7 +42,7 @@
   "62 Cottonwood Rd, Anytown, MA": "62 chemin Cottonwood, Anytown, MA",
   "Restart Demo": "Redémarrer la démo",
   "Confirm and continue" : "Confirmer et continuer",
-  "it's incorrect, rescan document": "c'est incorrect, réessayer0 0",
+  "it's incorrect, rescan document": "c'est incorrect, réessayer",
   "We had some difficulties to capture your document, Ensure all corners are visible.": "Nous avons eu quelques difficultés à capturer votre document, assurez-vous que tous les coins sont visibles.",
   "Example photo": "Exemple de photo",
   "Retry again": "Réessayer",
@@ -103,5 +103,8 @@
   "Passport": "Passeport",
   "passport": "passeport",
   "Resident Card": "Carte de Séjour",
-  "resident card": "carte de séjour"
+  "resident card": "carte de séjour",
+  "Uploading": "Chargement",
+  "We are uploading your results": "Nous téléchargeons vos résultats",
+  "This might take a few moments": "Cela peut prendre quelques instants"
 }
