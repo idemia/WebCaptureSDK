@@ -1,0 +1,2 @@
+# Ignore detect-env.js file since it contains var keyword (should be present for environnment detection)
+front/utils/detect-env.js

@@ -232,6 +232,7 @@ small ul {
 .pc #step-selfie-ok .animation-content {
     min-height: calc(100% - 215px); /* minus height of footer */
 }
+
 .animation-text {
     padding-bottom: 3%;
     font-style: normal;
@@ -347,16 +348,19 @@ small ul {
     flex: 0 0 auto;
     padding: 20px;
 }
-.browsers, .os-list {
+.os-list {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
 }
-.browser, .os {
+.marginLeft10 {
+    margin-left: 10px;
+}
+.os {
     display: flex;
     flex: 1 1 100%;
 }
-.browser-img,.os-img{
+.os-img{
     background-size: auto 100px;
     background-repeat: no-repeat;
     width: 100px;
@@ -364,8 +368,8 @@ small ul {
     display: inline-block;
     margin: 5px;
 }
-.browser-img {
-    background-image: url(../img/browsers.png) ;
+.browser-logo {
+    width: 100px;
 }
 .os-img {
     background-image: url(../img/os.png) ;
@@ -792,15 +796,15 @@ video {background-color: black}
 .video-tut .animation-tut { display:none!important;}
 
 .retry-fp {
-    margin-top: 0!important;
-    max-width: 500px;
+    margin-top: 30px !important;
+    max-width: 400px;
 }
 
 .too-many-attempts {
+    padding-top: 20px;
     font-style: normal;
     font-weight: bold;
     font-size: 20px;
-    line-height: 28px;
     color: #4C4C4C;
     text-align: center;
     letter-spacing: normal;
@@ -814,7 +818,6 @@ video {background-color: black}
     font-style: normal;
     font-weight: normal;
     font-size: 16px;
-    line-height: 23px;
     color: #656565;
     letter-spacing: normal;
     text-align: center;
@@ -827,15 +830,18 @@ video {background-color: black}
 .please-try-again-in {
     padding-top: 20px;
     font-style: normal;
-    font-weight: normal;
+    font-weight: bold;
     font-size: 16px;
-    line-height: 23px;
     color: #656565;
     letter-spacing: normal;
     text-align: center;
 }
 .pc .please-try-again-in {
     font-size: 24px;
+}
+
+.fp-countdown {
+    font-family: monospace;
 }
 
 /** LIVENESS INSTRUCTIONS **/

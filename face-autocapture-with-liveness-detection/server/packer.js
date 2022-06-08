@@ -81,6 +81,7 @@ function livenessPackage(liveness) {
                 filename: '[name].js',
                 hashFunction: 'sha256'
             },
+            target: ['web', 'es5'],
             module: {
                 rules: [
                     {
@@ -89,7 +90,7 @@ function livenessPackage(liveness) {
                         use: {
                             loader: 'babel-loader',
                             options: {
-                                presets: [['@babel/preset-env', { targets: 'ie >= 11' }]]
+                                presets: ['@babel/preset-env']
                             }
                         }
                     }

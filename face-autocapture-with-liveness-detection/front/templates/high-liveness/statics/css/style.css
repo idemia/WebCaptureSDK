@@ -336,16 +336,19 @@ small ul {
     flex: 0 0 auto;
     padding: 20px;
 }
-.browsers, .os-list {
+.os-list {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
 }
-.browser, .os {
+.marginLeft10 {
+    margin-left: 10px;
+}
+.os {
     display: flex;
     flex: 1 1 100%;
 }
-.browser-img,.os-img{
+.os-img{
     background-size: auto 100px;
     background-repeat: no-repeat;
     width: 100px;
@@ -353,8 +356,8 @@ small ul {
     display: inline-block;
     margin: 5px;
 }
-.browser-img {
-    background-image: url(../img/browsers.png) ;
+.browser-logo {
+    width: 100px;
 }
 .os-img {
     background-image: url(../img/os.png) ;
@@ -781,16 +784,16 @@ video {background-color: black}
 .video-tut .animation-tut { display:none!important;}
 
 .retry-fp {
-    margin-top: 0px !important;
+    margin-top: 30px !important;
 }
 
 .too-many-attempts {
+    padding-top: 20px;
     font-family: unset;
     font-size: 32px;
     font-weight: bold;
     font-stretch: normal;
     font-style: normal;
-    line-height: 1.45;
     letter-spacing: normal;
     text-align: center;
     color: #101010;
@@ -801,13 +804,11 @@ video {background-color: black}
 }
 .for-security-reason {
     padding-top: 20px;
-    margin: 16px 178px;
     font-family: unset;
     font-size: 18px;
     font-weight: 500;
     font-stretch: normal;
     font-style: normal;
-    line-height: 1.42;
     letter-spacing: normal;
     text-align: center;
     color: #4a4a4a;
@@ -824,11 +825,14 @@ video {background-color: black}
     font-weight: bold;
     font-stretch: normal;
     font-style: normal;
-    line-height: 1.42;
     letter-spacing: normal;
     text-align: center;
     color: #4a4a4a;
 }
 .pc .please-try-again-in {
     font-size: 24px;
+}
+
+.fp-countdown {
+    font-family: monospace;
 }

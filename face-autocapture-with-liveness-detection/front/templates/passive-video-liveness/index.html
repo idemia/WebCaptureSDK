@@ -172,7 +172,8 @@ limitations under the License.
                             <span><%= __("Let’s scan your face now") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("Position yourself in a good lighting and follow the instructions on the next screen.") %></span>
+                            <span><%= __("Make sure your face is well-lit and try not to move your device while scanning.") %></span><br/>
+                            <span><%= __("Follow the instructions on the next screen.") %></span>
                         </div>
                         <div class="animation-text">
                             <span><%= __("It's ok if you’re wearing eyeglasses.") %></span>
@@ -209,10 +210,10 @@ limitations under the License.
                     <div class="animation-content">
                         <div class="liveness-passive-video-tutorial"></div>
                         <div class="animation-text">
-                            <span><%= __("Bring your phone up to eye level.") %></span>
+                            <span><%= __("Hold your device still and make sure the light source is in front of you.") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("Center your face inside the oval and follow the on-screen instructions.") %></span>
+                            <span><%= __("Center you face within the oval and follow the on-screen instructions.") %></span>
                         </div>
                     </div>
                     <div class="footer">
@@ -243,7 +244,7 @@ limitations under the License.
                             <span><%= __("Camera Access") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("In order to authenticate you, we need access to your phone's camera. Sounds good ?") %></span>
+                            <span><%= __("In order to authenticate you, we need access to your camera. Sounds good ?") %></span>
                         </div>
                     </div>
                     <div class="footer">
@@ -273,7 +274,7 @@ limitations under the License.
                             <span><%= __("No camera access") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("We need access to your phone’s camera. Click Allow on the popup or enable it in your privacy settings.") %></span>
+                            <span><%= __("We need access to your camera. Click Allow on the popup or enable it in your privacy settings.") %></span>
                         </div>
                     </div>
                     <div class="footer">
@@ -452,36 +453,37 @@ limitations under the License.
                             <img src="./img/somethingWentWrong.svg" alt="Something went wrong">
                         </div>
                         <div class="animation-title-text">
-                            <span><%= __("Oops! There are a few issues with your liveness") %></span>
+                            <span><%= __("Oops! There were a few issues") %></span>
                         </div>
-                        <div class="animation-liveness-instructions">
-                            <table class="table-liveness-instructions"><!-- TODO: do not use table use div instead -->
-                                <tr>
-                                    <td class="table-img-liveness-instructions">
-                                        <img src="./img/light.svg" alt="Liveness instruction light">
-                                    </td>
-                                    <td class="table-txt-liveness-instructions">
-                                        <span><%= __("The light source should be in front of your face.") %></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="table-img-liveness-instructions">
-                                        <img src="./img/eyes-level.svg" alt="Liveness instruction eyes level">
-                                    </td>
-                                    <td class="table-txt-liveness-instructions">
-                                        <span><%= __("Hold your device level with your eyes.") %></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="table-img-liveness-instructions">
-                                        <img src="./img/person.svg" alt="Liveness instruction person">
-                                    </td>
-                                    <td class="table-txt-liveness-instructions">
-                                        <span><%= __("Make sure that you are the only person in the camera.") %></span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
+                        <br/>
+                        <span><%= __("Check the tips below or try using a different device.") %></span>
+                        <br/>
+                        <table class="table-liveness-instructions"><!-- TODO: do not use table use div instead -->
+                            <tr>
+                                <td class="table-img-liveness-instructions">
+                                    <img src="./img/light.svg" alt="Liveness instruction light">
+                                </td>
+                                <td class="table-txt-liveness-instructions">
+                                    <span><%= __("Make sure your face is well-lit and the light source is in front of you.") %></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="table-img-liveness-instructions">
+                                    <img src="./img/eyes-level.svg" alt="Liveness instruction eyes level">
+                                </td>
+                                <td class="table-txt-liveness-instructions">
+                                    <span><%= __("Hold your device still and at eye level.") %></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="table-img-liveness-instructions">
+                                    <img src="./img/person.svg" alt="Liveness instruction person">
+                                </td>
+                                <td class="table-txt-liveness-instructions">
+                                    <span><%= __("Make sure that you are the only person in the camera.") %></span>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                     <div class="footer">
                         <div class="row">
@@ -507,36 +509,37 @@ limitations under the License.
                             <img src="./img/somethingWentWrong.svg" alt="Something went wrong">
                         </div>
                         <div class="animation-title-text">
-                            <span><%= __("Oops! There are a few issues with your liveness") %></span>
+                            <span><%= __("Oops! There were a few issues") %></span>
                         </div>
-                        <div class="animation-liveness-instructions">
-                            <table class="table-liveness-instructions"><!-- TODO: do not use table use div instead -->
-                                <tr>
-                                    <td class="table-img-liveness-instructions">
-                                        <img src="./img/light.svg" alt="Liveness instruction light">
-                                    </td>
-                                    <td class="table-txt-liveness-instructions">
-                                        <span><%= __("The light source should be in front of your face.") %></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="table-img-liveness-instructions">
-                                        <img src="./img/eyes-level.svg" alt="Liveness instruction eyes level">
-                                    </td>
-                                    <td class="table-txt-liveness-instructions">
-                                        <span><%= __("Hold your device level with your eyes.") %></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="table-img-liveness-instructions">
-                                        <img src="./img/person.svg" alt="Liveness instruction person">
-                                    </td>
-                                    <td class="table-txt-liveness-instructions">
-                                        <span><%= __("Make sure that you are the only person in the camera.") %></span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
+                        <br/>
+                        <span><%= __("Check the tips below or try using a different device.") %></span>
+                        <br/>
+                        <table class="table-liveness-instructions"><!-- TODO: do not use table use div instead -->
+                            <tr>
+                                <td class="table-img-liveness-instructions">
+                                    <img src="./img/light.svg" alt="Liveness instruction light">
+                                </td>
+                                <td class="table-txt-liveness-instructions">
+                                    <span><%= __("Make sure your face is well-lit and the light source is in front of you.") %></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="table-img-liveness-instructions">
+                                    <img src="./img/eyes-level.svg" alt="Liveness instruction eyes level">
+                                </td>
+                                <td class="table-txt-liveness-instructions">
+                                    <span><%= __("Hold your device still and at eye level.") %></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="table-img-liveness-instructions">
+                                    <img src="./img/person.svg" alt="Liveness instruction person">
+                                </td>
+                                <td class="table-txt-liveness-instructions">
+                                    <span><%= __("Make sure that you are the only person in the camera.") %></span>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                     <div class="footer">
                         <div class="row">
@@ -590,13 +593,8 @@ limitations under the License.
                     <img src="./img/icons-product-lock-large.svg" alt="failure">
                     <span class="too-many-attempts"><%= __("Too Many attempts!") %></span>
                     <span class="for-security-reason"><%= __("For security reason, we have temporarily disabled access to verification.") %></span>
-                    <span class="please-try-again-in"><%= __("Please try again in") %> </span>
-                    <span class="fp-countdown">
-                        <small class="text-center"></small>
-                    </span>
-                    <button class="btn btn-primary btn-block reset-animations retry-fp" data-target="#socket-init">
-                        <%= __("Try again") %>
-                    </button>
+                    <span class="please-try-again-in"><%= __("Please try again in") %> <span class="fp-countdown"></span></span>
+                    <button class="btn btn-primary btn-block reset-animations retry-fp" data-target="#socket-init"><%= __("Try again") %></button>
                 </div>
             </div>
 

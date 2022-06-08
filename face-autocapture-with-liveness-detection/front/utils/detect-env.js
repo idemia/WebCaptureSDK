@@ -18,27 +18,27 @@ limitations under the License.
 /* eslint-disable no-console */
 
 if (typeof BioserverEnvironment === 'object') {
-    const env = BioserverEnvironment.detection();
-    const envDetectionPage = document.querySelector('#step-compatibility');
-    const description = envDetectionPage.querySelector('.description');
+    var env = BioserverEnvironment.detection();
+    var envDetectionPage = document.querySelector('#step-compatibility');
+    var description = envDetectionPage.querySelector('.description');
     if (env.envDetected) {
-        const browsersDescription = envDetectionPage.querySelector('.browsers-description ');
-        const envOS = env.envDetected.os;
-        const envBrowser = env.envDetected.browser;
+        var browsersDescription = envDetectionPage.querySelector('.browsers-description ');
+        var envOS = env.envDetected.os;
+        var envBrowser = env.envDetected.browser;
         if (!envOS.isSupported) {
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
             description.textContent = __('You seem to be using an unsupported operating system.');
             browsersDescription.textContent = __('Please use one of following operating systems for a better experience');
-            const osList = envDetectionPage.querySelector('.os-list');
+            var osList = envDetectionPage.querySelector('.os-list');
             osList.innerHTML = '';
-            for (const osIndex in envOS.supportedList) {
-                const osInfo = envOS.supportedList[osIndex];
-                const os = document.createElement('div');
+            for (var osIndex in envOS.supportedList) {
+                var osInfo = envOS.supportedList[osIndex];
+                var os = document.createElement('div');
                 os.className = 'os';
-                const osImg = document.createElement('div');
+                var osImg = document.createElement('div');
                 osImg.id = osInfo.toLowerCase().replace(' ', '-');
                 osImg.className = 'os-img';
-                const osDesc = document.createElement('span');
+                var osDesc = document.createElement('span');
                 osDesc.innerHTML = osInfo;
                 os.appendChild(osImg);
                 os.appendChild(osDesc);
@@ -48,20 +48,31 @@ if (typeof BioserverEnvironment === 'object') {
             envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
             description.textContent = __('You seem to be using an unsupported browser.');
             browsersDescription.textContent = __('Please use one of following browsers for a better experience');
-            const browsersList = envDetectionPage.querySelector('.browsers');
-            browsersList.innerHTML = '';
-            for (const browserIndex in envBrowser.supportedList) {
-                const browserInfo = envBrowser.supportedList[browserIndex];
-                const browser = document.createElement('div');
-                browser.className = 'browser';
-                const browserImg = document.createElement('div');
-                browserImg.id = browserInfo.name.toLowerCase().replace(' ', '-');
-                browserImg.className = 'browser-img';
-                const browserDesc = document.createElement('span');
+            var browsersTable = envDetectionPage.querySelector('.browsers');
+            browsersTable.innerHTML = '';
+            for (var browserIndex in envBrowser.supportedList) {
+                var browserInfo = envBrowser.supportedList[browserIndex];
+                var browserName = browserInfo.name.toLowerCase().replace(' ', '-');
+
+                // logo image td part
+                var imgLogo = document.createElement('img');
+                imgLogo.src = './img/browsers/' + browserName + '.png';
+                imgLogo.className = 'browser-logo';
+                var tdLogo = document.createElement('td');
+                tdLogo.appendChild(imgLogo);
+
+                // description td part
+                var tdDesc = document.createElement('td');
+                var browserDesc = document.createElement('span');
                 browserDesc.innerHTML = browserInfo.name + ' Version ' + browserInfo.minimumVersion + '+';
-                browser.appendChild(browserImg);
-                browser.appendChild(browserDesc);
-                browsersList.appendChild(browser);
+                browserDesc.className = 'marginLeft10';
+                tdDesc.appendChild(browserDesc);
+
+                // varruct each tr with previous tds
+                var trElement = document.createElement('tr');
+                trElement.appendChild(tdLogo);
+                trElement.appendChild(tdDesc);
+                browsersTable.appendChild(trElement);
             }
         } else {
             envDetectionPage.className = envDetectionPage.className.concat(' d-none');

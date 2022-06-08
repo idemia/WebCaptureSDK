@@ -417,7 +417,6 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
 
         // Liveness goes until timeout, maybe face is not detected
     } else if (msg && (msg.indexOf('Timeout') > -1)) {
-        sessionStorage.setItem('livenessResult', '1');
         document.querySelector('#step-liveness-timeout').classList.remove(D_NONE);
         setTimeout(() => {
             document.querySelector('#step-liveness-timeout .footer').classList.remove(D_NONE);
@@ -436,27 +435,32 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
 }
 
 function userBlockInterval(fpBlockDate) {
+    let fpCountdown = null;
     retryFp.classList.add(D_NONE);
     document.querySelector('.please-try-again-in').classList.remove(D_NONE);
-    const fpCountdown = setInterval( // update the UI each second to update the left time of blocking
-        function () {
-            const currentDate = new Date().getTime();
-            const timeLeft = fpBlockDate - currentDate; // difference between blocking time and now in miliseconds
-            // when browser's javascript is not working, timeLeft can be < 0
-            if (timeLeft > 0) {
-                // retrieve days/hours/minutes/seconds left before end of freeze
-                const timerLeft = countTimeLeft(timeLeft);
+    const updateBlockInterval = () => {
+        const currentDate = new Date().getTime();
+        const timeLeft = fpBlockDate - currentDate; // difference between blocking time and now in milliseconds
+        // when browser's javascript is not working, timeLeft can be < 0
+        if (timeLeft > 0) {
+            // retrieve days/hours/minutes/seconds left before end of freeze
+            const timerLeft = countTimeLeft(timeLeft);
+            if (timerLeft) {
                 // update UX with the countdown
                 document.querySelector('.fp-countdown').innerHTML = timerLeft;
-            } else {
-                // stop internal and display retry button
-                clearInterval(fpCountdown);
-                document.querySelector('.fp-countdown').innerHTML = ''; // remove countdown since time is over
-                document.querySelector('.please-try-again-in').classList.add(D_NONE);
-                // display retry button
-                retryFp.classList.remove(D_NONE);
+                return;
             }
-        }, 1000);
+        }
+        // stop internal and display retry button
+        clearInterval(fpCountdown);
+        document.querySelector('.fp-countdown').innerHTML = ''; // remove countdown since time is over
+        document.querySelector('.please-try-again-in').classList.add(D_NONE);
+        // display retry button
+        retryFp.classList.remove(D_NONE);
+    };
+    updateBlockInterval();
+    // update the UI each second to update the left time of blocking
+    fpCountdown = setInterval(updateBlockInterval, 1000);
 }
 
 /**
@@ -587,7 +591,6 @@ document.querySelector('#step-1-anim').id = 'step-1';
 if (document.querySelector('#step-1')) {
     window.envBrowserOk && document.querySelector('#step-1').classList.remove(D_NONE);
 }
-sessionStorage.removeItem('livenessResult');
 
 /**
  * check user connectivity (latency, download speed, upload speed)

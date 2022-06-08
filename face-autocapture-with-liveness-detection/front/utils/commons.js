@@ -370,28 +370,32 @@ function getTimeLeftBeforeEndFreeze(timeLeft) {
 // const delayDate = new Date('Mon Dec 14 2020 22:20:39 GMT+0000');
 exports.userBlockInterval = function (fpBlockDate) {
     document.querySelector('.retry-fp').classList.add('d-none');
-    const fpCountdown = setInterval( // update the UI each second to update the left time of blocking
-        function () {
-            const currentDate = new Date().getTime();
-            const timeLeft = fpBlockDate - currentDate; // difference between blocking time and now in miliseconds
+    let fpCountdown = null;
+    const updateBlockInterval = () => {
+        const currentDate = new Date().getTime();
+        const timeLeft = fpBlockDate - currentDate; // difference between blocking time and now in milliseconds
 
-            // when browser's javascript is not working, timeLeft can be < 0
-            if (timeLeft > 0) {
-                // retrieve days/hours/minutes/seconds left before end of freeze
-                const { days, hours, minutes, seconds } = getTimeLeftBeforeEndFreeze(timeLeft);
-
-                const timerLeft = days + hours + minutes + seconds;
+        // when browser's javascript is not working, timeLeft can be < 0
+        if (timeLeft > 0) {
+            // retrieve days/hours/minutes/seconds left before end of freeze
+            const { days, hours, minutes, seconds } = getTimeLeftBeforeEndFreeze(timeLeft);
+            const timerLeft = days + hours + minutes + seconds;
+            if (timerLeft) {
                 // update UX with the countdown
                 document.querySelector('.fp-countdown').innerHTML = timerLeft;
-            } else {
-                // stop internal and display retry button
-                clearInterval(fpCountdown);
-                document.querySelector('.fp-countdown').innerHTML = ''; // remove countdown since time is over
-                document.querySelector('.please-try-again-in').classList.add('d-none');
-                // display retry button
-                document.querySelector('.retry-fp').classList.remove('d-none');
+                return;
             }
-        }, 1000);
+        }
+        // stop internal and display retry button
+        clearInterval(fpCountdown);
+        document.querySelector('.fp-countdown').innerHTML = ''; // remove countdown since time is over
+        document.querySelector('.please-try-again-in').classList.add('d-none');
+        // display retry button
+        document.querySelector('.retry-fp').classList.remove('d-none');
+    };
+    updateBlockInterval();
+    // update the UI each second to update the left time of blocking
+    fpCountdown = setInterval(updateBlockInterval, 1000);
 };
 
 // Will be overridden after initializeNetworkCheck has been called
@@ -685,17 +689,12 @@ exports.stopVideoCaptureAndProcessResult = async function (session, settings, re
 
         document.querySelectorAll(`#step-liveness-ok button.${nextButton}`).forEach((step) => step.classList.remove('d-none'));
     } else if (msg && (msg.indexOf('Timeout') > -1 || msg.indexOf('failed') > -1)) {
-        if (!sessionStorage.getItem('livenessResult')) {
-            sessionStorage.setItem('livenessResult', '1');
-            document.querySelector('#step-liveness-timeout').classList.remove('d-none');
-            document.querySelector('#step-liveness-timeout .footer').classList.add('d-none');
-            setTimeout(() => {
-                document.querySelector('#step-liveness-timeout .footer').classList.remove('d-none');
-            }, 2000);
-        } else {
-            document.querySelector('#step-liveness-failed').classList.remove('d-none');
-            document.querySelector('#step-liveness-failed .footer').classList.add('d-none');
-        }
+        // We handle failed and timeout similarly, but one may use the id #step-liveness-failed if needed
+        document.querySelector('#step-liveness-timeout').classList.remove('d-none');
+        document.querySelector('#step-liveness-timeout .footer').classList.add('d-none');
+        setTimeout(() => {
+            document.querySelector('#step-liveness-timeout .footer').classList.remove('d-none');
+        }, 2000);
     } else {
         document.querySelector('#step-liveness-ko').classList.remove('d-none');
         if (msg) {
@@ -779,7 +778,6 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
     if (document.querySelector('#step-1')) {
         window.envBrowserOk && document.querySelector('#step-1').classList.remove('d-none');
     }
-    sessionStorage.removeItem('livenessResult');
     const selfieInput = document.querySelector('#selfieInput');
 
     document.querySelector('#takeMyPickture').addEventListener('click', () => {
