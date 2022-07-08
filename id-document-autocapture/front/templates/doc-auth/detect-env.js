@@ -99,6 +99,6 @@ function displayEnvironement(env) {
  * Check user env support
  * must be ES5 compatible
  **/
-if (DocserverEnvironment) {
+if (typeof DocserverEnvironment !== 'undefined') {
     DocserverEnvironment.detection(true, displayEnvironement);
 }

@@ -1,14 +1,13 @@
 const winston = require('winston');
-const WinstonContext = require('winston-context');
 const { LOG_APPENDER, LOG_FILE_PATH, LOG_LEVEL } = require('../config');
 const { format } = require('winston');
 
-function createLogger(service, sessionId = '') {
+function createLogger(service, logContext = {}) {
     if (!service) {
         throw Error('Illegal argument exception - logger must have service or class name');
     }
     const fileNameTab = service.split('/');
-    if (!fileNameTab.length || fileNameTab.length <= 0) {
+    if (!fileNameTab.length || !(fileNameTab.length > 0)) {
         throw Error('Illegal argument exception - logger must have service or class name');
     }
     const fileName = fileNameTab.pop();
@@ -16,21 +15,20 @@ function createLogger(service, sessionId = '') {
     const logger = winston.createLogger({
         level: LOG_LEVEL,
         format: format.combine(
-        // format.colorize(),
             format.label({ label: fileName }),
-            format.timestamp({
-                format: 'YYYY-MM-DD HH:mm:ss.SSS'
-            }),
+            format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
             format.splat(),
-            //
-            // The simple format outputs
-            // `${level}: ${message} ${[Object with everything else]}`
-            //
-            // format.simple()
-
             format.printf(info => {
-                let message = `[${info.timestamp}] [${info.thread}]  [${info.sessionId}] [${info.level.toUpperCase()}] [${info.label}]: ${info.message}`;
-                const extendedInfos = Object.keys(info).filter(key => !['timestamp', 'thread', 'label', 'sessionId', 'level', 'message'].includes(key));
+                const message = {};
+                message.timestamp = info.timestamp;
+                message.thread = info.thread.toString();
+                message.sessionId = info.logContext?.sessionId || '';
+                message.tenantId = info.logContext?.clientId || '';
+                message.level = info.level.toUpperCase();
+                message.class = info.label;
+                message.message = info.message;
+
+                const extendedInfos = Object.keys(info).filter(key => !['timestamp', 'thread', 'label', 'logContext', 'level', 'message'].includes(key));
                 let additional;
                 if (extendedInfos && extendedInfos.length > 0) {
                     additional = {};
@@ -41,13 +39,12 @@ function createLogger(service, sessionId = '') {
                     });
                 }
                 if (additional) {
-                    message += ' ' + JSON.stringify(additional);
+                    message.message += ' ' + JSON.stringify(additional);
                 }
-                return message;
+                return JSON.stringify(message);
             })
-
         ),
-        defaultMeta: { sessionId: sessionId, thread: process.pid }
+        defaultMeta: { logContext: logContext, thread: process.pid }
     });
     if (LOG_APPENDER !== 'console') {
         logger.add(new winston.transports.File({ filename: `${LOG_FILE_PATH}/docserver-demo-error.log`, level: 'error' }));
@@ -58,14 +55,4 @@ function createLogger(service, sessionId = '') {
     return logger;
 }
 
-function createContext(logger, session) {
-    // Create a per-request child
-    const requestCtx = new WinstonContext(logger, '', {
-        sessionId: session
-    });
-
-    return requestCtx;
-}
-
 module.exports.getLogger = (service) => { return createLogger(service); };
-module.exports.getContextLogger = (logger, session) => { return createContext(logger, session); };

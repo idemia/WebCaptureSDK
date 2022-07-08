@@ -139,7 +139,7 @@ if (!sessionIdParam) {
         });
 }
 /**
- * Handle suported country retrieval or processing error
+ * Handle supported country retrieval or processing error
  * @param extendedMsg
  * @param error
  */

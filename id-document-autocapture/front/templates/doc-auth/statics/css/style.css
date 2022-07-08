@@ -877,7 +877,7 @@ video {background-color: black}
 }
 
 .best-image-wrapper {
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
 .front-result-block {
@@ -924,3 +924,60 @@ video {background-color: black}
 #retry {
     margin-top: 1rem;
 }
+
+/** Document status management **/
+
+.status-title {
+    box-sizing: border-box;
+    border-radius: 10px;
+    padding: 10px 10px 10px 0;
+    display: flex;
+}
+
+.document-done {
+    background: rgba(66, 148, 0, 0.1);
+    color: #429400;
+}
+
+.document-failed, .document-error, .document-aborted {
+    background: rgba(208, 2, 27, 0.1);
+    color: #D0021B;
+}
+
+.document-timeout {
+    background: rgba(248, 171, 7, 0.1);
+    color: #F8AB07;
+}
+
+.status-result {
+    flex: 0 0 auto;
+    padding: 16px 0 0 0;
+}
+
+.status-result img {
+    width: 30px;
+    height: 30px;
+    vertical-align: middle;
+    text-align: center;
+    margin: 10px 10px 10px 15px;
+}
+
+.status-text {
+    font-style: normal;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: bold;
+    text-align: left;
+    padding: 0 5px 0 10px;
+    margin-bottom: auto;
+    margin-top: auto;
+}
+
+.status-text-details {
+    line-height: 1.38;
+    color: #545454;
+    font-weight: 500;
+    padding: 10px 0 0 0;
+    font-size: 15px;
+}
+/** end -- Document status management **/

@@ -54,7 +54,7 @@ module.exports.initHttpEndpoints = (app) => {
             }
 
             documentCaptureResults[docCaptureSession.id] = docCaptureSession;
-            logger.info('Document session created: ', { sessionId: docCaptureSession.id, docCaptureSession });
+            logger.info('Document session created: ', { logContext: { sessionId: docCaptureSession.id }, docCaptureSession });
             setTimeout(() => {
                 delete documentCaptureResults[docCaptureSession.id];
             }, parseInt(config.DOC_CAPTURE_SESSION_TTL) * 1000);
@@ -78,7 +78,7 @@ module.exports.initHttpEndpoints = (app) => {
         try {
             const docCaptureSession = await webDocApi.getDocSession(sessionId);
             documentCaptureResults[docCaptureSession.id] = docCaptureSession;
-            logger.info('Document session retrieved: ', { sessionId, docCaptureSession });
+            logger.info('Document session retrieved: ', { logContext: { sessionId }, docCaptureSession });
             setTimeout(() => {
                 delete documentCaptureResults[docCaptureSession.id];
             }, parseInt(config.DOC_CAPTURE_SESSION_TTL) * 1000);
@@ -90,7 +90,7 @@ module.exports.initHttpEndpoints = (app) => {
                 countryCode: docCaptureSession.countryCode
             });
         } catch (err) {
-            logger.error(`Retrieve Document session have failed: ${err.stack}`, { sessionId });
+            logger.error(`Retrieve Document session have failed: ${err.stack}`, { logContext: { sessionId } });
             res.status(err.status ? err.status : 500).send();
         }
     });
@@ -146,7 +146,7 @@ module.exports.initHttpEndpoints = (app) => {
             } else if (config.IDPROOFING) {
                 const gipsStatus = await gipsApi.getStatus(documentCaptureResults[sessionId].identity);
                 const status = gipsStatus.idDocuments[gipsStatus.idDocuments.length - 1].evidenceStatus.status;
-                logger.info(`GIPS Transaction is on ${status}`, { sessionId });
+                logger.info(`GIPS Transaction is on ${status}`, { logContext: { sessionId } });
                 // GIPS is still on PROCESSING
                 if (status === 'PROCESSING') {
                     res.status(404).send({ error: 'Result is not available' });
@@ -155,14 +155,14 @@ module.exports.initHttpEndpoints = (app) => {
                     const docCaptureSession = await gipsApi.getDocCaptureResult(gipsStatus, documentCaptureResults[sessionId].identity);
                     documentCaptureResults[sessionId] = docCaptureSession;
                     // finalResult = getDataToDisplay(docCaptureSession, docSide);
-                    logger.info(`Document capture result for side=${req.params.docSide}:`, { sessionId, result: removePIIDatat(docCaptureSession) });
+                    logger.info(`Document capture result for side=${req.params.docSide}:`, { logContext: { sessionId }, result: removePIIDatat(docCaptureSession) });
                     res.json(docCaptureSession);
                 }
             } else if (!config.DISABLE_CALLBACK && !documentCaptureResults[sessionId].callback) {
-                logger.info('Callback is not yet received for session', { sessionId });
+                logger.info('Callback is not yet received for session', { logContext: { sessionId } });
                 res.status(404).send({ error: 'Result is not available' });
             } else {
-                logger.info('Retrieve document capture result (polling):', { sessionId, polling: polling });
+                logger.info('Retrieve document capture result (polling):', { logContext: { sessionId }, polling: polling });
                 if (!sessionId) {
                     const error = { error: 'Missing mandatory param sessionId' };
                     logger.error('Document capture retrieval result has failed', { error });
@@ -171,12 +171,12 @@ module.exports.initHttpEndpoints = (app) => {
                     const docCaptureSession = await webDocApi.getDocCaptureResult(sessionId, documentCaptureResults[sessionId].captureId);
                     documentCaptureResults[sessionId] = docCaptureSession;
                     finalResult = getDataToDisplay(docCaptureSession, docSide);
-                    logger.info(`Document capture result for side=${req.params.docSide}:`, { sessionId, result: removePIIDatat(finalResult) });
+                    logger.info(`Document capture result for side=${req.params.docSide}:`, { logContext: { sessionId }, result: removePIIDatat(finalResult) });
                     res.json(finalResult);
                 }
             }
         } catch (err) {
-            logger.error(`Document capture error for side ${req.params.docSide}: ${err.stack}`, { sessionId });
+            logger.error(`Document capture error for side ${req.params.docSide}: ${err.stack}`, { logContext: { sessionId } });
             res.status(err.status ? err.status : 500).send();
         }
     });
@@ -209,17 +209,17 @@ module.exports.initHttpEndpoints = (app) => {
     //
     app.post(config.BASE_PATH + config.DOC_CAPTURE_CALLBACK_URL, async (req, res) => {
         const { sessionId, captureId, documentId } = req.body || {};
-        logger.info('Callback reception: ' + config.DOC_CAPTURE_CALLBACK_URL, { sessionId, body: req.body });
+        logger.info('Callback reception: ' + config.DOC_CAPTURE_CALLBACK_URL, { logContext: { sessionId }, body: req.body });
         if (!sessionId || (!captureId && !documentId)) {
             const err = { error: 'Missing mandatory param' };
-            logger.error('A failure occurred during callback reception: ', { err });
+            logger.error('A failure occurred during callback reception: ', { logContext: { sessionId }, err });
             res.status(400).send(err);
         } else if (captureId) {
-            logger.info('Document capture result is available', { sessionId });
+            logger.info('Document capture result is available', { logContext: { sessionId } });
             documentCaptureResults[sessionId] = { callback: true, captureId: captureId };
             res.status(204).send();
         } else if (documentId) {
-            logger.info('Document result is available', { sessionId });
+            logger.info('Document result is available', { logContext: { sessionId } });
             // TODO handle document received result
             res.status(204).send();
         }
