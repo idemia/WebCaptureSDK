@@ -117,9 +117,8 @@ exports.initLivenessSession = async function (basePath, sessionId = '', identity
 
 /**
  * retrieve the complete GIPS/IPV status
- * @param sessionId
- * @param maxAttempts
- * @param interval
+ * @param basePath
+ * @param identityId
  * @return {isLivenessSucceeded, message}
  */
 exports.getGipsStatus = async function (basePath, identityId) {
@@ -600,12 +599,12 @@ exports.initLivenessPassiveVideoTutorial = function () {
     });
 };
 
-function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessMediumOrHigh = false) {
+function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessHigh = false) {
     // hide all messages
     document.querySelectorAll(CLASS_VIDEO_OVERLAY).forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
     elementToDisplay.classList.remove(D_NONE_FADEOUT);
-    // TODO why don't we execute this code for liveness high and medium ?
-    if (!livenessMediumOrHigh) {
+    // TODO why don't we execute this code for liveness high ?
+    if (!livenessHigh) {
         userInstructionMsgDisplayed = window.setTimeout(() => {
             elementToDisplay.classList.add(D_NONE_FADEOUT);
             userInstructionMsgDisplayed = window.clearTimeout(userInstructionMsgDisplayed);
@@ -613,17 +612,17 @@ function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessMediu
     }
 }
 
-exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed, livenessMediumOrHigh = false) {
+exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed, livenessHigh = false) {
     const headStartPositionOutline = document.querySelector('#center-head-animation');
     const moveCloserMsg = document.querySelector('#move-closer-animation');
     const moveFurtherMsg = document.querySelector('#move-further-animation');
     const tooBrightMsg = document.querySelector('#darkness');
     const tooDarkMsg = document.querySelector('#brightness');
 
-    // do not show brightness information for high liveness and medium
-    if (livenessMediumOrHigh && (positionInfo === 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA' ||
+    // do not show brightness information for high liveness
+    if (livenessHigh && (positionInfo === 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA' ||
       positionInfo === 'TRACKER_POSITION_INFO_MOVE_BRIGHTER_AREA')) {
-        displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessMediumOrHigh);
+        displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessHigh);
     } else {
         switch (positionInfo) {
             case 'TRACKER_POSITION_INFO_MOVE_BACK_INTO_FRAME': // No head detected
@@ -635,22 +634,22 @@ exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed
             case 'TRACKER_POSITION_INFO_CENTER_TILT_RIGHT': // Tilt your head right
             case 'TRACKER_POSITION_INFO_CENTER_TILT_LEFT': // Tilt your head left
             case 'TRACKER_POSITION_INFO_STAND_STILL': // Stand still
-                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessMediumOrHigh);
+                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessHigh);
                 break;
             case 'TRACKER_POSITION_INFO_CENTER_MOVE_BACKWARDS': // Move away from the camera
-                displayMsg(moveFurtherMsg, userInstructionMsgDisplayed, livenessMediumOrHigh);
+                displayMsg(moveFurtherMsg, userInstructionMsgDisplayed, livenessHigh);
                 break;
             case 'TRACKER_POSITION_INFO_CENTER_MOVE_FORWARDS': // Move closer to the camera
-                displayMsg(moveCloserMsg, userInstructionMsgDisplayed, livenessMediumOrHigh);
+                displayMsg(moveCloserMsg, userInstructionMsgDisplayed, livenessHigh);
                 break;
             case 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA': // The place is too bright
-                displayMsg(tooBrightMsg, userInstructionMsgDisplayed, livenessMediumOrHigh);
+                displayMsg(tooBrightMsg, userInstructionMsgDisplayed, livenessHigh);
                 break;
             case 'TRACKER_POSITION_INFO_MOVE_BRIGHTER_AREA': // The place is too dark
-                displayMsg(tooDarkMsg, userInstructionMsgDisplayed, livenessMediumOrHigh);
+                displayMsg(tooDarkMsg, userInstructionMsgDisplayed, livenessHigh);
                 break;
             default:
-                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessMediumOrHigh);
+                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessHigh);
                 break;
         }
     }

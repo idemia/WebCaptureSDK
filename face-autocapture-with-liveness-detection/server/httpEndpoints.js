@@ -164,9 +164,7 @@ exports.initHttpEndpoints = (app) => {
                     debug(sessionId, '> No callback done, retrieve directly liveness challenge results');
 
                     // DONT FORGET TO REVERT
-                    livenessResult = await wbsApi.getLivenessChallengeResult(sessionId,
-                        config.LIVENESS_MODE,
-                        config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE, config.LIVENESS_SECURITY_LEVEL);
+                    livenessResult = await wbsApi.getLivenessChallengeResult(sessionId);
                 }
                 delete livenessResults[sessionId];
                 debug(sessionId, '< Got liveness-challenge result', { livenessResult });

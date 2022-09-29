@@ -43,10 +43,10 @@ let tooManyAttempts = false;
 
 /**
  * 1- init liveness session (from backend)
- * 2- init the communication with the server via webrtc & socket
+ * 2- init the communication with the server via socket
  * 3- get liveness result (from backend)
  * 4- [Optional] ask the end user to push his reference image (post to backend)
- * 5- [Optional] get the matching result between the best image from webRTC and the reference image
+ * 5- [Optional] get the matching result between the best image from liveness check and the reference image
  */
 
 // call getCapabilities from demo-server which will call with apikey the endpoint from video-server
@@ -74,6 +74,9 @@ function getFaceCaptureOptions() {
             if (challengeInstruction === 'TRACKER_CHALLENGE_PENDING') {
                 // pending ==> display waiting msg meanwhile the showChallengeResult callback is called with result
                 challengeInProgress = false;
+                // When 'TRACKER_CHALLENGE_PENDING' message under showChallengeInstruction callback is received, a loader should be displayed to
+                // the end user so he understands that the capture is yet finished but best image is still being computing
+                // and that he should wait for his results. If you don't implement this way, a black screen should be visible !
                 session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
                 session.loadingChallenge.classList.remove(settings.D_NONE_FADEOUT);
             } else { // challengeInstruction == TRACKER_CHALLENGE_DONT_MOVE
@@ -142,7 +145,6 @@ async function init(options = {}) {
     const faceCaptureOptions = getFaceCaptureOptions();
     faceCaptureOptions.wspath = settings.videoBasePath + '/engine.io';
     faceCaptureOptions.bioserverVideoUrl = settings.videoUrl;
-    faceCaptureOptions.rtcConfigurationPath = settings.videoUrlWithBasePath + '/coturnService?bioSessionId=' + encodeURIComponent(session.sessionId);
     
     session.client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
 

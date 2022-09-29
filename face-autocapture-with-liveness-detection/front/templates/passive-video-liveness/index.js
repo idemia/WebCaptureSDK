@@ -92,10 +92,10 @@ commonutils.initLivenessPassiveVideoTutorial();
 
 /**
  * 1- init liveness session (from backend)
- * 2- init the communication with the server via webrtc & socket
+ * 2- init the communication with the server via socket
  * 3- get liveness result (from backend)
  * 4- [Optional] ask the end user to push his reference image (post to backend)
- * 5- [Optional] get the matching result between the best image from webRTC and the reference image
+ * 5- [Optional] get the matching result between the best image from liveness check and the reference image
  */
 
 // call getCapabilities from demo-server which will call with apikey the endpoint from video-server
@@ -166,6 +166,9 @@ async function init(options = {}) {
             if (challengeInstruction === 'TRACKER_CHALLENGE_PENDING') {
                 // pending ==> display waiting msg meanwhile the showChallengeResult callback is called with result
                 challengeInProgress = false;
+                // When 'TRACKER_CHALLENGE_PENDING' message under showChallengeInstruction callback is received, a loader should be displayed to
+                // the end user so he understands that the capture is yet finished but best image is still being computing
+                // and that he should wait for his results. If you don't implement this way, a black screen should be visible !
                 videoInstructionMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
                 videoLoadingMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
                 loadingChallenge.classList.remove(D_NONE_FADEOUT);
@@ -216,7 +219,6 @@ async function init(options = {}) {
     };
     faceCaptureOptions.wspath = videoBasePath + '/engine.io';
     faceCaptureOptions.bioserverVideoUrl = videoUrl;
-    faceCaptureOptions.rtcConfigurationPath = videoUrlWithBasePath + '/coturnService?bioSessionId=' + encodeURIComponent(sessionId);
     
     client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
 }

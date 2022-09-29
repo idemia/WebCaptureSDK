@@ -73,14 +73,14 @@ packer.pack();
 
     if (config.LIVENESS_MODE === 'LIVENESS_HIGH') {
         manageServerLivenessMode('high');
-        debug('high liveness configured, medium mode disabled => /high-liveness');
+        debug('high liveness configured => /high-liveness');
     } else if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE_VIDEO') {
         manageServerLivenessMode('passive-video');
         debug('passive liveness video configured => /passive-video-liveness');
-    } else if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE') {
-        manageServerLivenessMode('passive');
+    }  else {
+        manageServerLivenessMode('passive'); /// LIVENESS_PASSIVE by default
         debug('passive liveness configured => /passive-liveness');
-    } 
+    }
 
     app.use(config.BASE_PATH + '/how-to', express.static('front/how-to'));
     debug('How to configure page => /how-to');

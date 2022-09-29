@@ -116,10 +116,6 @@ function livenessPackage(liveness) {
                             replacement: ''
                         },
                         {
-                            pattern: config.IDPROOFING ? /<li><a href=".\/medium-liveness\/\?enableMatching=true">Medium liveness with matching<\/a><\/li>/ : '',
-                            replacement: ''
-                        },
-                        {
                             pattern: config.IDPROOFING ? /<li><a href=".\/passive-liveness\/\?enableMatching=true">Passive liveness with matching<\/a><\/li>/ : '',
                             replacement: ''
                         },

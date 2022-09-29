@@ -76,23 +76,10 @@ function getCapabilities() {
 /**
  * retrieve challenge result for a given session
  * @param sessionId
- * @param livenessMode
- * @param numberOfChallenge
- * @param securityLevel
  * @returns livenessResult
  */
-function getLivenessChallengeResult(sessionId, livenessMode, numberOfChallenge, securityLevel) {
-    let url = config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/liveness-challenge-result';
-
-    if (livenessMode) {
-        url += '/' + livenessMode;
-        if (securityLevel) {
-            url += '/' + securityLevel;
-        }
-        if (numberOfChallenge) {
-            url += '?numberOfChallenge=' + numberOfChallenge;
-        }
-    }
+function getLivenessChallengeResult(sessionId) {
+    const url = config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/liveness-challenge-result';
 
     // debug('>> url {}', url);
     return fetch(url, {

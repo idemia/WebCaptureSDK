@@ -65,7 +65,7 @@ if (typeof BioserverEnvironment === 'object') {
                 var tdDesc = document.createElement('td');
                 var browserDesc = document.createElement('span');
                 browserDesc.innerHTML = browserInfo.name + ' Version ' + browserInfo.minimumVersion + '+';
-                browserDesc.className = 'marginLeft10';
+                browserDesc.className = 'browser-desc';
                 tdDesc.appendChild(browserDesc);
 
                 // varruct each tr with previous tds

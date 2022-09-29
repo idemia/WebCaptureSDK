@@ -343,24 +343,36 @@ small ul {
 .browsers-content {
     flex: 1;
     flex-wrap: wrap;
+    padding: 0;
 }
 .browsers-description {
     flex: 0 0 auto;
-    padding: 20px;
+    padding: 0;
 }
-.os-list {
+.browsers, .os-list {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: left;
 }
-.marginLeft10 {
-    margin-left: 10px;
+
+.browsers > tr {
+    margin-top: 10px;
 }
+.browser-logo {
+    width: 80px;
+}
+.browser-desc {
+    padding-left: 5px;
+    display: flex;
+    justify-content: left;
+}
+
 .os {
     display: flex;
     flex: 1 1 100%;
 }
-.os-img{
+.os-img {
     background-size: auto 100px;
     background-repeat: no-repeat;
     width: 100px;
@@ -368,38 +380,12 @@ small ul {
     display: inline-block;
     margin: 5px;
 }
-.browser-logo {
-    width: 100px;
-}
+
 .os-img {
     background-image: url(../img/os.png) ;
 }
-.browser > span,.os > span  {
+.os > span {
     align-self: center;
-}
-
-.browser #chrome {
-    background-position: -100px 0;
-}
-.browser #firefox {
-    background-position: -200px 0;
-}
-.browser #edge {
-    background-position: -300px 0;
-}
-.browser #safari, .browsers #mobile-safari {
-    background-position: -400px 0;
-}
-.browser #opera {
-    background-position: -500px 0;
-}
-
-.browser #samsung-browser {
-    background-position: -600px 0;
-}
-
-.browser #huaweibrowser {
-    background-position: -600px 0;
 }
 
 .os #windows {
@@ -414,9 +400,10 @@ small ul {
 .os #mac-os {
     background-position: -300px 0;
 }
-.os #linux {
+.os #linux, #ubuntu {
     background-position: -400px 0;
 }
+
 .column-center {
     flex: 0 0 auto;
     display: flex;
