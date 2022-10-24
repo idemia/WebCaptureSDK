@@ -20,14 +20,15 @@ limitations under the License.
 /* eslint-disable no-console */
 const commonutils = require('../../utils/commons');
 
-const settings = {};
-settings.idProofingWorkflow = IDPROOFING;
-settings.basePath = BASE_PATH;
-settings.videoUrlWithBasePath = VIDEO_URL + VIDEO_BASE_PATH;
-settings.videoBasePath = VIDEO_BASE_PATH;
-settings.videoUrl = VIDEO_URL;
-settings.enablePolling = !DISABLE_CALLBACK;
-settings.healthPath = DEMO_HEALTH_PATH;
+const settings = {
+    idProofingWorkflow: IDPROOFING,
+    basePath: BASE_PATH,
+    videoUrlWithBasePath: VIDEO_URL + VIDEO_BASE_PATH,
+    videoBasePath: VIDEO_BASE_PATH,
+    videoUrl: VIDEO_URL,
+    enablePolling: !DISABLE_CALLBACK,
+    healthPath: DEMO_HEALTH_PATH
+};
 
 const D_NONE_FADEOUT = 'd-none-fadeout';
 
@@ -125,7 +126,7 @@ function getFaceCaptureOptions() {
 }
 
 async function init(options = {}) {
-    session.client = undefined;
+    session.client = null;
     initLivenessDesign();
     // request a sessionId from backend (if we are switching camera we use the same session)
     if (!session.sessionId || !options.switchCamera) {
@@ -177,7 +178,11 @@ document.querySelectorAll('*[data-target]')
     .forEach((btn) => btn.addEventListener('click', async () => {
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
-            .catch(() => { if (!tooManyAttempts) stopVideoCaptureAndProcessResult(false); });
+            .catch(() => {
+                if (!tooManyAttempts) {
+                    stopVideoCaptureAndProcessResult(false);
+                }
+            });
     }));
 
 async function processStep(targetStepId, displayWithDelay) {

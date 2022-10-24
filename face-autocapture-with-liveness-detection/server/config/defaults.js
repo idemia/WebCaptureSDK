@@ -61,7 +61,9 @@ module.exports = {
     LIVENESS_HIGH_NUMBER_OF_CHALLENGE: 2,
 
     // *** BACK END SERVER
-    // Server port
+    // Http server port (null to disable)
+    HTTP_SERVER_PORT: null, // Set 8088 to avoid conflicts when deploying with core / video server
+    // Https server port (null to disable)
     TLS_API_PORT: 9943,
     // Path to the server's server SSL certificate
     TLS_KEYSTORE_PATH: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PATH',

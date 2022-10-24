@@ -390,7 +390,7 @@ function refreshImgAnimations() {
  * suspend video camera and return result
  */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
-    console.log('Stop video capture: message=' + msg + 'reset-animations, success=' + success);
+    console.log('Stop video capture: message=' + msg + ', success=' + success);
     bestImageId = faceId;
     // we reset the session when we finished the liveness check real session
     resetLivenessDesign();

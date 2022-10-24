@@ -156,6 +156,7 @@ exports.getGipsStatus = async function (basePath, identityId) {
  * @return {isLivenessSucceeded, message}
  */
 exports.getLivenessChallengeResult = async function (basePath, enablePolling, sessionId, maxAttempts = 10, interval = 1000) {
+    console.log('getLivenessChallengeResult call : maxAttempts=' + maxAttempts + ', enablePolling=' + enablePolling);
     return new Promise((resolve, reject) => {
         const xhttp = new window.XMLHttpRequest();
         xhttp.open('GET', `${basePath}/liveness-challenge-result/${sessionId}/?polling=${enablePolling}`, true);
@@ -163,6 +164,8 @@ exports.getLivenessChallengeResult = async function (basePath, enablePolling, se
         xhttp.responseType = 'json';
         xhttp.onload = () => {
             if (xhttp.status) {
+                console.log('getLivenessChallengeResult status', xhttp.status);
+
                 if (xhttp.status === 200) {
                     resolve(xhttp.response);
                 } else if (maxAttempts) { // >> polling

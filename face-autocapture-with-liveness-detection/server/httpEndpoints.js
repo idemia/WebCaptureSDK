@@ -137,43 +137,48 @@ exports.initHttpEndpoints = (app) => {
         const sessionId = req.params.sessionId;
         const polling = req.query.polling && req.query.polling === 'true';
         debug(sessionId, '> retrieve liveness-challenge result', { polling });
-
-        if (config.IDPROOFING && !livenessResults[sessionId].pooling) {
-            await retrieveIPVEvidence({
-                identityId: livenessResults[sessionId].identityId,
-                portraitId: livenessResults[sessionId].portraitId
-            }, sessionId);
-            livenessResults[sessionId].pooling = true;
-        }
         if (!sessionId) {
             const error = { error: 'Missing mandatory param sessionId' };
             debug('< get liveness-challenge failed', error);
             res.status(400).json(error);
             return;
         }
+        // retrieve liveness result
+        let currentLivenessResult = livenessResults[sessionId];
+        debug(sessionId, 'liveness-challenge-result content is', currentLivenessResult);
+        if (config.IDPROOFING && !currentLivenessResult) {
+            debug('< get liveness-challenge failed. Liveness result does not exist anymore');
+            res.status(404).json();
+            return;
+        } else if (config.IDPROOFING && !currentLivenessResult.gipsCalled) {
+            await retrieveIPVEvidence({
+                identityId: currentLivenessResult.identityId,
+                portraitId: currentLivenessResult.portraitId
+            }, sessionId);
+            currentLivenessResult.gipsCalled = true;
+        }
+        // Manage result
         try {
-            let livenessResult = livenessResults[sessionId];
-            if (!livenessResult && polling) {
+            if (!currentLivenessResult && polling) {
                 debug(sessionId, '< No liveness-challenge associated to this session');
                 res.status(404).send(); // unknown sessionID
-            } else if (polling && livenessResult.status === 'PENDING') {
+            } else if (polling && currentLivenessResult.status === 'PENDING') {
                 debug(sessionId, '< Waiting for liveness result callback ');
                 res.status(204).send(); // tell client that no liveness result is available for now
             } else {
                 if (!polling && !config.IDPROOFING) {
                     debug(sessionId, '> No callback done, retrieve directly liveness challenge results');
-
-                    // DONT FORGET TO REVERT
-                    livenessResult = await wbsApi.getLivenessChallengeResult(sessionId);
+                    currentLivenessResult = await wbsApi.getLivenessChallengeResult(sessionId);
                 }
+                debug(sessionId, 'Delete liveness result', currentLivenessResult);
                 delete livenessResults[sessionId];
-                debug(sessionId, '< Got liveness-challenge result', { livenessResult });
+                debug(sessionId, '< Got liveness-challenge result', { currentLivenessResult });
                 const result = { isLivenessSucceeded: false, message: 'Something was wrong' };
-                switch (livenessResult.livenessStatus) {
+                switch (currentLivenessResult.livenessStatus) {
                     case 'SUCCESS' :
                         result.message = 'Liveness succeeded';
                         result.isLivenessSucceeded = true;
-                        result.bestImageId = livenessResult.bestImageId;
+                        result.bestImageId = currentLivenessResult.bestImageId;
                         break;
                     case 'SPOOF' :
                         result.message = 'Liveness failed';
@@ -188,9 +193,10 @@ exports.initHttpEndpoints = (app) => {
                 }
 
                 // add diagnostic field if present
-                if (livenessResult.diagnostic) {
-                    result.diagnostic = livenessResult.diagnostic;
+                if (currentLivenessResult.diagnostic) {
+                    result.diagnostic = currentLivenessResult.diagnostic;
                 }
+                debug(sessionId, '> Send liveness result');
                 res.send(result);
             }
         } catch (e) {
@@ -202,7 +208,7 @@ exports.initHttpEndpoints = (app) => {
     const wait = async (ttl) => {
         // eslint-disable-next-line promise/param-names
         return new Promise((resolve, _) =>
-            setTimeout(() => resolve(), ttl)
+            setTimeout(() => resolve(true), ttl)
         );
     };
 
@@ -210,9 +216,8 @@ exports.initHttpEndpoints = (app) => {
         let livenessResult;
         do {
             livenessResult = await gipsApi.getLivenessChallengeResult({ identityId, portraitId });
-            await wait(1000);
             countDown = countDown - 1;
-        } while (livenessResult.livenessStatus === 'PROCESSING' && countDown);
+        } while (livenessResult.livenessStatus === 'PROCESSING' && countDown && await wait(1000));
 
         if (livenessResults[sessionId] && livenessResult) {
             Object.assign(livenessResults[sessionId], livenessResult);
