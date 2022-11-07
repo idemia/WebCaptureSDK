@@ -17,23 +17,21 @@ limitations under the License.
 // this controllers allows you to interact with Biometric services through GIPS (IPV) calls
 
 const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
-const FormData = require('form-data');
 const config = require('./config');
 const debug = require('debug')('front:gips:api');
 const multipart = require('parse-multipart');
-const agent = require('./httpUtils').getAgent(config.GIPS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
+const { getAgent, validateResponseStatus } = require('./httpUtils');
+const agent = getAgent(config.GIPS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
 const context = [{
     key: 'BUSINESS_ID',
     value: 'LOA1P'
 }];
 
-const passportFRA = { jurisdiction: 'FRA', documentType: 'PASSPORT', source: 'LIVE_CAPTURE_IMAGE' };
 const PATH_V1_IDENTITY = '/v1/identities/';
 
 module.exports = {
     getSession,
     getLivenessChallengeResult,
-    createFace,
     getFaceImage,
     getGipsStatus
 };
@@ -154,21 +152,15 @@ async function getLivenessChallengeResult(session) {
  * @returns identity id
  */
 
-function createIdentity() {
-    const formData = new FormData();
-    formData.append('context', Buffer.from(context));
-
-    return fetch(config.GIPS_URL + '/v1/identities', {
+async function createIdentity() {
+    const res = await fetch(config.GIPS_URL + '/v1/identities', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(context),
         headers: mutipartContentType(authenticationHeader()),
         agent: agent
-    }).then(function (res) {
-        return res.status === 200 ? res.json() : Promise.reject(res);
-    }).catch(err => {
-        debug('Failed to request gips server  - error:', err);
-        return Promise.reject(err);
     });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -185,7 +177,7 @@ function createIdentity() {
  * @returns  Boolean true / false
  *  Error code 404/ 401 /
  */
-function postConsent(identityId) {
+async function postConsent(identityId) {
     const consent = [{
         approved: true,
         type: 'PORTRAIT',
@@ -193,15 +185,14 @@ function postConsent(identityId) {
             from: '2018-01-01'
         }
     }];
-
-    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/consents', {
+    const res = await fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/consents', {
         method: 'POST',
         body: JSON.stringify(consent),
         headers: jsonContentType(authenticationHeader()),
         agent: agent
-    }).then(function (res) {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -238,21 +229,21 @@ function postConsent(identityId) {
  *   }
  * }
  */
-function startVideoCapture(identityId) {
+async function startVideoCapture(identityId) {
     const livenessParamerters = {
         type: config.LIVENESS_MODE,
         securityLevel: config.LIVENESS_SECURITY_LEVEL,
         nbChallenge: config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE
     };
 
-    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/live-capture-session', {
+    const res = await fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/live-capture-session', {
         method: 'POST',
         body: JSON.stringify(livenessParamerters),
         headers: jsonContentType(authenticationHeader()),
         agent: agent
-    }).then(function (res) {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -267,14 +258,14 @@ function startVideoCapture(identityId) {
  * @param portraitId
  * @returns {*}
  */
-function getStatus(identityId, portraitId) {
-    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/status/' + portraitId, {
+async function getStatus(identityId, portraitId) {
+    const res = await fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/status/' + portraitId, {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
-    }).then(function (res) {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -307,36 +298,14 @@ function getStatus(identityId, portraitId) {
  * @param identityId
  * @returns {*}
  */
-function getGlobalStatus(identityId) {
-    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId, {
+async function getGlobalStatus(identityId) {
+    const res = await fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId, {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
-    }).then(function (res) {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
-}
-
-/**
- * associate face to an identity
- * @param imageFile
- * @param identityId
- * @returns {*}
- */
-function createFace(imageFile, identityId) {
-    const formData = new FormData();
-    formData.append('DocumentCaptureDetails', Buffer.from(JSON.stringify(passportFRA)));
-    formData.append('DocumentFront', imageFile.buffer);
-
-    return fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/id-documents/capture', {
-        method: 'POST',
-        body: formData,
-        headers: mutipartContentType(authenticationHeader()),
-        agent: agent
-    }).then(res => {
-        // passport id
-        return res.status === 201 ? res.json() : Promise.reject(res);
-    });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -344,24 +313,18 @@ function createFace(imageFile, identityId) {
  * @param identityId
  * @returns face
  */
-function getFaceImage(identityId) {
+async function getFaceImage(identityId) {
     const url = config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/capture';
-
-    return fetch(url, {
+    const res = await fetch(url, {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
-    }).then(res => {
-        return res.status === 200 ? res.buffer() : Promise.reject(res);
-    }).then(body => {
-        const data = (String(body));
-        const boundary = data.split('\r')[0];
-        const parts = multipart.Parse(body, boundary.replace('--', ''));
-        return parts[0].data;
-    }).catch(err => {
-        debug(url, ' Failed to request gips server  - error:', err);
-        return Promise.reject(err);
     });
+    validateResponseStatus(res);
+    const multiPartBodyBuffer = Buffer.from(await res.arrayBuffer());
+    const boundary = multipart.getBoundary(res.headers.get('content-type'));
+    const parts = multipart.Parse(multiPartBodyBuffer, boundary);
+    return parts[0].data;
 }
 
 function authenticationHeader() {

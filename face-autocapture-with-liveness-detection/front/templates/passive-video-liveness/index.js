@@ -255,7 +255,7 @@ getIpvTransactionButton.addEventListener('click', async () => {
     getIPVStatus.innerHTML = '';
     const result = await commonutils.getGipsStatus(basePath, identityId);
     console.log('result IPV response' + result);
-    getIPVStatus.innerHTML = JSON.stringify(result, null, 4);
+    getIPVStatus.innerHTML = JSON.stringify(result, null, 2);
     getIPVStatus.classList.remove(D_NONE);
 });
 
@@ -433,6 +433,8 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
         // No-camera-access issue
     } else {
         document.querySelector('#step-liveness-failed').classList.remove(D_NONE);
+        // when spoof received, we force a new session creation on backend side on next init call
+        initCalled = false;
     }
 }
 

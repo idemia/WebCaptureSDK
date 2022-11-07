@@ -752,7 +752,7 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
         document.querySelector(ID_GET_IPV_STATUS_RESULT).innerHTML = '';
         const result = await this.getGipsStatus(settings.basePath, session.identityId);
         console.log('result IPV response' + result);
-        document.querySelector(ID_GET_IPV_STATUS_RESULT).innerHTML = JSON.stringify(result, null, 4);
+        document.querySelector(ID_GET_IPV_STATUS_RESULT).innerHTML = JSON.stringify(result, null, 2);
         document.querySelector(ID_GET_IPV_STATUS_RESULT).classList.remove('d-none');
     });
 
