@@ -15,12 +15,10 @@ limitations under the License.
 */
 
 // this controllers allow you to interact with Biometric services
-
 const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
-const FormData = require('form-data');
 const config = require('./config');
-// const debug = require('debug')('front:app:api');
-const agent = require('./httpUtils').getAgent(config.WBS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
+const { getAgent, validateResponseStatus } = require('./httpUtils');
+const agent = getAgent(config.WBS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
 
 const PATH_BIO_SESSIONS = '/bio-sessions/';
 const contentTypeJson = { 'content-type': 'application/json' };
@@ -34,7 +32,7 @@ module.exports = {
     doMatch
 };
 
-function getSession() {
+async function getSession() {
     const bodyContentCallback = {
         imageStorageEnabled: true,
         livenessMode: config.LIVENESS_MODE,
@@ -51,26 +49,26 @@ function getSession() {
         bodyContentNoCallback.securityLevel = config.LIVENESS_SECURITY_LEVEL;
     }
 
-    return fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + '/init-liveness-session', {
+    const res = await fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + '/init-liveness-session', {
         method: 'POST',
         // if callback is disabled, don't pass the callbackURL to bioserver-core
         body: JSON.stringify(config.DISABLE_CALLBACK ? bodyContentNoCallback : bodyContentCallback),
         headers: Object.assign({}, contentTypeJson, authenticationHeader(true)),
         agent: agent
-    }).then(function (res) {
-        return res.status === 201 ? res.headers.get('location').split(PATH_BIO_SESSIONS)[1] : Promise.reject(res);
     });
+    validateResponseStatus(res, 201);
+    return res.headers.get('location').split(PATH_BIO_SESSIONS)[1];
 }
 
-function getCapabilities() {
+async function getCapabilities() {
     // debug('getCapabilities', config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + config.VIDEO_HEALTH_PATH);
-    return fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + config.VIDEO_HEALTH_PATH, {
+    const res = await fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + config.VIDEO_HEALTH_PATH, {
         method: 'GET',
         headers: authenticationHeader(true),
         agent: agent
-    }).then(function (res) {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -78,17 +76,17 @@ function getCapabilities() {
  * @param sessionId
  * @returns livenessResult
  */
-function getLivenessChallengeResult(sessionId) {
+async function getLivenessChallengeResult(sessionId) {
     const url = config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/liveness-challenge-result';
 
     // debug('>> url {}', url);
-    return fetch(url, {
+    const res = await fetch(url, {
         method: 'GET',
         headers: authenticationHeader(true),
         agent: agent
-    }).then(function (res) {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -98,27 +96,27 @@ function getLivenessChallengeResult(sessionId) {
  * @param imageFaceInfo
  * @returns {*}
  */
-function createFace(sessionId, imageFile, imageFaceInfo = {}) {
+async function createFace(sessionId, imageFile, imageFaceInfo = {}) {
+    const { FormData, File } = await import('node-fetch');
     const formData = new FormData();
-    formData.append('image', imageFile.buffer);
-    formData.append('face', imageFaceInfo.buffer);
+    formData.append('image', new File([new Uint8Array(imageFile.buffer)], 'image'));
+    formData.append('face', new File([new Uint8Array(imageFaceInfo.buffer)], 'face'));
 
-    return fetch(config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces', {
+    let res = await fetch(config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces', {
         method: 'POST',
         body: formData,
         headers: authenticationHeader(false),
         agent: agent
-    }).then(res => {
-        return res.status === 201 ? res.headers.get('location').split('/faces/')[1] : Promise.reject(res);
-    }).then(faceId => {
-        return fetch(config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces/' + faceId, {
-            method: 'GET',
-            headers: Object.assign({}, contentTypeJson, authenticationHeader(false)),
-            agent: agent
-        });
-    }).then(res => {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
+    validateResponseStatus(res, 201);
+    const faceId = res.headers.get('location').split('/faces/')[1];
+    res = await fetch(config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces/' + faceId, {
+        method: 'GET',
+        headers: Object.assign({}, contentTypeJson, authenticationHeader(false)),
+        agent: agent
+    });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 /**
@@ -127,18 +125,19 @@ function createFace(sessionId, imageFile, imageFaceInfo = {}) {
  * @param faceId
  * @returns face
  */
-function getFaceImage(sessionId, faceId) {
+async function getFaceImage(sessionId, faceId) {
     let url = config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces/' + faceId + '/image';
     if (config.ENABLE_IMAGE_COMPRESSION) {
         url = url + '?compression=true';
     }
-    return fetch(url, {
+    const res = await fetch(url, {
         method: 'GET',
         headers: Object.assign({}, contentTypeJson, authenticationHeader(false)),
         agent: agent
-    }).then(res => {
-        return res.status === 200 ? res.buffer() : Promise.reject(res);
     });
+    validateResponseStatus(res);
+    const resArray = await res.arrayBuffer();
+    return Buffer.from(resArray);
 }
 
 /**
@@ -147,14 +146,14 @@ function getFaceImage(sessionId, faceId) {
  * @param referenceFaceId
  * @returns match result
  */
-function doMatch(sessionId, referenceFaceId) {
-    return fetch(config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces/' + referenceFaceId + '/matches', {
+async function doMatch(sessionId, referenceFaceId) {
+    const res = await fetch(config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces/' + referenceFaceId + '/matches', {
         method: 'GET',
         headers: Object.assign({}, contentTypeJson, authenticationHeader(false)),
         agent: agent
-    }).then(res => {
-        return res.status === 200 ? res.json() : Promise.reject(res);
     });
+    validateResponseStatus(res);
+    return res.json();
 }
 
 function authenticationHeader(webSDKServices) {

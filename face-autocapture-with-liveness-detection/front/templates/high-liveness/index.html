@@ -377,13 +377,15 @@ limitations under the License.
                                 <img src="./img/success.svg" alt="success">
                                 <span class="passed-liveness description text-center"><%= __("You passed liveness!") %></span>
                             </div>
-                            <button class="col-md-4 offset-md-4 btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+                            <div class="padb20">
+                                <button class="col-md-4 offset-md-4 btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+                            </div>
                         </div>
                     </div>
                     <div class="row padT20">
                         <div id="debug-ipv-portrait" class="col-md-6">
                             <button id="get-ipv-portrait" class="col-md-8 offset-md-2 wrap-text btn btn-primary btn-block reset-animations"><%= __("Get GIPS portrait - dev only !") %></button>
-                            <div class="offset-6">
+                            <div class="padb20">
                                 <img id="best-image-ipv" class="d-none">
                             </div>
                         </div>

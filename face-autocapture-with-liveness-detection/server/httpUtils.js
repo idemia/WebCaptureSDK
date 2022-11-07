@@ -16,6 +16,7 @@ limitations under the License.
 
 const http = require('http');
 const https = require('https');
+const debug = require('debug')('front:app:httpUtils');
 const ProxyAgent = require('proxy-agent');
 const splitca = require('split-ca');
 
@@ -54,6 +55,14 @@ function getAgent(trustStorePath, proxyUrl) {
     };
 }
 
+function validateResponseStatus(response, status = 200) {
+    if (response.status !== status) {
+        debug(`<< Got unexpected response status: expected ${status} but got ${response.status}`);
+        throw response; // FIXME: throw Error instead of Response
+    }
+}
+
 module.exports = {
-    getAgent
+    getAgent,
+    validateResponseStatus
 };

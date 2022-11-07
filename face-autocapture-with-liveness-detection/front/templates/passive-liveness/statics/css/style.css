@@ -731,10 +731,6 @@ video {background-color: black}
 
 }
 
-#best-image-ipv {
-    margin: 0px 0px 20px -112px; /* because best image is 224px */
-}
-
 .success-message-ipv {
     text-align:center;
     margin-bottom:15px
@@ -778,10 +774,15 @@ video {background-color: black}
 #best-image-ipv {
     border: ridge;
     border-radius:10px;
+    max-width: 100%
 }
 
 .padT20 {
   padding-top: 20px;
+}
+
+.padb20 {
+    padding-bottom: 20px;
 }
 
 .light-image {
