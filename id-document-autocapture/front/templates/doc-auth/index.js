@@ -31,6 +31,7 @@ const capturedDoc = $('#doc-captured');
 const capturedDocBorder = $('#doc-captured .doc-captured-border polygon');
 const blurryDocMsg = $('#blurry-doc-msg');
 const holdStraightDocMsg = $('#hold-straight-msg');
+const wrongDocOrientationMsg = $('#wrong-orientation-msg');
 const reflectionDocMsg = $('#doc-reflection-msg');
 const lowLightDocMsg = $('#doc-low-light-msg');
 const tooCloseDocMsg = $('#too-close-doc-msg');
@@ -435,6 +436,9 @@ function processCaptureResult(result, msg, extendedMsg) {
                 // Hide footer with buttons except for the last element
                 $(stepId + ' .footer').classList.add('d-none');
             } else {
+                // Display footer with buttons
+                $(stepId + ' .footer').classList.remove('d-none');
+                // Display the correct restart button depending of the workflow
                 selectRestartButton(stepId);
                 selectRetryButton(stepId);
                 // Last element: Add margin to allow scrolling to the bottom of the image (otherwise it overlaps with footer)
@@ -655,6 +659,12 @@ function initDocAuthDesign(docSide) {
     $('header').classList.add('d-none');
     $('main').classList.add('darker-bg');
     videoScanOverlays.forEach(overlay => overlay.classList.add(dNoneFadeoutString));
+    // display the mrz and portrait overlay only in case of passport capture
+    if (docSide.toLowerCase() === 'inside_page') {
+        document.querySelectorAll('.passport-overlay').forEach(msg => msg.classList.remove('d-none'));
+    } else {
+        document.querySelectorAll('.passport-overlay').forEach(msg => msg.classList.add('d-none'));
+    }
     docAuthMask.classList.remove(dNoneFadeoutString);
     resetVideoMsgContent();
     if (docSide !== 'back') { // do not display initialization loader after doc-flip for back side
@@ -715,6 +725,8 @@ function displayInstructionsToUser({ position, corners, pending, uploadProgress 
     if (position) { // << got some message related to document position
         if (position.noDocument) {
             displayMsg(alignDocMsg);
+        } else if (position.wrongOrientation) {
+            displayMsg(wrongDocOrientationMsg);
         } else if (position.tooClose) {
             displayMsg(tooCloseDocMsg);
         } else if (position.tooFar) {

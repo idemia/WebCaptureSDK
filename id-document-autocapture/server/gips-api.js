@@ -22,7 +22,7 @@ const FormData = require('form-data');
 const config = require('./config');
 const multipart = require('parse-multipart');
 const agent = require('./httpUtils').getAgent(config.GIPS_TLS_TRUSTSTORE_PATH);
-const logger = require('./config/demoLogConf').getLogger(__filename);
+const logger = require('./config/demoLogConf').getLogger();
 const context = [{
     key: 'BUSINESS_ID',
     value: 'LOA1P'

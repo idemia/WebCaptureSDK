@@ -23,8 +23,11 @@ const fs = require('fs');
  */
 module.exports = {
 
-    LOG_APPENDER: 'console',
+    DEBUG: 'mph:*',
     LOG_LEVEL: 'info',
+    LOG_FORMAT: 'json', // 'json' for production env | 'raw' with colors for development env
+    LOG_APPENDER: 'console', // console or file
+    LOG_FILE_PATH: path.join(path.dirname(require.main.filename), 'logs'), // path where log files will be stored
 
     // ******************* APIKEY/URL for DOCSERVER/GIPS *******************
     DOCSERVER_VIDEO_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io',
@@ -42,10 +45,13 @@ module.exports = {
     // *******************************************************************
 
     // ******************* back-end server creation *******************
+    // Http server port (null to disable)
+    HTTP_SERVER_PORT: null, // Set 8088 to avoid conflicts when deploying with video server
+    // Https server port (null to disable)
     TLS_API_PORT: 9943,
     TLS_KEYSTORE_PATH: 'PLEASE_FILL_WITH_YOUR_KEYSTORE_PATH',
     TLS_KEYSTORE_PASSWORD: loadSecretFromFile(path.join(__dirname, 'secrets/tls_keystore_password.txt')),
-    // Disable unsecure protocols such as : SSL2, SSL3, TLS 1.0, TLS 1.1. Variables are separated by a comma
+    // Disable unsecure protocols such as : SSL2, SSL3, TLS 1.0, TLS 1.1. Values are separated by a comma
     PROTOCOL_OPTIONS: 'SSL_OP_NO_SSLv2,SSL_OP_NO_SSLv3,SSL_OP_NO_TLSv1,SSL_OP_NO_TLSv1_1',
     BASE_PATH: '/demo-doc',
     SUPPORTED_LANGUAGES: 'en,es,fr' // used to translate the web pages

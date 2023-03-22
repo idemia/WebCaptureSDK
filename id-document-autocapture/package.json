@@ -4,7 +4,6 @@
   "description": "WebDocServer demo",
   "main": "index.js",
   "scripts": {
-    "preinstall": "npm install --package-lock-only --ignore-scripts && npx npm-force-resolutions",
     "start": "node . ",
     "start:dev": "cross-env WDS_DEMO_ENV=dev npm run start",
     "lint": "npx eslint './server/**/*.js' './front/templates/**/*.js' './front/utils/**/*.js'",
@@ -13,36 +12,34 @@
     "coverage": "./node_modules/nyc/bin/nyc.js --check-coverage=true --reporter=lcov --reporter=text-lcov --reporter=text npm test"
   },
   "author": "IDEMIA",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "dependencies": {
+    "@zainulbr/i18n-webpack-plugin": "^2.0.3",
     "asn1-ber": "^1.1.1",
-    "express": "^4.17.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "compression": "^1.7.4",
+    "copy-webpack-plugin": "^9.0.1",
+    "express": "^4.18.2",
     "form-data": "^4.0.0",
+    "html-webpack-plugin": "^5.3.2",
     "lottie-web": "^5.7.13",
-    "node-fetch": "^3.2.6",
+    "node-fetch": "^3.2.10",
     "parse-multipart": "^1.0.4",
     "pem": "1.14.4",
     "sanitize-filename": "^1.6.3",
     "split-ca": "^1.0.1",
-    "winston": "3.3.3",
-    "webpack": "~5.57.1",
-    "html-webpack-plugin": "^5.3.2",
-    "clean-webpack-plugin": "^4.0.0",
-    "copy-webpack-plugin": "^9.0.1",
-    "@zainulbr/i18n-webpack-plugin": "^2.0.3"
-  },
-  "resolutions": {
-    "cookie": "0.4.1"
+    "webpack": "^5.74.0",
+    "winston": "3.3.3"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
     "cross-env": "^7.0.3",
-    "nyc": "^15.1.0",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0"
+    "eslint-plugin-promise": "^5.1.0",
+    "nyc": "^15.1.0"
   }
 }

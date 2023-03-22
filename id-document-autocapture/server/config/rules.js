@@ -16,7 +16,7 @@ limitations under the License.
 /*
  * File used to retrieve the rules to apply depending on the user's document and country selection
  */
-const logger = require('./demoLogConf').getLogger(__filename);
+const logger = require('./demoLogConf').getLogger();
 
 /**
  * side: FRONT | BACK | INSIDE_PAGE | UNKNOWN
@@ -83,7 +83,6 @@ const documentRules =
   }
   ];
 
-/** @return CountryDocTypes */
 function findDocTypesByCountry() {
     const docTypes = [];
     documentRules
@@ -97,8 +96,8 @@ function findDocTypesByCountry() {
         return;
     }
     const countryDocTypes = { code: '', docTypes: docTypes };
-    logger.info('found %d docTypes', countryDocTypes.docTypes.length);
-    logger.debug('found docTypes: ', { countryDocTypes });
+    logger.info('Found %d docTypes', countryDocTypes.docTypes.length);
+    logger.debug('countryDocTypes:', countryDocTypes);
     return countryDocTypes;
 }
 

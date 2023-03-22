@@ -535,11 +535,13 @@ limitations under the License.
                             </span>
                             <div class="doc-scan-flip"></div>
                         </span>
+                        <span id="mrz-overlay" class="passport-overlay d-none"></span>
+                        <span id="portrait-overlay" class="passport-overlay d-none"></span>
                     </div>
                 </div>
                 <div id="align-doc-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
                     <span class="d-none video-msg video-msg-unknown align-self-center"><%= __("Align ID in frame") %></span>
-                    <span class="d-none video-msg video-msg-inside-page align-self-center"><%= __("Align Inside page of ID in frame") %></span>
+                    <span class="d-none video-msg video-msg-inside-page align-self-center"><%= __("Align the passport's inner page in frame") %></span>
                     <span class="d-none video-msg video-msg-front align-self-center"><%= __("Align Front of ID in frame") %></span>
                     <span class="d-none video-msg video-msg-back align-self-center"><%= __("Align Back of ID in frame") %></span>
                 </div>
@@ -549,6 +551,9 @@ limitations under the License.
                 <div id="scanning-doc-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex flex-column">
                     <div class="loader-animation loader-animation-authent align-self-center mb-3"><div></div></div>
                     <span class="video-msg align-self-center"><%= __("Scanning document in progress") %></span>
+                </div>
+                <div id="wrong-orientation-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
+                    <span class="video-msg align-self-center"><%= __("Rotate the document to fit in the frame") %></span>
                 </div>
                 <div id="hold-straight-msg" class="rotatable-wh d-none-fadeout video-overlay w-100 h-100 d-flex">
                     <span class="video-msg align-self-center"><%= __("Hold your document straight") %></span>

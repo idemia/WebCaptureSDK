@@ -18,7 +18,7 @@ limitations under the License.
  * Backend endpoint (used by the front-end to reach WebDocserver). This file can be used by integrator as it is.
  */
 const config = require('./config');
-const logger = require('./config/demoLogConf').getLogger(__filename);
+const logger = require('./config/demoLogConf').getLogger();
 const webDocApi = require('./webdoc-api');
 const gipsApi = require('./gips-api');
 
@@ -37,7 +37,7 @@ module.exports.initHttpEndpoints = (app) => {
     app.post(config.BASE_PATH + '/init-document-session', async (req, res) => {
         try {
             const session = req.body;
-            logger.info('Document session initialization', { session });
+            logger.info('Document session initialization:', session);
 
             if (session.countryCode === '') {
                 session.rules = findRulesByCountryAndType(session.countryCode, session.docType);
@@ -54,7 +54,7 @@ module.exports.initHttpEndpoints = (app) => {
             }
 
             documentCaptureResults[docCaptureSession.id] = docCaptureSession;
-            logger.info('Document session created: ', { logContext: { sessionId: docCaptureSession.id }, docCaptureSession });
+            logger.info('Document session created:', { logContext: { sessionId: docCaptureSession.id }, docCaptureSession });
             setTimeout(() => {
                 delete documentCaptureResults[docCaptureSession.id];
             }, parseInt(config.DOC_CAPTURE_SESSION_TTL) * 1000);
@@ -71,14 +71,14 @@ module.exports.initHttpEndpoints = (app) => {
      */
     app.get(config.BASE_PATH + '/document-sessions/:sessionId', async (req, res) => {
         const sessionId = req.params.sessionId;
-        logger.info('Retrieve Document session : ', { sessionId });
+        logger.info('Retrieve Document session:', { sessionId });
         if (!sessionId) {
             res.status(400).json({ error: 'missing sessionId in request' });
         }
         try {
             const docCaptureSession = await webDocApi.getDocSession(sessionId);
             documentCaptureResults[docCaptureSession.id] = docCaptureSession;
-            logger.info('Document session retrieved: ', { logContext: { sessionId }, docCaptureSession });
+            logger.info('Document session retrieved:', { logContext: { sessionId }, docCaptureSession });
             setTimeout(() => {
                 delete documentCaptureResults[docCaptureSession.id];
             }, parseInt(config.DOC_CAPTURE_SESSION_TTL) * 1000);
@@ -102,7 +102,7 @@ module.exports.initHttpEndpoints = (app) => {
         try {
             const country = req.query.countryCode;
             if (country) {
-                logger.info(`Requesting document types supported from issuing country:  ${country}`);
+                logger.info(`Requesting document types supported from issuing country: ${country}`);
             } else {
                 logger.info('Requesting document types supported from all issuing countries');
             }
@@ -111,18 +111,18 @@ module.exports.initHttpEndpoints = (app) => {
             if (config.IDPROOFING) {
                 result = await gipsApi.getCountryDocTypes(country);
                 logger.info('Got Document types and issuing countries supported');
-                logger.debug('', { result });
+                logger.debug('countryDocTypes', { result });
             } else {
                 const countryDocTypes = await webDocApi.getCountryDocTypes(country);
                 logger.info('Got Document types and issuing countries supported');
-                logger.debug('', { countryDocTypes });
+                logger.debug('countryDocTypes:', countryDocTypes);
 
-                const rulesAscountryDocTypes = findDocTypesByCountry();
+                const rulesAsCountryDocTypes = findDocTypesByCountry();
 
                 logger.info('Got Document rules supported');
-                logger.debug('', { rulesAscountryDocTypes });
+                logger.debug('rulesAsCountryDocTypes:', rulesAsCountryDocTypes);
 
-                result = countryDocTypes.concat(rulesAscountryDocTypes);
+                result = countryDocTypes.concat(rulesAsCountryDocTypes);
             }
             res.json(result);
         } catch (err) {
@@ -225,7 +225,7 @@ module.exports.initHttpEndpoints = (app) => {
         }
     });
 
-    logger.debug('Init HTTP Endpoints done ..');
+    logger.debug('Init HTTP Endpoints done');
 };
 
 /**

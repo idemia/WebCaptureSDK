@@ -450,7 +450,6 @@ video {background-color: black}
 #step-doc-auth .doc-auth-mask {
     position: absolute;
     top: 0 ;
-    z-index: 999;
     justify-content: center;
     align-items: center;
 }
@@ -460,7 +459,6 @@ video {background-color: black}
 }
 
 #step-doc-auth .doc-auth-mask-border {
-    flex-direction: column;
     justify-content: center;
     align-items: stretch;
     border: 5px solid white;
@@ -509,6 +507,23 @@ video {background-color: black}
     height: calc(var(--mask-margin) * var(--mask-h-ratio));
     max-height: calc(var(--mask-margin) * 100%);
 }
+
+#mrz-overlay {
+    background: url('../img/mrz.svg') no-repeat left 90%;
+    background-size: auto;
+    background-size: contain;
+    width: 95%;
+}
+
+#portrait-overlay {
+    background: url('../img/portrait.svg') no-repeat;
+    position: absolute;
+    width: 90%;
+    height: 40%;
+    background-size: contain;
+    margin-top: 15%;
+}
+
 #step-doc-auth .video-msg {
     max-width: calc(var(--mask-margin) * var(--mask-w-ratio));
 }

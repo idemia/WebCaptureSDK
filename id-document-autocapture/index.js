@@ -16,45 +16,39 @@ limitations under the License.
 
 const startDate = Date.now();
 const express = require('express');
+const compression = require('compression');
 const config = require('./server/config');
 const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const logger = require('./server/config/demoLogConf').getLogger(__filename);
+const logger = require('./server/config/demoLogConf').getLogger();
 const packer = require('./server/packer');
 const httpEndpoints = require('./server/httpEndpoints');
 const crypto = require('crypto');
 
 
+const DEFAULT_LANG = 'en'; // default language
+
 packer.pack();
 
 (async () => {
-    // Protocol options
-    const protocolOptionsList = config.PROTOCOL_OPTIONS ? config.PROTOCOL_OPTIONS.split(',') : [];
-
-    const options = {
-        pfx: fs.readFileSync(config.TLS_KEYSTORE_PATH),
-        passphrase: config.TLS_KEYSTORE_PASSWORD, 
-        secureOptions: protocolOptionsList.reduce((previous, current) => previous | crypto.constants[current])
-    };
-    logger.info(`Creating server with secure options: ${options.secureOptions}`);
-
     const app = express();
-    const server = https.createServer(options, app);
+    app.use(compression());
 
     // serve demos
     logger.info('Available web applications:');
 
     app.use(config.BASE_PATH, (req, res, next) => {
         const locale = req.acceptsLanguages()[0].split('-')[0];
-        let lang = 'en'; // default language
+        let lang = DEFAULT_LANG;
         if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
             lang = locale;
         }
         express.static(path.resolve(__dirname, `./front/doc-auth/${lang}/`))(req, res, next);
     });
     app.use('/:lang' + config.BASE_PATH + '/doc-auth', (req, res, next) => {
-        let lang = 'en'; // default language
+        let lang = DEFAULT_LANG;
         if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
             lang = req.params.lang;
         }
@@ -70,26 +64,48 @@ packer.pack();
     // init http endPoints
     httpEndpoints.initHttpEndpoints(app);
 
-    ['SIGTERM', 'SIGINT'].forEach(event => {
-        process.on(event, () => {
-            logger.info(`<<< Catch ${event} .. exiting app !`);
-            server.close(() => {
-                logger.info('Http server closed.');
-                process.exit(0);
-            });
+    // HTTPS server
+    if (config.TLS_API_PORT) {
+        // Protocol options
+        const protocolOptionsList = config.PROTOCOL_OPTIONS ? config.PROTOCOL_OPTIONS.split(',') : [];
+
+        const options = {
+            pfx: fs.readFileSync(config.TLS_KEYSTORE_PATH),
+            passphrase: config.TLS_KEYSTORE_PASSWORD, 
+            secureOptions: protocolOptionsList.reduce((previous, current) => previous | crypto.constants[current])
+        };
+        logger.info(`Server secure options: ${options.secureOptions}`);
+
+        const server = https.createServer(options, app);
+
+        // Let the server listen for incoming requests on defined port
+        await new Promise(resolve => {
+            server.listen(config.TLS_API_PORT, () => resolve());
         });
-    });
+        logger.info(`Https server started - https://localhost:${config.TLS_API_PORT}${config.BASE_PATH}`);
+    }
 
-    // Let the server listen for incoming requests on defined port
-    await new Promise(resolve => {
-        server.listen(config.TLS_API_PORT, () => resolve());
-    });
+    // HTTP server
+    if (config.HTTP_SERVER_PORT) {
+        const server = http.createServer(app);
+        // Let the server listen for incoming requests on defined port
+        await new Promise(resolve => {
+            server.listen(config.HTTP_SERVER_PORT, () => resolve());
+        });
+        logger.info(`Http server started - http://localhost:${config.HTTP_SERVER_PORT}${config.BASE_PATH}`);
+    }
 
-    logger.info(`Backend server started - https://localhost:${config.TLS_API_PORT}${config.BASE_PATH}`);
     logger.info(`Total starting time: ${Date.now() - startDate} ms`);
     if (config.IDPROOFING) {
         logger.info(`Using GIPS API on url: ${config.GIPS_URL}`);
     } else {
         logger.info(`Using WDS API on url: ${config.DOCSERVER_VIDEO_URL}${config.DOC_SERVER_BASE_PATH}`);
     }
+
+    ['SIGTERM', 'SIGINT'].forEach(event => {
+        process.on(event, () => {
+            logger.info(`<<< Caught ${event}, exiting app !`);
+            process.exit(0);
+        });
+    });
 })();
