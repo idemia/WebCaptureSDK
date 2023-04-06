@@ -231,9 +231,9 @@ async function postConsent(identityId) {
  */
 async function startVideoCapture(identityId) {
     const livenessParamerters = {
-        type: config.LIVENESS_MODE,
+        type: (config.LIVENESS_MODE === 'LIVENESS_ACTIVE') ? 'LIVENESS_HIGH' : config.LIVENESS_MODE, // Waiting GIPS upgrade
         securityLevel: config.LIVENESS_SECURITY_LEVEL,
-        nbChallenge: config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE
+        nbChallenge: config.LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE
     };
 
     const res = await fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/live-capture-session', {

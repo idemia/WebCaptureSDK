@@ -24,6 +24,7 @@ const serveStatic = require('serve-static');
 const multer = require('multer'); // for files upload
 const storage = multer.memoryStorage(); // use in memory
 const upload = multer({ storage: storage }); // a temp directory could be used instead
+const { setTimeout: sleep } = require('timers/promises');
 const ERROR_INIT_LIVENESS_SESSION = 'init-liveness-session failed';
 
 const livenessResults = {};
@@ -98,19 +99,16 @@ exports.initHttpEndpoints = (app) => {
             debug('Failed to request liveness result with error:', err);
             res.status(400).send(err);
         } else {
-            debug('<< liveness result available for sessionID: ', sessionId);
+            debug('<< liveness result available on callback for sessionID:', sessionId);
             res.status(204).send();
-            const livenessResult = await wbsApi
-                .getLivenessChallengeResult(sessionId,
-                    config.LIVENESS_MODE,
-                    config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE,
-                    config.LIVENESS_SECURITY_LEVEL)
-                .catch(err => {
-                    debug('Failed to request liveness result with error:', err);
-                });
-            debug(sessionId, 'Request liveness result', livenessResult);
+            let livenessResult;
+            try {
+                livenessResult = await wbsApi.getLivenessChallengeResult(sessionId);
+                debug(sessionId, '< Got liveness challenge result on callback:', livenessResult);
+            } catch (err) {
+                debug('Failed to get liveness challenge result with error:', err);
+            }
             livenessResults[sessionId] = livenessResult;
-            // setTimeout( () => {livenessResults[sessionId] = livenessResult}, 5000);
         }
     });
     //
@@ -169,12 +167,11 @@ exports.initHttpEndpoints = (app) => {
                 if (!polling && !config.IDPROOFING) {
                     debug(sessionId, '> No callback done, retrieve directly liveness challenge results');
                     currentLivenessResult = await wbsApi.getLivenessChallengeResult(sessionId);
+                    debug(sessionId, '< Got liveness challenge result:', currentLivenessResult);
                 }
-                debug(sessionId, 'Delete liveness result', currentLivenessResult);
                 delete livenessResults[sessionId];
-                debug(sessionId, '< Got liveness-challenge result', { currentLivenessResult });
                 const result = { isLivenessSucceeded: false, message: 'Something was wrong' };
-                switch (currentLivenessResult.livenessStatus) {
+                switch (currentLivenessResult?.livenessStatus) {
                     case 'SUCCESS' :
                         result.message = 'Liveness succeeded';
                         result.isLivenessSucceeded = true;
@@ -193,10 +190,10 @@ exports.initHttpEndpoints = (app) => {
                 }
 
                 // add diagnostic field if present
-                if (currentLivenessResult.diagnostic) {
+                if (currentLivenessResult?.diagnostic) {
                     result.diagnostic = currentLivenessResult.diagnostic;
                 }
-                debug(sessionId, '> Send liveness result');
+                debug(sessionId, '> Send liveness result response');
                 res.send(result);
             }
         } catch (e) {
@@ -205,19 +202,12 @@ exports.initHttpEndpoints = (app) => {
         }
     });
 
-    const wait = async (ttl) => {
-        // eslint-disable-next-line promise/param-names
-        return new Promise((resolve, _) =>
-            setTimeout(() => resolve(true), ttl)
-        );
-    };
-
     async function retrieveIPVEvidence({ identityId, portraitId }, sessionId, countDown = 10) {
         let livenessResult;
         do {
+            await sleep(1000);
             livenessResult = await gipsApi.getLivenessChallengeResult({ identityId, portraitId });
-            countDown = countDown - 1;
-        } while (livenessResult.livenessStatus === 'PROCESSING' && countDown && await wait(1000));
+        } while (livenessResult.livenessStatus === 'PROCESSING' && --countDown);
 
         if (livenessResults[sessionId] && livenessResult) {
             Object.assign(livenessResults[sessionId], livenessResult);

@@ -45,6 +45,7 @@ packer.pack();
     // Manage Server liveness mode
     const manageServerLivenessMode = (mode) => {
         app.use(config.BASE_PATH, express.static(path.resolve(__dirname, `front/home-${mode}`)));
+        app.use(config.BASE_PATH + '/video/tutorial.mp4', express.static(path.resolve(__dirname, 'assets/tutorial.mp4')));
         app.use(`${config.BASE_PATH}/${mode}-liveness`, (req, res, next) => {
             const locale = req.acceptsLanguages()[0].split('-')[0];
             let lang = DEFAULT_LANG;
@@ -62,9 +63,9 @@ packer.pack();
         });
     };
 
-    if (config.LIVENESS_MODE === 'LIVENESS_HIGH') {
-        manageServerLivenessMode('high');
-        debug('High liveness configured => /high-liveness');
+    if (config.LIVENESS_MODE === 'LIVENESS_ACTIVE') {
+        manageServerLivenessMode('active');
+        debug('Active liveness configured => /active-liveness');
     } else if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE_VIDEO') {
         manageServerLivenessMode('passive-video');
         debug('Passive liveness video configured => /passive-video-liveness');

@@ -252,7 +252,7 @@ limitations under the License.
                             <span><%= __("No camera access") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("We need access to your camera. Click Allow on the popup or enable it in your privacy settings.") %></span>
+                            <span><%= __("We need access to your camera. Click Allow on the popup or enable it in your privacy settings. Please refresh the page to restart the demo.") %></span>
                         </div>
                     </div>
                     <div class="footer">
@@ -578,6 +578,20 @@ limitations under the License.
                 </div>
             </div>
 
+            <div id="step-server-overloaded" class="row step d-none results">
+                <header class="row header">
+                    <div class="col logo">
+                        <img alt="Logo" src="./img/logo-passive-video.png">
+                    </div>
+                </header>
+                <div class="col-12 animation">
+                    <img src="./img/server-overloaded.svg" alt="server-overloaded">
+                    <span class="server-overloaded-title"><%= __("Server is at capacity") %></span>
+                    <span class="server-overloaded-description"><%= __("The server is currently unable to handle your request. Please try again in a few moments.") %></span>
+                    <button class="btn btn-primary btn-block reset-animations retry-fp" data-target="#socket-init"><%= __("Try again") %></button>
+                </div>
+            </div>
+
             <!-- Selfie upload -->
             <div id="step-selfie" class="row step d-none">
                 <header class="row header">
@@ -620,7 +634,7 @@ limitations under the License.
                 </header>
                 <div class="animation">
                     <div class="animation-content">
-                        <div class="best-image">
+                        <div class="row justify-content-center">
                             <img src="./img/success_tick.svg" alt="success">
                         </div>
                         <span class="animation-title-text"><%= __("Good Job !")%></span><br>

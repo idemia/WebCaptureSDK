@@ -49,9 +49,9 @@ config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
 
 exports.pack = function pack() {
     debug('>> process.env.NODE_ENV = ', process.env.NODE_ENV, { mode: MODE }, { devtool: DEVTOOL });
-    // generate liveness high package
-    if (config.LIVENESS_MODE === 'LIVENESS_HIGH') {
-        livenessPackage('high');
+    // generate active liveness package
+    if (config.LIVENESS_MODE === 'LIVENESS_ACTIVE') {
+        livenessPackage('active');
     } else if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE') {
         livenessPackage('passive');
     } else if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE_VIDEO') {
@@ -112,7 +112,7 @@ function livenessPackage(liveness) {
                 new HtmlReplaceWebpackPlugin(
                     [
                         {
-                            pattern: config.IDPROOFING ? /<li><a href=".\/high-liveness\/\?enableMatching=true">High liveness with matching<\/a><\/li>/ : '',
+                            pattern: config.IDPROOFING ? /<li><a href=".\/active-liveness\/\?enableMatching=true">Active liveness with matching<\/a><\/li>/ : '',
                             replacement: ''
                         },
                         {

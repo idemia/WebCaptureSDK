@@ -154,9 +154,8 @@ async function init(options = {}) {
     let challengeInProgress = false;
     const faceCaptureOptions = {
         bioSessionId: sessionId,
-        identityId,
         onClientInitEnd: () => {
-            console.warn('init ended');
+            console.log('init ended');
             loadingInitialized.classList.add(D_NONE_FADEOUT); // initialization successfully, remove loading for video
             headStartPositionOutline.classList.remove(D_NONE_FADEOUT);
             stopCapture.classList.remove(D_NONE_FADEOUT); // display
@@ -208,6 +207,9 @@ async function init(options = {}) {
                 resetLivenessDesign();
                 userBlockInterval(new Date(error.unlockDateTime).getTime());
                 displayStep('#step-liveness-fp-block');
+            } else if (error.code && error.code === 503) { //  server overloaded
+                resetLivenessDesign();
+                displayStep('#step-server-overloaded');
             } else {
                 stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
             }
@@ -233,7 +235,11 @@ async function initStream(options = {}) {
                 let extendedMsg;
                 if (e.name && e.name.indexOf('NotAllowed') > -1) {
                     msg = __('You denied camera permissions, either by accident or on purpose.');
-                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings.');
+                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
+
+                    // we hide the restart button so the user is not in a error loop. User should refresh his browser
+                    const restartButton = document.querySelector('#step-No-camera-access button');
+                    restartButton.classList.add(D_NONE);
                 }
                 stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
             });
@@ -264,21 +270,11 @@ getIpvTransactionButton.addEventListener('click', async () => {
  **/
 getIpvPortraitButton.addEventListener('click', async () => {
     console.log('calling getIpvPortraitButton ');
-    // bestImageIPV.src = '';
-    const faceImg = await commonutils.getFaceImage(basePath, sessionId, bestImageId);
-    // bestImageIPVbestImageURL = window.URL.createObjectURL(faceImg);
-    // bestImageIPV.src = `${bestImageURL}`;
-    BioserverVideoUI.displayBestImage(faceImg, bestImageInfo, BEST_IMG_IPV_ID);
-    bestImageIPV.classList.remove(D_NONE);
-    /* console.log('centering best image with info ', bestImageInfo);
-    const { w, boxX, boxY, boxW, boxH } = bestImageInfo;
-    const sizeCoeff = bestImgElement.offsetWidth / boxW;
-    bestImgElement.style.backgroundSize = (w * sizeCoeff).toFixed() + 'px';
-    // adjust Y position to fit oval shape ( oval form ==>  height = width x 1.3)
-    // as height is 30% bigger so we center face on Y axis by adding the half of the 30% of surface that exceeds
-    bestImgElement.style.backgroundPositionY = -((boxY - 0.3 * boxH / 2) * sizeCoeff).toFixed() + 'px';
-    bestImgElement.style.backgroundPositionX = -(boxX * sizeCoeff).toFixed() + 'px';
-    */
+    if (bestImageId) {
+        const faceImg = await commonutils.getFaceImage(basePath, sessionId, bestImageId);
+        BioserverVideoUI.displayBestImage(faceImg, bestImageInfo, BEST_IMG_IPV_ID);
+        bestImageIPV.classList.remove(D_NONE);
+    }
 });
 
 // when next button is clicked go to targeted step

@@ -1,8 +1,8 @@
 {
   "name": "IPV WebSDK",
   "short_name": "WebSDK",
-  "start_url": "/video-server/high-liveness-demo/",
-  "scope": "/video-server/high-liveness-demo/",
+  "start_url": "/video-server/active-liveness-demo/",
+  "scope": "/video-server/active-liveness-demo/",
   "icons": [
     {
       "src": "./logo-144.png",

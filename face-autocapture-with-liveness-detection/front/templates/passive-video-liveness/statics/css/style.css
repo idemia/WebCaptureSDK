@@ -788,7 +788,7 @@ video {background-color: black}
     max-width: 400px;
 }
 
-.too-many-attempts {
+.too-many-attempts, .server-overloaded-title {
     padding-top: 20px;
     font-style: normal;
     font-weight: bold;
@@ -797,11 +797,11 @@ video {background-color: black}
     text-align: center;
     letter-spacing: normal;
 }
-.pc .too-many-attempts {
+.pc .too-many-attempts, .pc .server-overloaded-title {
     width: 1128px;
     font-size: 44px;
 }
-.for-security-reason {
+.for-security-reason, .server-overloaded-description {
     padding-top: 20px;
     font-style: normal;
     font-weight: normal;
@@ -810,7 +810,7 @@ video {background-color: black}
     letter-spacing: normal;
     text-align: center;
 }
-.pc .for-security-reason {
+.pc .for-security-reason, .pc .server-overloaded-description {
     width: 772px;
     font-size: 24px;
 }

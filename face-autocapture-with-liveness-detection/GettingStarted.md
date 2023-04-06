@@ -100,8 +100,8 @@ If you want to link Biometric Services with ID&V/GIPS, edit the file `/server/co
 
 | **Variable**       | **Description**    | **Value**       |
 | ----------------- | ---------------------- | -------------- |
-| LIVENESS_MODE   | The liveness capture mode. Determines the type of capture and liveliness control to be performed on the video stream. | Allowed values: `LIVENESS_PASSIVE`: liveness check without challenge   `LIVENESS_MEDIUM`:  liveness check with « move the head » challenge. `LIVENESS_HIGH`: liveness check with « join the dots » challenge. |
-| LIVENESS_HIGH_NUMBER_OF_CHALLENGE | Number of dots generated for « join the dots » challenge.  Only applies when `LIVENESS_MODE` is set to `LIVENESS_HIGH` | `2`              |
+| LIVENESS_MODE   | The liveness capture mode. Determines the type of capture and liveliness control to be performed on the video stream. | Allowed values: `LIVENESS_PASSIVE`: liveness check without challenge   `LIVENESS_MEDIUM`:  liveness check with « move the head » challenge. `LIVENESS_ACTIVE`: liveness check with « join the dots » challenge. |
+| LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE | Number of dots generated for « join the dots » challenge.  Only applies when `LIVENESS_MODE` is set to `LIVENESS_ACTIVE` | `2`              |
 
 #### Configuration Variables for Changing Security/Usability Compromise
 
@@ -131,38 +131,38 @@ If you want to link Biometric Services with ID&V/GIPS, edit the file `/server/co
 
 #### Description of the files from source code:
 
-| Filename                                | Description                                                  |
-| --------------------------------------- | ------------------------------------------------------------ |
+| Filename                                | Description                                                                                                                 |
+|-----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | ./index.js                              | NodeJS index file that initialize front-end endpoints and call the file ''./server/httpEndpoints.js" for back-end endpoints |
-| ./package.json                          | nodeJS dependencies                                          |
-| ./GettingStarted.md                     | Readme markdown file                                         |
-| ./assets/*                              | Contains a video tutorial for liveness high                  |
-| ./licenses                              | Licenses from the demonstration project                      |
-| ./server                                | Back-end side package                                        |
-| ./server/wbs-api.js                     | Allow communication with WebBioserver API                    |
-| ./server/packer.js                      | Prepare the front-end source to be exposed                   |
-| ./server/httpEndpoints.js               | Backend endpoint (used by the front-end to reach GIPS & WebBioserver) |
-| ./server/gips-api.js                    | Allow communication with GIPS API                            |
-| ./server/config/index.js                | Read the Server configuration file and set defaults keys     |
-| ./server/config/defaults.js             | Server configuration file                                    |
-| ./server/config/certs/*                 | Procedure for TLS certificate generation                     |
-| ./server/config/i18n/*                  | Translation files (spanish / french / japanese)              |
-| ./front                                 | Front-end side package                                       |
-| ./front/utils/*                         | Common resources called by front-end JS                      |
-| ./templates                             | Front-end sources divided by each supported liveness mode    |
-| ./templates/high-liveness/index.js      | Unique High liveness javascript. All the JS source code to integrate the high liveness is present here. |
-| ./templates/high-liveness/index.html    | Unique High liveness html. All the html source code to integrate the high liveness is present here. |
-| ./templates/high-liveness/home.html     | Home page for high liveness that expose only links to the main high index.html page |
-| ./templates/high-liveness/statics       | Assets : images, logo, fonts, css for high liveness          |
-| ./templates/high-liveness/animations    | Json animation files (alternative to .gif) for high liveness |
-| ./templates/medium-liveness/index.js    | Unique medium liveness javascript. All the JS source code to integrate the medium liveness is present here. |
-| ./templates/medium-liveness/index.html  | Unique medium liveness html. All the html source code to integrate the medium liveness is present here. |
-| ./templates/medium-liveness/home.html   | Home page for medium liveness that expose only links to the main medium index.html page |
-| ./templates/medium-liveness/statics     | Assets : images, logo, fonts, css for medium liveness        |
-| ./templates/passive-liveness/animations | Json animation files (alternative to .gif) for medium liveness |
-| ./templates/passive-liveness/index.js   | Unique passive liveness javascript. All the JS source code to integrate the medium liveness is present here. |
-| ./templates/passive-liveness/index.html | Unique passive liveness html. All the html source code to integrate the passive liveness is present here. |
-| ./templates/passive-liveness/home.html  | Home page for passive liveness that expose only links to the main passive index.html page |
-| ./templates/passive-liveness/statics    | Assets : images, logo, fonts, css for passive liveness       |
-| ./templates/passive-liveness/animations | Json animation files (alternative to .gif) for passive liveness |
+| ./package.json                          | nodeJS dependencies                                                                                                         |
+| ./GettingStarted.md                     | Readme markdown file                                                                                                        |
+| ./assets/*                              | Contains a video tutorial for active liveness                                                                               |
+| ./licenses                              | Licenses from the demonstration project                                                                                     |
+| ./server                                | Back-end side package                                                                                                       |
+| ./server/wbs-api.js                     | Allow communication with WebBioserver API                                                                                   |
+| ./server/packer.js                      | Prepare the front-end source to be exposed                                                                                  |
+| ./server/httpEndpoints.js               | Backend endpoint (used by the front-end to reach GIPS & WebBioserver)                                                       |
+| ./server/gips-api.js                    | Allow communication with GIPS API                                                                                           |
+| ./server/config/index.js                | Read the Server configuration file and set defaults keys                                                                    |
+| ./server/config/defaults.js             | Server configuration file                                                                                                   |
+| ./server/config/certs/*                 | Procedure for TLS certificate generation                                                                                    |
+| ./server/config/i18n/*                  | Translation files (spanish / french / japanese)                                                                             |
+| ./front                                 | Front-end side package                                                                                                      |
+| ./front/utils/*                         | Common resources called by front-end JS                                                                                     |
+| ./templates                             | Front-end sources divided by each supported liveness mode                                                                   |
+| ./templates/active-liveness/index.js    | Unique Active liveness javascript. All the JS source code to integrate the active liveness is present here.                 |
+| ./templates/active-liveness/index.html    | Unique Active liveness html. All the html source code to integrate the active liveness is present here.                       |
+| ./templates/active-liveness/home.html     | Home page for active liveness that expose only links to the main index.html page                                            |
+| ./templates/active-liveness/statics       | Assets : images, logo, fonts, css for active liveness                                                                       |
+| ./templates/active-liveness/animations    | Json animation files (alternative to .gif) for active liveness                                                              |
+| ./templates/medium-liveness/index.js    | Unique medium liveness javascript. All the JS source code to integrate the medium liveness is present here.                 |
+| ./templates/medium-liveness/index.html  | Unique medium liveness html. All the html source code to integrate the medium liveness is present here.                     |
+| ./templates/medium-liveness/home.html   | Home page for medium liveness that expose only links to the main medium index.html page                                     |
+| ./templates/medium-liveness/statics     | Assets : images, logo, fonts, css for medium liveness                                                                       |
+| ./templates/passive-liveness/animations | Json animation files (alternative to .gif) for medium liveness                                                              |
+| ./templates/passive-liveness/index.js   | Unique passive liveness javascript. All the JS source code to integrate the medium liveness is present here.                |
+| ./templates/passive-liveness/index.html | Unique passive liveness html. All the html source code to integrate the passive liveness is present here.                   |
+| ./templates/passive-liveness/home.html  | Home page for passive liveness that expose only links to the main passive index.html page                                   |
+| ./templates/passive-liveness/statics    | Assets : images, logo, fonts, css for passive liveness                                                                      |
+| ./templates/passive-liveness/animations | Json animation files (alternative to .gif) for passive liveness                                                             |
 

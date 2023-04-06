@@ -150,6 +150,8 @@ exports.getGipsStatus = async function (basePath, identityId) {
 
 /**
  * retrieve the liveness challenge result from backend (via polling)
+ * @param basePath
+ * @param enablePolling
  * @param sessionId
  * @param maxAttempts
  * @param interval
@@ -193,6 +195,9 @@ exports.getLivenessChallengeResult = async function (basePath, enablePolling, se
 
 /**
  * send another image to match with video best image
+ * @param basePath
+ * @param sessionId
+ * @param bestImageId
  * @param selfieImage
  * @return {Promise<void>}
  */
@@ -208,13 +213,6 @@ exports.pushFaceAndDoMatch = async function (basePath, sessionId, bestImageId, s
                 matchingOKDescription.innerHTML = __('Matching succeeded <br> score: ') + matches.score;
             }
             document.querySelector('#step-selfie-ok').classList.remove('d-none');
-
-            const bestImgMatching = document.querySelector('#step-selfie-ok .best-image');
-            if (bestImgMatching) {
-                const faceImg = await this.getFaceImage(basePath, sessionId, bestImageId);
-                const bestImageURL = window.URL.createObjectURL(faceImg);
-                bestImgMatching.style.backgroundImage = `url(${bestImageURL})`;
-            }
         } else {
             document.querySelector('#step-selfie-ko').classList.remove('d-none');
             const matchingNOKDescription = document.querySelector('#step-selfie-ko .description');
@@ -237,6 +235,7 @@ exports.pushFaceAndDoMatch = async function (basePath, sessionId, bestImageId, s
 
 /**
  * associate a new face to session
+ * @param basePath
  * @param sessionId session id
  * @param imageFile face image
  * @param faceInfo face information
@@ -271,6 +270,7 @@ exports.createFace = async function (basePath, sessionId, imageFile, faceInfo = 
 
 /**
  * retrieve face for a given session
+ * @param basePath
  * @param sessionId
  * @param faceId
  */
@@ -298,6 +298,7 @@ exports.getFaceImage = async function (basePath, sessionId, faceId) {
 
 /**
  * get matches result for a given session and two faces
+ * @param basePath
  * @param sessionId
  * @param referenceFaceId
  * @param candidateFaceId
@@ -366,7 +367,7 @@ function getTimeLeftBeforeEndFreeze(timeLeft) {
         }
     }
     return { days, hours, minutes, seconds };
-};
+}
 
 // msg is following this regex : 'Please retry after ' + new Date(delay)
 // const delayDate = new Date('Mon Dec 14 2020 22:20:39 GMT+0000');
@@ -435,7 +436,7 @@ function onFirstConnectivityCheck(networkConnectivity, uploadThreshold) {
         weakNetworkCheckPage.querySelector(CLASS_SIGNAL_MIN_VALUE).innerHTML = uploadThreshold + ' kb/s';
         weakNetworkCheckPage.querySelector('.upload').classList.remove('d-none');
     }
-};
+}
 
 function doNetworkCheck(onNetworkCheckUpdate) {
     BioserverNetworkCheck.connectivityMeasure({
@@ -602,12 +603,12 @@ exports.initLivenessPassiveVideoTutorial = function () {
     });
 };
 
-function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessHigh = false) {
+function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessActive = false) {
     // hide all messages
     document.querySelectorAll(CLASS_VIDEO_OVERLAY).forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
     elementToDisplay.classList.remove(D_NONE_FADEOUT);
-    // TODO why don't we execute this code for liveness high ?
-    if (!livenessHigh) {
+    // TODO why don't we execute this code for active liveness ?
+    if (!livenessActive) {
         userInstructionMsgDisplayed = window.setTimeout(() => {
             elementToDisplay.classList.add(D_NONE_FADEOUT);
             userInstructionMsgDisplayed = window.clearTimeout(userInstructionMsgDisplayed);
@@ -615,17 +616,17 @@ function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessHigh 
     }
 }
 
-exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed, livenessHigh = false) {
+exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed, livenessActive = false) {
     const headStartPositionOutline = document.querySelector('#center-head-animation');
     const moveCloserMsg = document.querySelector('#move-closer-animation');
     const moveFurtherMsg = document.querySelector('#move-further-animation');
     const tooBrightMsg = document.querySelector('#darkness');
     const tooDarkMsg = document.querySelector('#brightness');
 
-    // do not show brightness information for high liveness
-    if (livenessHigh && (positionInfo === 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA' ||
+    // do not show brightness information for active liveness
+    if (livenessActive && (positionInfo === 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA' ||
       positionInfo === 'TRACKER_POSITION_INFO_MOVE_BRIGHTER_AREA')) {
-        displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessHigh);
+        displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessActive);
     } else {
         switch (positionInfo) {
             case 'TRACKER_POSITION_INFO_MOVE_BACK_INTO_FRAME': // No head detected
@@ -637,22 +638,22 @@ exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed
             case 'TRACKER_POSITION_INFO_CENTER_TILT_RIGHT': // Tilt your head right
             case 'TRACKER_POSITION_INFO_CENTER_TILT_LEFT': // Tilt your head left
             case 'TRACKER_POSITION_INFO_STAND_STILL': // Stand still
-                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessHigh);
+                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessActive);
                 break;
             case 'TRACKER_POSITION_INFO_CENTER_MOVE_BACKWARDS': // Move away from the camera
-                displayMsg(moveFurtherMsg, userInstructionMsgDisplayed, livenessHigh);
+                displayMsg(moveFurtherMsg, userInstructionMsgDisplayed, livenessActive);
                 break;
             case 'TRACKER_POSITION_INFO_CENTER_MOVE_FORWARDS': // Move closer to the camera
-                displayMsg(moveCloserMsg, userInstructionMsgDisplayed, livenessHigh);
+                displayMsg(moveCloserMsg, userInstructionMsgDisplayed, livenessActive);
                 break;
             case 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA': // The place is too bright
-                displayMsg(tooBrightMsg, userInstructionMsgDisplayed, livenessHigh);
+                displayMsg(tooBrightMsg, userInstructionMsgDisplayed, livenessActive);
                 break;
             case 'TRACKER_POSITION_INFO_MOVE_BRIGHTER_AREA': // The place is too dark
-                displayMsg(tooDarkMsg, userInstructionMsgDisplayed, livenessHigh);
+                displayMsg(tooDarkMsg, userInstructionMsgDisplayed, livenessActive);
                 break;
             default:
-                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessHigh);
+                displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessActive);
                 break;
         }
     }
@@ -710,6 +711,7 @@ exports.stopVideoCaptureAndProcessResult = async function (session, settings, re
 
 exports.initComponents = function (session, settings, resetLivenessDesign) {
     settings.CLASS_VIDEO_OVERLAY = '#step-liveness .video-overlay';
+    settings.D_NONE = 'd-none';
     settings.D_NONE_FADEOUT = 'd-none-fadeout';
     settings.ID_CONNECTIVITY_CHECK = '#connectivity-check';
     settings.ID_STEP_LIVENESS = '#step-liveness';

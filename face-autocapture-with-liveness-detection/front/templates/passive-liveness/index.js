@@ -16,7 +16,7 @@ limitations under the License.
 
 // this file is the main program that uses video server api for passive liveness
 
-/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, __ */
+/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, BioserverVideoUI __ */
 /* eslint-disable no-console */
 const commonutils = require('../../utils/commons');
 
@@ -32,6 +32,7 @@ const settings = {
 
 const D_NONE_FADEOUT = 'd-none-fadeout';
 
+const BEST_IMG_ID = '.best-image';
 const bestImageIPV = document.querySelector('#best-image-ipv');
 const getIPVStatus = document.querySelector('#get-ipv-status-result');
 
@@ -41,6 +42,7 @@ commonutils.initComponents(session, settings, resetLivenessDesign);
 const monitoring = document.querySelectorAll('.monitoring');
 const countDown = document.querySelector('#count-down');
 let tooManyAttempts = false;
+let serverOverloaded = false;
 
 /**
  * 1- init liveness session (from backend)
@@ -65,7 +67,6 @@ function getFaceCaptureOptions() {
     let challengeInProgress = false;
     return {
         bioSessionId: session.sessionId,
-        identityId: session.identityId,
         onClientInitEnd: () => {
             console.warn('init ended');
             session.loadingInitialized.classList.add(D_NONE_FADEOUT); // initialization successfully, remove loading for video
@@ -84,8 +85,9 @@ function getFaceCaptureOptions() {
                 challengeInProgress = true;
             }
         },
-        showChallengeResult: async () => {
+        showChallengeResult: async (msgBody) => {
             console.log('Liveness Challenge done > requesting result ...');
+            session.bestImageInfo = msgBody && msgBody.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const result = await commonutils.getLivenessChallengeResult(settings.basePath, settings.enablePolling, session.sessionId)
                 .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
             session.loadingChallenge.classList.add(settings.D_NONE_FADEOUT);
@@ -109,11 +111,19 @@ function getFaceCaptureOptions() {
                 tooManyAttempts = true;
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
-                document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
+                document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
 
-                document.querySelector('.please-try-again-in').classList.remove('d-none');
+                document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
                 commonutils.userBlockInterval(new Date(error.unlockDateTime).getTime());
-                document.querySelector('#step-liveness-fp-block').classList.remove('d-none');
+                document.querySelector('#step-liveness-fp-block').classList.remove(settings.D_NONE);
+            } else if (error.code && error.code === 503) { //  server overloaded
+                serverOverloaded = true;
+                // we reset the session when we finished the liveness check real session
+                resetLivenessDesign();
+                document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
+
+                document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
+                document.querySelector('#step-server-overloaded').classList.remove(settings.D_NONE);
             } else {
                 stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
             }
@@ -157,7 +167,11 @@ async function init(options = {}) {
                 let extendedMsg;
                 if (e.name && e.name.indexOf('NotAllowed') > -1) {
                     msg = __('You denied camera permissions, either by accident or on purpose.');
-                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings.');
+                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
+
+                    // we hide the restart button so the user is not in a error loop. User should refresh his browser
+                    const restartButton = document.querySelector('#step-liveness-ko button');
+                    restartButton.classList.add(settings.D_NONE);
                 }
                 stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
             });
@@ -179,7 +193,7 @@ document.querySelectorAll('*[data-target]')
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
             .catch(() => {
-                if (!tooManyAttempts) {
+                if (!tooManyAttempts && !serverOverloaded) {
                     stopVideoCaptureAndProcessResult(false);
                 }
             });
@@ -187,25 +201,25 @@ document.querySelectorAll('*[data-target]')
 
 async function processStep(targetStepId, displayWithDelay) {
     // init debug ipv
-    bestImageIPV.classList.add('d-none');
-    getIPVStatus.classList.add('d-none');
+    bestImageIPV.classList.add(settings.D_NONE);
+    getIPVStatus.classList.add(settings.D_NONE);
 
     if (targetStepId === '#application-version') {
-        document.querySelector(targetStepId).classList.remove('d-none');
+        document.querySelector(targetStepId).classList.remove(settings.D_NONE);
 
         setTimeout(() => {
-            document.querySelector(targetStepId).classList.add('d-none');
+            document.querySelector(targetStepId).classList.add(settings.D_NONE);
         }, 2000);
     } else {
         // d-none all steps
 
-        document.querySelectorAll('.step').forEach((row) => row.classList.add('d-none'));
+        document.querySelectorAll('.step').forEach((row) => row.classList.add(settings.D_NONE));
         if (targetStepId === settings.ID_CONNECTIVITY_CHECK) { // << if client clicks on start capture or start training
             if (session.networkContext.connectivityOK) {
                 targetStepId = settings.ID_STEP_LIVENESS; // connectivity check done & successful, move to the next step
             } else if (session.networkContext.connectivityOK === undefined) {
                 // connectivity check in progress, display waiting screen
-                document.querySelector(settings.ID_CONNECTIVITY_CHECK).classList.remove('d-none');
+                document.querySelector(settings.ID_CONNECTIVITY_CHECK).classList.remove(settings.D_NONE);
                 session.networkContext.timeoutCheckConnectivity = setTimeout(() => {
                     processStep(targetStepId, displayWithDelay);
                 }, 1000); // call this method until we got the results from the network connectivity
@@ -227,22 +241,22 @@ async function processStep(targetStepId, displayWithDelay) {
             }
         }
         const targetStep = document.querySelector(targetStepId);
-        targetStep.classList.remove('d-none');
+        targetStep.classList.remove(settings.D_NONE);
         const targetStepFooter = targetStep.querySelector('.footer');
         if (targetStepFooter) {
-            targetStepFooter.classList.add('d-none');
+            targetStepFooter.classList.add(settings.D_NONE);
             if (displayWithDelay) {
                 // display next button after few seconds
-                setTimeout(() => targetStepFooter.classList.remove('d-none'), displayWithDelay);
+                setTimeout(() => targetStepFooter.classList.remove(settings.D_NONE), displayWithDelay);
             } else {
-                targetStepFooter.classList.remove('d-none');
+                targetStepFooter.classList.remove(settings.D_NONE);
             }
         }
     }
 }
 
 async function processLivenessStep() {
-    document.querySelector(settings.ID_STEP_LIVENESS).classList.remove('d-none');
+    document.querySelector(settings.ID_STEP_LIVENESS).classList.remove(settings.D_NONE);
     await init();
     if (session.client && session.videoStream) {
         let timeleft = 3;
@@ -250,12 +264,12 @@ async function processLivenessStep() {
             if (timeleft <= 0) {
                 clearInterval(downloadTimer);
                 document.getElementById('count-down-txt-id').innerHTML = '';
-                session.livenessHeader.classList.remove('d-none');
-                countDown.classList.add('d-none');
+                session.livenessHeader.classList.remove(settings.D_NONE);
+                countDown.classList.add(settings.D_NONE);
             } else {
                 document.getElementById('count-down-txt-id').innerHTML = 'Countdown... ' + timeleft;
-                countDown.classList.remove('d-none');
-                session.livenessHeader.classList.add('d-none'); // hide header when countdown is here
+                countDown.classList.remove(settings.D_NONE);
+                session.livenessHeader.classList.add(settings.D_NONE); // hide header when countdown is here
             }
             timeleft -= 1;
         }, 1000);
@@ -299,13 +313,17 @@ function refreshImgAnimations() {
  */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', extendedMsg) {
     await commonutils.stopVideoCaptureAndProcessResult(session, settings, resetLivenessDesign, success, msg, faceId, extendedMsg);
+    if (faceId) {
+        const faceImg = await commonutils.getFaceImage(settings.basePath, session.sessionId, faceId);
+        BioserverVideoUI.displayAndCenterBestImage(faceImg, session.bestImageInfo, BEST_IMG_ID);
+    }
 }
 
 /**
  * prepare video capture elements
  */
 function initLivenessDesign() {
-    document.querySelector('header').classList.add('d-none');
+    document.querySelector('header').classList.add(settings.D_NONE);
     document.querySelector('main').classList.add('darker-bg');
     session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
     session.loadingInitialized.classList.remove(settings.D_NONE_FADEOUT); // display loading until initialization is done

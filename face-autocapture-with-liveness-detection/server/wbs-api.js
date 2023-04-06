@@ -17,6 +17,7 @@ limitations under the License.
 // this controllers allow you to interact with Biometric services
 const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const config = require('./config');
+const debug = require('debug')('front:app:wbs-api');
 const { getAgent, validateResponseStatus } = require('./httpUtils');
 const agent = getAgent(config.WBS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
 
@@ -33,26 +34,22 @@ module.exports = {
 };
 
 async function getSession() {
-    const bodyContentCallback = {
-        imageStorageEnabled: true,
+    const bodyContent = {
         livenessMode: config.LIVENESS_MODE,
-        numberOfChallenge: config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE,
-        callbackURL: config.SERVER_PUBLIC_ADDRESS + config.BASE_PATH + config.LIVENESS_RESULT_CALLBACK_PATH
-    };
-    const bodyContentNoCallback = {
-        imageStorageEnabled: true,
-        livenessMode: config.LIVENESS_MODE,
-        numberOfChallenge: config.LIVENESS_HIGH_NUMBER_OF_CHALLENGE
+        numberOfChallenge: config.LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE,
+        correlationId: 'wbs-demo-id'
     };
     if (config.LIVENESS_SECURITY_LEVEL) {
-        bodyContentCallback.securityLevel = config.LIVENESS_SECURITY_LEVEL;
-        bodyContentNoCallback.securityLevel = config.LIVENESS_SECURITY_LEVEL;
+        bodyContent.securityLevel = config.LIVENESS_SECURITY_LEVEL;
+    }
+    if (config.DISABLE_CALLBACK === false) {
+        bodyContent.callbackURL = config.SERVER_PUBLIC_ADDRESS + config.BASE_PATH + config.LIVENESS_RESULT_CALLBACK_PATH;
     }
 
     const res = await fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + '/init-liveness-session', {
         method: 'POST',
         // if callback is disabled, don't pass the callbackURL to bioserver-core
-        body: JSON.stringify(config.DISABLE_CALLBACK ? bodyContentNoCallback : bodyContentCallback),
+        body: JSON.stringify(bodyContent),
         headers: Object.assign({}, contentTypeJson, authenticationHeader(true)),
         agent: agent
     });
@@ -72,14 +69,14 @@ async function getCapabilities() {
 }
 
 /**
- * retrieve challenge result for a given session
+ * Retrieve challenge result for a given session
  * @param sessionId
  * @returns livenessResult
  */
 async function getLivenessChallengeResult(sessionId) {
-    const url = config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/liveness-challenge-result';
+    const url = `${config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId}/liveness-challenge-result`;
 
-    // debug('>> url {}', url);
+    debug('>> Getting liveness challenge result using url {}', url);
     const res = await fetch(url, {
         method: 'GET',
         headers: authenticationHeader(true),

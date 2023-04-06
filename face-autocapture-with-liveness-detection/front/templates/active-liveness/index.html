@@ -469,6 +469,21 @@ limitations under the License.
                 <button class="btn btn-primary reset-animations retry-fp" data-target="#step-liveness"><%= __("try again") %></button>
             </div>
         </div>
+
+        <div id="step-server-overloaded" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/server-overloaded.svg" alt="server-overloaded">
+                <span class="server-overloaded-title"><%= __("Server is at capacity") %></span>
+                <span class="server-overloaded-description"><%= __("The server is currently unable to handle your request. Please try again in a few moments.") %></span>
+                <button class="btn btn-primary reset-animations retry-fp" data-target="#step-liveness"><%= __("try again") %></button>
+            </div>
+        </div>
+
         <!-- Selfie upload -->
         <div id="step-selfie" class="row step d-none">
             <div class="col-12 description">

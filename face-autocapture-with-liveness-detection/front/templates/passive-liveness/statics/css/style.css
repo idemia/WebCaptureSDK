@@ -677,19 +677,13 @@ video {background-color: black}
         transform: rotate(360deg);
     }
 }
-.best-image {
-    background-position: center center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    width: 220px;
-    height: 250px;
-    justify-content: center;
-    position: relative;
+.best-image .pc {
+    align-self: flex-start;
 }
 .best-image img {
     position: absolute;
-    top: -37px;
-    right: 180px;
+    top: -5px;
+    left: -20px;
 }
 
 .video-block,
@@ -808,7 +802,7 @@ video {background-color: black}
     margin-top: 30px !important;
 }
 
-.too-many-attempts {
+.too-many-attempts, .server-overloaded-title {
     padding-top: 20px;
     font-family: unset;
     font-size: 32px;
@@ -819,11 +813,11 @@ video {background-color: black}
     text-align: center;
     color: #101010;
 }
-.pc .too-many-attempts {
+.pc .too-many-attempts, .pc .server-overloaded-title {
     width: 1128px;
     font-size: 44px;
 }
-.for-security-reason {
+.for-security-reason, .server-overloaded-description {
     padding-top: 20px;
     font-family: unset;
     font-size: 18px;
@@ -834,7 +828,7 @@ video {background-color: black}
     text-align: center;
     color: #4a4a4a;
 }
-.pc .for-security-reason {
+.pc .for-security-reason, .pc .server-overloaded-description {
     width: 772px;
     font-size: 24px;
 }

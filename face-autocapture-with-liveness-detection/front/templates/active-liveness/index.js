@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// this file is the main program that uses video server api for high liveness
+// this file is the main program that uses video server api for active liveness
 
 /* global __,BioserverVideo,BioserverEnvironment,BioserverNetworkCheck, BioserverVideoUI, BASE_PATH,BASE_PATH,VIDEO_URL,VIDEO_BASE_PATH,DISABLE_CALLBACK,IDPROOFING */
 /* eslint-disable no-console */
@@ -44,22 +44,23 @@ const tutorialVideoPlayer = document.querySelector('#video-player');
 const stopTutorialButton = document.querySelector('#stop-tutorial');
 const positiveMessage = document.querySelector('#positive-message');
 
+const BEST_IMG_ID = '.best-image';
 const isGifOverlayEnabled = new URLSearchParams(window.location.search).get('gifOverlay') === 'true';
 
 let tooManyAttempts = false;
+let serverOverloaded = false;
 
 function getFaceCaptureOptions() {
     let challengeInProgress = false;
     let challengePending = false;
     return {
         bioSessionId: session.sessionId,
-        identityId: session.identityId,
         showChallengeInstruction: (challengeInstruction) => {
             if (challengeInstruction === 'TRACKER_CHALLENGE_PENDING') {
             // pending ==> display waiting msg meanwhile the showChallengeResult callback is called with result
                 challengeInProgress = false;
                 challengePending = true;
-                BioserverVideoUI.resetLivenessHighGraphics();
+                BioserverVideoUI.resetLivenessActiveGraphics();
                 // When 'TRACKER_CHALLENGE_PENDING' message under showChallengeInstruction callback is received, a loader should be displayed to
                 // the end user so he understands that the capture is yet finished but best image is still being computing
                 // and that he should wait for his results. If you don't implement this way, a black screen should be visible !
@@ -84,11 +85,12 @@ function getFaceCaptureOptions() {
                 // Let appear "Wait a moment" message
                 session.loadingChallenge.classList.remove(settings.D_NONE_FADEOUT);
 
-                BioserverVideoUI.resetLivenessHighGraphics(options);
+                BioserverVideoUI.resetLivenessActiveGraphics(options);
             }
         },
-        showChallengeResult: async () => {
+        showChallengeResult: async (msgBody) => {
             console.log('Liveness Challenge done > requesting result ...');
+            session.bestImageInfo = msgBody && msgBody.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const result = await commonutils.getLivenessChallengeResult(settings.basePath, settings.enablePolling, session.sessionId)
                 .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
             if (result) {
@@ -103,7 +105,7 @@ function getFaceCaptureOptions() {
             if (!challengePending) { // tracking info can be received  after challengeInstruction === 'TRACKER_CHALLENGE_PENDING'
             // In this case , skip received tracking message
                 displayInstructionsToUser(trackingInfo, challengeInProgress);
-                BioserverVideoUI.updateLivenessHighGraphics('user-video', trackingInfo);
+                BioserverVideoUI.updateLivenessActiveGraphics('user-video', trackingInfo);
             }
         },
         errorFn: (error) => {
@@ -113,9 +115,17 @@ function getFaceCaptureOptions() {
                 tooManyAttempts = true;
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
-                document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
+                document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
                 commonutils.userBlockInterval(new Date(error.unlockDateTime).getTime());
-                document.querySelector('#step-liveness-fp-block').classList.remove('d-none');
+                document.querySelector('#step-liveness-fp-block').classList.remove(settings.D_NONE);
+            } else if (error.code && error.code === 503) { //  server overloaded
+                serverOverloaded = true;
+                // we reset the session when we finished the liveness check real session
+                resetLivenessDesign();
+                document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
+
+                document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
+                document.querySelector('#step-server-overloaded').classList.remove(settings.D_NONE);
             } else {
                 stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
             }
@@ -167,7 +177,11 @@ async function init(options = {}) {
                 let extendedMsg;
                 if (e.name && e.name.indexOf('NotAllowed') > -1) {
                     msg = __('You denied camera permissions, either by accident or on purpose.');
-                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings.');
+                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
+
+                    // we hide the restart button so the user is not in a error loop. User should refresh his browser
+                    const restartButton = document.querySelector('#step-liveness-ko button');
+                    restartButton.classList.add(settings.D_NONE);
                 }
                 stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
             });
@@ -188,7 +202,7 @@ async function init(options = {}) {
  **/
 stopTutorialButton.addEventListener('click', async () => {
     tutorialVideoPlayer.pause();
-    session.livenessHeader.classList.remove('d-none');
+    session.livenessHeader.classList.remove(settings.D_NONE);
 });
 tutorialVideoPlayer.addEventListener('ended', () => {
     stopTutorialButton.click();
@@ -200,7 +214,7 @@ document.querySelectorAll('*[data-target]')
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
             .catch(() => {
-                if (!tooManyAttempts) {
+                if (!tooManyAttempts && !serverOverloaded) {
                     stopVideoCaptureAndProcessResult(false);
                 }
             });
@@ -208,11 +222,11 @@ document.querySelectorAll('*[data-target]')
 
 async function processStep(targetStepId, displayWithDelay) {
     // init debug ipv
-    document.querySelector('#best-image-ipv').classList.add('d-none');
-    document.querySelector('#get-ipv-status-result').classList.add('d-none');
+    document.querySelector('#best-image-ipv').classList.add(settings.D_NONE);
+    document.querySelector('#get-ipv-status-result').classList.add(settings.D_NONE);
 
     // d-none all steps
-    document.querySelectorAll('.step').forEach(row => row.classList.add('d-none'));
+    document.querySelectorAll('.step').forEach(row => row.classList.add(settings.D_NONE));
     if (targetStepId === '#step-tutorial') {
         // start playing tutorial video (from the beginning)
         tutorialVideoPlayer.currentTime = 0;
@@ -222,7 +236,7 @@ async function processStep(targetStepId, displayWithDelay) {
             targetStepId = settings.ID_STEP_LIVENESS; // connectivity check done & successful, move to the next step
         } else if (session.networkContext.connectivityOK === undefined) {
             // connectivity check in progress, display waiting screen
-            document.querySelector(settings.ID_CONNECTIVITY_CHECK).classList.remove('d-none');
+            document.querySelector(settings.ID_CONNECTIVITY_CHECK).classList.remove(settings.D_NONE);
             session.networkContext.timeoutCheckConnectivity = setTimeout(() => {
                 processStep(targetStepId, displayWithDelay);
             }, 1000); // call this method until we got the results from the network connectivity
@@ -240,8 +254,8 @@ async function processStep(targetStepId, displayWithDelay) {
             // when client accepts camera permission access > we redirect it to the liveness check
             document.querySelector(`${targetStepId} button`).classList.add('start-capture');
         } else {
-            document.querySelector(settings.ID_STEP_LIVENESS).classList.remove('d-none');
-            session.livenessHeader.classList.remove('d-none');
+            document.querySelector(settings.ID_STEP_LIVENESS).classList.remove(settings.D_NONE);
+            session.livenessHeader.classList.remove(settings.D_NONE);
             await init();
             if (session.client && session.videoStream) {
                 session.client.startCapture({ stream: session.videoStream });
@@ -252,15 +266,15 @@ async function processStep(targetStepId, displayWithDelay) {
         }
     }
     const targetStep = document.querySelector(targetStepId);
-    targetStep.classList.remove('d-none');
+    targetStep.classList.remove(settings.D_NONE);
     const targetStepFooter = targetStep.querySelector('.footer');
     if (targetStepFooter) {
-        targetStepFooter.classList.add('d-none');
+        targetStepFooter.classList.add(settings.D_NONE);
         if (displayWithDelay) {
             // display next button after few seconds
-            setTimeout(() => targetStepFooter.classList.remove('d-none'), displayWithDelay);
+            setTimeout(() => targetStepFooter.classList.remove(settings.D_NONE), displayWithDelay);
         } else {
-            targetStepFooter.classList.remove('d-none');
+            targetStepFooter.classList.remove(settings.D_NONE);
         }
     }
 }
@@ -295,13 +309,17 @@ function refreshImgAnimations() {
  */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', extendedMsg) {
     await commonutils.stopVideoCaptureAndProcessResult(session, settings, resetLivenessDesign, success, msg, faceId, extendedMsg);
+    if (faceId) {
+        const faceImg = await commonutils.getFaceImage(settings.basePath, session.sessionId, faceId);
+        BioserverVideoUI.displayAndCenterBestImage(faceImg, session.bestImageInfo, BEST_IMG_ID);
+    }
 }
 
 /**
  * prepare video capture elements
  */
 function initLivenessDesign() {
-    document.querySelector('header').classList.add('d-none');
+    document.querySelector('header').classList.add(settings.D_NONE);
     document.querySelector('main').classList.add('darker-bg');
     session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
     session.loadingInitialized.classList.remove(settings.D_NONE_FADEOUT); // display loading until initialization is done
@@ -311,7 +329,7 @@ function initLivenessDesign() {
  * reset video capture elements at the end of the process
  */
 function resetLivenessDesign() {
-    BioserverVideoUI.resetLivenessHighGraphics();
+    BioserverVideoUI.resetLivenessActiveGraphics();
     commonutils.genericResetLivenessDesign(session);
     headRotationAnimation.style.backgroundImage = null;
     if (headAnimationOn || headAnimationOff) {
@@ -338,7 +356,7 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
     if (userInstructionMsgDisplayed) {
         return;
     }
-    const livenessHighData = trackingInfo.livenessHigh;
+    const livenessActiveData = trackingInfo.livenessActive;
 
     // << user phone not up to face
     if (trackingInfo.phoneNotVertical) { // << user phone not up to face
@@ -367,11 +385,11 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
         session.headStartPositionOutline.classList.remove(settings.D_NONE_FADEOUT);
 
         // << user not moving his head or moving his phone
-    } else if (livenessHighData && (livenessHighData.stillFace || livenessHighData.movingPhone) && !userInstructionMsgToDisplay) {
+    } else if (livenessActiveData && (livenessActiveData.stillFace || livenessActiveData.movingPhone) && !userInstructionMsgToDisplay) {
         session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
         userInstructionMsgToDisplay = true;
         // << user not moving his head
-        if (livenessHighData.stillFace) {
+        if (livenessActiveData.stillFace) {
             moveHeadMsg.classList.remove(settings.D_NONE_FADEOUT);
             userInstructionMsgDisplayed = window.setTimeout(() => {
                 moveHeadMsg.classList.add(settings.D_NONE_FADEOUT);
@@ -398,31 +416,31 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
 
         // << challenge is started
         // << challenge join-the-dots is displaying
-    } else if (challengeInProgress && livenessHighData) {
-        displayChallenge(livenessHighData);
+    } else if (challengeInProgress && livenessActiveData) {
+        displayChallenge(livenessActiveData);
     } // end of join-the dot-display
 }
 
-function displayChallenge(livenessHighData) {
+function displayChallenge(livenessActiveData) {
     // Clean screen
     document.querySelectorAll(settings.CLASS_VIDEO_OVERLAY)
         .forEach(overlay =>
             ![headRotationAnimation.id, positiveMessage.id].includes(overlay.id) &&
         overlay.classList.add(settings.D_NONE_FADEOUT));
     // join-the-dot animation
-    if (livenessHighData.targetOnHover && (headAnimationOn || headAnimationOff)) {
+    if (livenessActiveData.targetOnHover && (headAnimationOn || headAnimationOff)) {
         window.clearTimeout(headAnimationOn);
         window.clearTimeout(headAnimationOff);
         headRotationAnimation.classList.add(settings.D_NONE_FADEOUT);
     }
-    if (livenessHighData.targetChallengeIndex !== lastChallengeIndex) {
-        lastChallengeIndex = livenessHighData.targetChallengeIndex;
+    if (livenessActiveData.targetChallengeIndex !== lastChallengeIndex) {
+        lastChallengeIndex = livenessActiveData.targetChallengeIndex;
         if (lastChallengeIndex === 1) { // << if first point done display positive message and hide it after 3 seconds
             positiveMessage.classList.remove(settings.D_NONE_FADEOUT);
-            session.livenessHeader.classList.add('d-none');
+            session.livenessHeader.classList.add(settings.D_NONE);
             setTimeout(() => {
                 positiveMessage.classList.add(settings.D_NONE_FADEOUT);
-                session.livenessHeader.classList.remove('d-none');
+                session.livenessHeader.classList.remove(settings.D_NONE);
             }, 3000);
         }
         if (isGifOverlayEnabled) { // display animated face overlay
@@ -432,9 +450,9 @@ function displayChallenge(livenessHighData) {
                 headRotationAnimation.classList.add(settings.D_NONE_FADEOUT);
             }
             headAnimationOn = window.setTimeout(() => {
-                const pos = livenessHighData.challengeCircles[livenessHighData.targetChallengeIndex].pos;
+                const pos = livenessActiveData.challengeCircles[livenessActiveData.targetChallengeIndex].pos;
                 headRotationAnimation.style.backgroundImage = `url(./img/rotate_head_${pos}.gif)`;
-                if (!livenessHighData.targetOnHover) {
+                if (!livenessActiveData.targetOnHover) {
                     headRotationAnimation.classList.remove(settings.D_NONE_FADEOUT);
                     headAnimationOff = setTimeout(() => {
                         headRotationAnimation.classList.add(settings.D_NONE_FADEOUT);

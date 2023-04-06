@@ -20,7 +20,7 @@ const fs = require('fs');
 
 // this file contains configuration of sample app
 module.exports = {
-
+    
     // *** BIOSERVER CONNECTIVITY
     // Bioserver-core server api endpoint
     BIOSERVER_CORE_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443/bioserver-app/v2',
@@ -43,7 +43,7 @@ module.exports = {
     // Callback url will be SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH
     DISABLE_CALLBACK: true,
     // The ip address of the demo which will be used in callback url by the webioserver to callback the demo server with liveness results
-    SERVER_PUBLIC_ADDRESS: 'https://localhost',
+    SERVER_PUBLIC_ADDRESS: 'https://localhost:9943',
     // Used in callback URL to receive liveness result from WebioServercallback
     LIVENESS_RESULT_CALLBACK_PATH: '/liveness-result-callback',
 
@@ -55,10 +55,10 @@ module.exports = {
     LIVENESS_SECURITY_LEVEL: 'HIGH',
     // The security level to apply for the current liveness session under dermo-server which is passed
     // when initializing the session. Default value is “HIGH”.
-    LIVENESS_MODE: 'LIVENESS_PASSIVE', // LIVENESS_PASSIVE_VIDEO;LIVENESS_HIGH;LIVENESS_PASSIVE
-    // The number of challenge to be done in high liveness mode under dermo-server which is passed when initializing the session.
+    LIVENESS_MODE: 'LIVENESS_PASSIVE', // LIVENESS_PASSIVE_VIDEO;LIVENESS_ACTIVE;LIVENESS_PASSIVE
+    // The number of challenge to be done in active liveness mode under dermo-server which is passed when initializing the session.
     // Default number of challenge set to 2
-    LIVENESS_HIGH_NUMBER_OF_CHALLENGE: 2,
+    LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE: 2,
 
     // *** BACK END SERVER
     // Http server port (null to disable)
@@ -76,9 +76,7 @@ module.exports = {
 
     // *** LANGUAGES
     // Supported languages. Used to translate the web pages
-    SUPPORTED_LANGUAGES: 'en,es,fr',
-    
-
+    SUPPORTED_LANGUAGES: 'en,es,fr'
 };
 
 /**

@@ -4,7 +4,6 @@
   "description": "show WebBioServer demos",
   "main": "index.js",
   "scripts": {
-    "preinstall": "npm install --package-lock-only --ignore-scripts && npx npm-force-resolutions",
     "start": "node . ",
     "start:dev": "cross-env WBS_DEMO_ENV=dev npm run start",
     "lint": "npx eslint './server/**/*.js' './front/templates/**/*.js' './front/utils/**/*.js'",
@@ -13,13 +12,13 @@
     "coverage": "./node_modules/nyc/bin/nyc.js --check-coverage=true --reporter=lcov --reporter=text-lcov --reporter=text npm test"
   },
   "author": "IDEMIA",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "dependencies": {
-    "@babel/core": "^7.16.11",
+    "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.16.11",
     "@zainulbr/i18n-webpack-plugin": "^2.0.3",
     "asn1-ber": "^1.1.1",
-    "babel-loader": "^8.2.2",
+    "babel-loader": "^9.1.2",
     "clean-webpack-plugin": "^4.0.0",
     "compression": "^1.7.4",
     "copy-webpack-plugin": "^9.0.1",
@@ -36,9 +35,7 @@
     "sanitize-filename": "^1.6.3",
     "serve-static": "^1.14.1",
     "split-ca": "^1.0.1",
-    "webpack": "^5.74.0"
-  },
-  "resolutions": {
+    "webpack": "^5.76.3"
   },
   "devDependencies": {
     "cross-env": "^6.0.3",
