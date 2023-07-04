@@ -188,7 +188,7 @@ async function initDocCaptureClient(options = {}) {
             console.log('got error', error);
             clearTimeout(countDownTimer);
             captureInProgress = false;
-            processCaptureResult(false, __('Sorry, there was an issue.'));
+            processCaptureResult(error, __('Sorry, there was an issue.'));
             if (client) {
                 videoOutput.srcObject = null;
                 videoStream = null; // it will allow to reload the stream on next capture
@@ -410,8 +410,8 @@ async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide
 function processCaptureResult(result, msg, extendedMsg) {
     $$('.step').forEach(step => step.classList.add('d-none'));
     $$('.status-result').forEach(status => status.classList.add('d-none'));
-
-    if (result) {
+    const error = !result || result.code;
+    if (!error) {
         console.log('Full Document ID: ' + result.id);
         console.log('Full Document status: ', result.status);
         if (result.status) {
@@ -423,7 +423,7 @@ function processCaptureResult(result, msg, extendedMsg) {
         }
     }
 
-    const captures = result && result.captures;
+    const captures = !error && result.captures;
     if (captures) {
         captures.forEach((capture, index) => {
             const stepId = processCaptureResultForSide(getDataToDisplay(capture, capture.side), capture.side.name);
@@ -477,6 +477,7 @@ function selectRetryButton(stepId) {
 }
 
 function processCaptureResultForSide(result, side, msg, extendedMsg) {
+    const error = !result || result.code;
     console.log('Processing result for side: ' + side);
     resetDocAuthDesigns();
     const isPassport = side === 'INSIDE_PAGE';
@@ -485,7 +486,7 @@ function processCaptureResultForSide(result, side, msg, extendedMsg) {
     const stepResult = $(stepId + ' .formatted-results');
     stepResult.innerHTML = '';
 
-    if (result) {
+    if (!error) {
         if (IDPROOFING) {
             if (!urlParams.get('identityId')) {
                 identityId = getCurrentDocumentRule().identityId;
@@ -529,6 +530,8 @@ function processCaptureResultForSide(result, side, msg, extendedMsg) {
             console.log('Unknown doc captured', result);
             $(stepId).classList.remove('d-none');
         }
+    } else if (result.code === 503) { // server overloaded
+        $('#step-server-overloaded').classList.remove('d-none');
     } else {
         $('#step-doc-auth-ko').classList.remove('d-none');
         if (msg) {

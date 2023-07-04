@@ -600,6 +600,20 @@ limitations under the License.
                 </span>
             </div>
         </div>
+<!-- server overloaded UI -->
+        <div id="step-server-overloaded" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/server-overloaded.svg" alt="server-overloaded">
+                <span class="server-overloaded-title"><%= __("Server is at capacity") %></span>
+                <span class="server-overloaded-description"><%= __("The server is currently unable to handle your request. Please try again in a few moments.") %></span>
+                <button class="btn btn-primary reset-animations restart-demo" data-target="#step-country-selection"><%= __("Try again") %></button>
+            </div>
+        </div>
 <!-- Technical issue -->
         <div id="step-doc-auth-ko" class="row step d-none results">
             <div class="col-12 animation">

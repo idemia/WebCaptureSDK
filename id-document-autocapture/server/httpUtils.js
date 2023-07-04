@@ -16,14 +16,17 @@ limitations under the License.
 
 const http = require('http');
 const https = require('https');
+const ProxyAgent = require('proxy-agent');
 const splitca = require('split-ca');
 
 /**
  * Creates an agent to be used by node-fetch with connection and TLS configuration
- * @param trustStorePath the path of the truststore to load (bundle of pem certificates)
+ * If a proxy url is defined, it will be used for non localhost connections, ignoring custom truststore configuration
+ * @param {string?} trustStorePath the path of the truststore to load (bundle of pem certificates)
+ * @param {string?} proxyUrl the url of the proxy
  * @returns {function(*): module:http.Agent|module:https.Agent}
  */
-function getAgent(trustStorePath) {
+function getAgent(trustStorePath, proxyUrl) {
     // Array of pem certificates of the truststore bundle
     const trustStore = trustStorePath ? splitca(trustStorePath) : null;
 
@@ -37,8 +40,18 @@ function getAgent(trustStorePath) {
         keepAlive: true
     });
 
+    const proxyAgent = proxyUrl && new ProxyAgent(proxyUrl);
+
     // method expected as agent
-    return url => url.protocol === 'http:' ? httpAgent : httpsAgent;
+    return url => {
+        if (proxyAgent && !['localhost', '127.0.0.1'].includes(url.hostname)) {
+            return proxyAgent;
+        }
+        if (url.protocol === 'http:') {
+            return httpAgent;
+        }
+        return httpsAgent;
+    };
 }
 
 module.exports = {
