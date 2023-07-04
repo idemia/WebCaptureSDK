@@ -35,7 +35,7 @@ module.exports = {
 
     // callbackURL = SERVER_PUBLIC_ADDRESS + BASE_PATH + DOC_CAPTURE_CALLBACK_URL
     DISABLE_CALLBACK: true, // set this key to true to disable callback functionality
-    SERVER_PUBLIC_ADDRESS: 'https://localhost',
+    SERVER_PUBLIC_ADDRESS: 'https://localhost:9943',
     DOC_CAPTURE_CALLBACK_URL: '/doccapture-result-callback',
 
     // only needed if using ID&V

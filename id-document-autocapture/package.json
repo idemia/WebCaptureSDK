@@ -26,9 +26,10 @@
     "node-fetch": "^3.2.10",
     "parse-multipart": "^1.0.4",
     "pem": "1.14.4",
+    "proxy-agent": "^5.0.0",
     "sanitize-filename": "^1.6.3",
     "split-ca": "^1.0.1",
-    "webpack": "^5.74.0",
+    "webpack": "^5.76.3",
     "winston": "3.3.3"
   },
   "devDependencies": {
