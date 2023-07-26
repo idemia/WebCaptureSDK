@@ -66,7 +66,7 @@ function getFaceCaptureOptions() {
                 // and that he should wait for his results. If you don't implement this way, a black screen should be visible !
                 headRotationAnimation.classList.add(settings.D_NONE_FADEOUT);
                 authenticationInProgress.classList.remove(settings.D_NONE_FADEOUT);
-            } else { // challengeInstruction == TRACKER_CHALLENGE_2D
+            } else { // challengeInstruction == FACEFLOW_CHALLENGE_2D
                 challengeInProgress = true;
                 // display challenge
                 const options = {
