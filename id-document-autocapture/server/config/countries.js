@@ -31,6 +31,7 @@ module.exports.countries = [
 
 module.exports.Allcountries = [
     { code: '', name: 'Other country - Choose capture rules' },
+    { code: 'ABR', name: 'Abrodia' },
     { code: 'ABW', name: 'Aruba' },
     { code: 'AFG', name: 'Afghanistan' },
     { code: 'AGO', name: 'Angola' },
