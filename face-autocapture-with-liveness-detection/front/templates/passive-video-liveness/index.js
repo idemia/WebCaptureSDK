@@ -184,7 +184,7 @@ async function init(options = {}) {
             bestImageInfo = result && result.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const livenessResult = await commonutils.getLivenessChallengeResult(basePath, enablePolling, sessionId)
                 .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
-            console.log('Liveness result : ' + livenessResult.message, livenessResult);
+            console.log('Liveness result: ' + livenessResult.message, livenessResult);
             // result.diagnostic not currently set as last param of stopVideoCaptureAndProcessResult(), as we need to know the impact of displaying it to the user
             if (livenessResult) {
                 stopVideoCaptureAndProcessResult(livenessResult.isLivenessSucceeded, livenessResult.message, livenessResult.bestImageId);
@@ -739,12 +739,14 @@ function handlePositionInfo(trackingInfo) {
         logText = logText + 'No position info. ';
         displayMsgAndCircle(headStartPositionOutline, trackingInfo);
     }
-    if (trackingInfo.targetInfo.targetR) {
-        logText = logText + 'Radius ... ' + trackingInfo.targetInfo.targetR + '. ';
-    }
-    // Circle Animation management
-    if (trackingInfo.targetInfo && trackingInfo.targetInfo.stability && trackingInfo.targetInfo.stability > 0) {
-        logText = logText + 'Stability ... ' + trackingInfo.targetInfo.stability;
+    if (trackingInfo.targetInfo) {
+        if (trackingInfo.targetInfo.targetR) {
+            logText = logText + 'Radius ... ' + trackingInfo.targetInfo.targetR + '. ';
+        }
+        // Circle Animation management
+        if (trackingInfo.targetInfo.stability && trackingInfo.targetInfo.stability > 0) {
+            logText = logText + 'Stability ... ' + trackingInfo.targetInfo.stability;
+        }
     }
     console.log(logText);
 }

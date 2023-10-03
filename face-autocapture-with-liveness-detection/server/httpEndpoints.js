@@ -17,7 +17,7 @@ limitations under the License.
 // this file contains all http requests endpoints of sample app that allow you to interact with controllers ‘wbs-api.js’ and ‘gips-api.js’
 
 const config = require('./config');
-const debug = require('debug')('front:app:httpEndpoints');
+const logger = require('./logger');
 const wbsApi = require('./wbs-api');
 const gipsApi = require('./gips-api');
 const serveStatic = require('serve-static');
@@ -25,7 +25,7 @@ const multer = require('multer'); // for files upload
 const storage = multer.memoryStorage(); // use in memory
 const upload = multer({ storage: storage }); // a temp directory could be used instead
 const { setTimeout: sleep } = require('timers/promises');
-const ERROR_INIT_LIVENESS_SESSION = 'init-liveness-session failed';
+const INIT_LIVENESS_SESSION_FAILED = 'init-liveness-session failed';
 
 const livenessResults = {};
 
@@ -40,10 +40,9 @@ exports.initHttpEndpoints = (app) => {
         try {
             const capabilities = await wbsApi.getCapabilities();
             res.json(capabilities);
-        } catch (e) {
-            debug('capabilities', e);
-            debug('capabilities', e.status, e.statusText);
-            res.status(e.status ? e.status : 500).json({ error: 'capabilities failed' });
+        } catch (err) {
+            logger.error('capabilities failed', err);
+            res.status(err.status || 500).json({ error: 'capabilities failed' });
         }
     });
     //
@@ -54,10 +53,11 @@ exports.initHttpEndpoints = (app) => {
         try {
             let session = {};
             let sessionId = req.params.sessionId;
+            logger.updateContext({ sessionId });
             const identityId = req.query.identityId;
 
             if (config.IDPROOFING && (!sessionId || sessionId === 'null')) {
-                debug('<< sessionId not present, calling getSession..from gips api.');
+                logger.info('<< sessionId not present, calling getSession..from gips api.');
                 session = await gipsApi.getSession(identityId);
                 sessionId = session.sessionId;
 
@@ -68,24 +68,23 @@ exports.initHttpEndpoints = (app) => {
                 };
             } else {
                 if (!sessionId || sessionId === 'null') {
-                    debug('<< sessionId not present, calling getSession...');
-
+                    logger.info('<< sessionId not present, calling getSession...');
                     sessionId = await wbsApi.getSession();
+                    logger.updateContext({ sessionId });
                 } else {
-                    debug('<< sessionId present, avoid calling getSession to use : ', sessionId);
+                    logger.info('<< sessionId present, avoid calling getSession');
                 }
                 livenessResults[sessionId] = { status: 'PENDING' };
             }
-            debug(sessionId, 'init-liveness-session', livenessResults[sessionId]);
+            logger.info('init-liveness-session', livenessResults[sessionId]);
             if (session.identityId) {
                 res.json(session);
             } else {
                 res.json({ sessionId: sessionId });
             }
-        } catch (e) {
-            debug(ERROR_INIT_LIVENESS_SESSION, e);
-            debug(ERROR_INIT_LIVENESS_SESSION, e.status, e.statusText);
-            res.status(e.status ? e.status : 500).json({ error: ERROR_INIT_LIVENESS_SESSION });
+        } catch (err) {
+            logger.error(INIT_LIVENESS_SESSION_FAILED, err);
+            res.status(err.status || 500).json({ error: INIT_LIVENESS_SESSION_FAILED });
         }
     });
 
@@ -94,19 +93,20 @@ exports.initHttpEndpoints = (app) => {
     //
     app.post(config.BASE_PATH + config.LIVENESS_RESULT_CALLBACK_PATH, async (req, res) => {
         const sessionId = req.body && req.body.sessionId;
+        logger.updateContext({ sessionId });
         if (!sessionId) {
             const err = { error: 'Missing mandatory param sessionId' };
-            debug('Failed to request liveness result with error:', err);
+            logger.info('Failed to request liveness result with error:', err);
             res.status(400).send(err);
         } else {
-            debug('<< liveness result available on callback for sessionID:', sessionId);
+            logger.info('<< liveness result available on callback');
             res.status(204).send();
             let livenessResult;
             try {
                 livenessResult = await wbsApi.getLivenessChallengeResult(sessionId);
-                debug(sessionId, '< Got liveness challenge result on callback:', livenessResult);
+                logger.info('< Got liveness challenge result on callback:', livenessResult);
             } catch (err) {
-                debug('Failed to get liveness challenge result with error:', err);
+                logger.error('Failed to get liveness challenge result:', err);
             }
             livenessResults[sessionId] = livenessResult;
         }
@@ -117,9 +117,9 @@ exports.initHttpEndpoints = (app) => {
     app.get(config.BASE_PATH + '/gips-status/:identityId', async (req, res) => {
         // retrieve sessionId
         const identityId = req.params.identityId;
-        debug(identityId, '> gips-status');
+        logger.info(identityId, '> gips-status');
 
-        // get status JSON from GIPS
+        // Get status JSON from GIPS
         const gipsStatus = await gipsApi.getGipsStatus({ identityId });
         if (gipsStatus) {
             res.send(gipsStatus);
@@ -133,19 +133,20 @@ exports.initHttpEndpoints = (app) => {
     app.get(config.BASE_PATH + '/liveness-challenge-result/:sessionId', async (req, res) => {
         // retrieve sessionId
         const sessionId = req.params.sessionId;
+        logger.updateContext({ sessionId });
         const polling = req.query.polling && req.query.polling === 'true';
-        debug(sessionId, '> retrieve liveness-challenge result', { polling });
+        logger.info('> retrieve liveness-challenge result', { polling });
         if (!sessionId) {
             const error = { error: 'Missing mandatory param sessionId' };
-            debug('< get liveness-challenge failed', error);
+            logger.error('< get liveness-challenge failed', error);
             res.status(400).json(error);
             return;
         }
         // retrieve liveness result
         let currentLivenessResult = livenessResults[sessionId];
-        debug(sessionId, 'liveness-challenge-result content is', currentLivenessResult);
+        logger.info('liveness-challenge-result content is', currentLivenessResult);
         if (config.IDPROOFING && !currentLivenessResult) {
-            debug('< get liveness-challenge failed. Liveness result does not exist anymore');
+            logger.info('< get liveness-challenge failed. Liveness result does not exist anymore');
             res.status(404).json();
             return;
         } else if (config.IDPROOFING && !currentLivenessResult.gipsCalled) {
@@ -158,16 +159,16 @@ exports.initHttpEndpoints = (app) => {
         // Manage result
         try {
             if (!currentLivenessResult && polling) {
-                debug(sessionId, '< No liveness-challenge associated to this session');
+                logger.info('< No liveness-challenge associated to this session');
                 res.status(404).send(); // unknown sessionID
             } else if (polling && currentLivenessResult.status === 'PENDING') {
-                debug(sessionId, '< Waiting for liveness result callback ');
+                logger.info('< Waiting for liveness result callback ');
                 res.status(204).send(); // tell client that no liveness result is available for now
             } else {
                 if (!polling && !config.IDPROOFING) {
-                    debug(sessionId, '> No callback done, retrieve directly liveness challenge results');
+                    logger.info('> No callback done, retrieve directly liveness challenge results');
                     currentLivenessResult = await wbsApi.getLivenessChallengeResult(sessionId);
-                    debug(sessionId, '< Got liveness challenge result:', currentLivenessResult);
+                    logger.info('< Got liveness challenge result:', currentLivenessResult);
                 }
                 delete livenessResults[sessionId];
                 const result = { isLivenessSucceeded: false, message: 'Something was wrong' };
@@ -193,12 +194,12 @@ exports.initHttpEndpoints = (app) => {
                 if (currentLivenessResult?.diagnostic) {
                     result.diagnostic = currentLivenessResult.diagnostic;
                 }
-                debug(sessionId, '> Send liveness result response');
+                logger.info('> Send liveness result response');
                 res.send(result);
             }
-        } catch (e) {
-            debug(sessionId, 'get liveness-challenge failed', e.status, e.statusText, e);
-            res.status(e.status ? e.status : 500).json({ error: 'get liveness-challenge failed' });
+        } catch (err) {
+            logger.error('get liveness-challenge failed', err);
+            res.status(err.status || 500).json({ error: 'get liveness-challenge failed' });
         }
     });
 
@@ -212,7 +213,7 @@ exports.initHttpEndpoints = (app) => {
         if (livenessResults[sessionId] && livenessResult) {
             Object.assign(livenessResults[sessionId], livenessResult);
         }
-        debug('< get  livenessResult', livenessResult);
+        logger.info('< get livenessResult', livenessResult);
     }
 
     //
@@ -221,27 +222,28 @@ exports.initHttpEndpoints = (app) => {
     app.post(config.BASE_PATH + '/bio-session/:bioSessionId/faces', upload.any(),
         async (req, res) => {
             try {
+                const sessionId = req.params.bioSessionId;
+                logger.updateContext({ sessionId });
                 let image = req.files[0];
                 let face = req.files[1];
                 if (req.files[0].fieldname !== 'image') {
                     image = req.files[1];
                     face = req.files[0];
                 }
-                const sessionId = req.params.bioSessionId;
                 if (config.IDPROOFING) {
                     res.status(503).json({ error: 'Not yet implemented' });
                 } else {
                     const faceResult = await wbsApi.createFace(sessionId, image, face);
-                    debug(sessionId, 'create face result', faceResult);
+                    logger.info('create face result', faceResult);
                     if (faceResult.quality >= config.CODING_QUALITY_THRESHOLD) {
                         res.json({ faceId: faceResult.id });
                     } else {
                         res.status(400).send();
                     }
                 }
-            } catch (e) {
-                debug(req.params.bioSessionId, 'create face failed', e.status, e.statusText);
-                res.status(e.status ? e.status : 500).send();
+            } catch (err) {
+                logger.error('create face failed', err);
+                res.status(err.status || 500).send();
             }
         }
     );
@@ -251,19 +253,20 @@ exports.initHttpEndpoints = (app) => {
     app.get(config.BASE_PATH + '/bio-session/:bioSessionId/faces/:faceId/image', async (req, res) => {
         try {
             const sessionId = req.params.bioSessionId;
+            logger.updateContext({ sessionId });
             const faceId = req.params.faceId;
             if (config.IDPROOFING) {
                 const faceImg = await gipsApi.getFaceImage(faceId);
-                debug(sessionId, 'get a face img for faceID', faceId);
+                logger.info('get a face img for faceID', faceId);
                 res.status(200).send(faceImg);
             } else {
                 const faceImg = await wbsApi.getFaceImage(sessionId, faceId);
-                debug(sessionId, 'get a face img for faceID', faceId);
+                logger.info('get a face img for faceID', faceId);
                 res.status(200).send(faceImg);
             }
-        } catch (e) {
-            debug(req.params.bioSessionId, 'get face image failed', e.status, e.statusText);
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error('get face image failed', err);
+            res.status(err.status || 500).send();
         }
     });
     //
@@ -271,14 +274,15 @@ exports.initHttpEndpoints = (app) => {
     //
     app.get(config.BASE_PATH + '/bio-session/:bioSessionId/faces/:referenceFaceId/matches/:candidateFaceId', async (req, res) => {
         try {
+            const sessionId = req.params.bioSessionId;
+            logger.updateContext({ sessionId });
             if (config.IDPROOFING) {
                 res.status(503).json({ error: 'Not yet implemented' });
             } else {
                 const referenceFaceId = req.params.referenceFaceId;
                 const candidateFaceId = req.params.candidateFaceId;
-                const sessionId = req.params.bioSessionId;
                 const matchResult = await wbsApi.doMatch(sessionId, referenceFaceId);
-                debug(sessionId, 'get matches result', matchResult);
+                logger.info('get matches result', matchResult);
                 // check matching score ...
                 const match = matchResult.find(m => m.candidate.id === candidateFaceId);
                 // client should not see all results (like score) ...
@@ -291,9 +295,9 @@ exports.initHttpEndpoints = (app) => {
                     res.json(Object.assign({ matching: 'ko', score: Math.round(match.score) }));
                 }
             }
-        } catch (e) {
-            debug(req.params.bioSessionId, 'get matches failed', e.status, e.statusText);
-            res.status(e.status ? e.status : 500).send();
+        } catch (err) {
+            logger.error('get matches failed', err);
+            res.status(err.status || 500).send();
         }
     });
     //

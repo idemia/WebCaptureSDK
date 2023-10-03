@@ -18,7 +18,7 @@ limitations under the License.
 
 const path = require('path');
 const config = require('./config');
-const debug = require('debug')('front:packer');
+const logger = require('./logger');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const I18nPlugin = require('@zainulbr/i18n-webpack-plugin');
@@ -41,14 +41,14 @@ config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
             languages[lang] = require(`./config/i18n/${lang}.json`);
         }
     } catch (err) {
-        debug(`Warning! No ${lang}.json found, fallback to english for this language`);
+        logger.warn(`No ${lang}.json found, fallback to english for this language`);
     }
 });
 
 // generate liveness package by mode
 
 exports.pack = function pack() {
-    debug('>> process.env.NODE_ENV = ', process.env.NODE_ENV, { mode: MODE }, { devtool: DEVTOOL });
+    logger.info('>> process.env.NODE_ENV = ', process.env.NODE_ENV, { mode: MODE }, { devtool: DEVTOOL });
     // generate active liveness package
     if (config.LIVENESS_MODE === 'LIVENESS_ACTIVE') {
         livenessPackage('active');
@@ -61,7 +61,7 @@ exports.pack = function pack() {
 
 function livenessPackage(liveness) {
     Object.keys(languages).forEach(function (language) {
-        debug(`Generating ${language} package...`);
+        logger.info(`Generating ${language} package...`);
         // eslint-disable-next-line no-unused-expressions
         webpack({
             mode: MODE,
@@ -147,17 +147,17 @@ function livenessPackage(liveness) {
             ]
         }, (err, stats) => {
             if (err) {
-                debug('Failed to pack assets with error', err);
+                logger.error('Failed to pack assets with error', err);
                 return;
             }
             const jsonStats = stats.toJson();
             if (jsonStats.errors.length > 0) {
-                debug(PACK_ERRORS, jsonStats.errors);
+                logger.error(PACK_ERRORS, jsonStats.errors);
             }
             if (jsonStats.warnings.length > 0) {
-                debug(PACK_WARNINGS, jsonStats.warnings);
+                logger.warn(PACK_WARNINGS, jsonStats.warnings);
             }
-            debug(`>> ${liveness} liveness package generated for ${language}`);
+            logger.info(`>> ${liveness} liveness package generated for ${language}`);
         });
     });
 }

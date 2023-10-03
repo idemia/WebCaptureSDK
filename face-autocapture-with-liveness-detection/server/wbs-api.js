@@ -17,8 +17,8 @@ limitations under the License.
 // this controllers allow you to interact with Biometric services
 const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const config = require('./config');
-const debug = require('debug')('front:app:wbs-api');
-const { getAgent, validateResponseStatus } = require('./httpUtils');
+const logger = require('./logger');
+const { getAgent, validateResponseStatus, HTTP_REQUEST_FAILED } = require('./httpUtils');
 const agent = getAgent(config.WBS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
 
 const PATH_BIO_SESSIONS = '/bio-sessions/';
@@ -52,17 +52,23 @@ async function getSession() {
         body: JSON.stringify(bodyContent),
         headers: Object.assign({}, contentTypeJson, authenticationHeader(true)),
         agent: agent
+    }).catch(err => {
+        logger.error('getSession failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
-    validateResponseStatus(res, 201);
+    validateResponseStatus(res);
     return res.headers.get('location').split(PATH_BIO_SESSIONS)[1];
 }
 
 async function getCapabilities() {
-    // debug('getCapabilities', config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + config.VIDEO_HEALTH_PATH);
+    // logger.debug('getCapabilities', config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + config.VIDEO_HEALTH_PATH);
     const res = await fetch(config.BIOSERVER_VIDEO_URL + config.VIDEO_SERVER_BASE_PATH + config.VIDEO_HEALTH_PATH, {
         method: 'GET',
         headers: authenticationHeader(true),
         agent: agent
+    }).catch(err => {
+        logger.error('getCapabilities failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -76,11 +82,14 @@ async function getCapabilities() {
 async function getLivenessChallengeResult(sessionId) {
     const url = `${config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId}/liveness-challenge-result`;
 
-    debug('>> Getting liveness challenge result using url {}', url);
+    logger.info('>> Getting liveness challenge result using url', url);
     const res = await fetch(url, {
         method: 'GET',
         headers: authenticationHeader(true),
         agent: agent
+    }).catch(err => {
+        logger.error('getLivenessChallengeResult failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -104,13 +113,20 @@ async function createFace(sessionId, imageFile, imageFaceInfo = {}) {
         body: formData,
         headers: authenticationHeader(false),
         agent: agent
+    }).catch(err => {
+        logger.error('createFace failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
-    validateResponseStatus(res, 201);
+    validateResponseStatus(res);
+
     const faceId = res.headers.get('location').split('/faces/')[1];
     res = await fetch(config.BIOSERVER_CORE_URL + PATH_BIO_SESSIONS + sessionId + '/faces/' + faceId, {
         method: 'GET',
         headers: Object.assign({}, contentTypeJson, authenticationHeader(false)),
         agent: agent
+    }).catch(err => {
+        logger.error('createFace 2 failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -131,6 +147,9 @@ async function getFaceImage(sessionId, faceId) {
         method: 'GET',
         headers: Object.assign({}, contentTypeJson, authenticationHeader(false)),
         agent: agent
+    }).catch(err => {
+        logger.error('getFaceImage failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     const resArray = await res.arrayBuffer();
@@ -148,6 +167,9 @@ async function doMatch(sessionId, referenceFaceId) {
         method: 'GET',
         headers: Object.assign({}, contentTypeJson, authenticationHeader(false)),
         agent: agent
+    }).catch(err => {
+        logger.error('doMatch failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();

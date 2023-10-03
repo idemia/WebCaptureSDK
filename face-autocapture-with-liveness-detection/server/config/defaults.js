@@ -20,6 +20,12 @@ const fs = require('fs');
 
 // this file contains configuration of sample app
 module.exports = {
+    DEBUG: 'mph:*',
+    LOG_LEVEL: 'info',
+    LOG_FORMAT: 'json', // 'json' for production env | 'raw' with colors for development env
+    LOG_APPENDER: 'console', // console or file
+    LOG_FILE_PATH: path.join(path.dirname(require.main.filename), 'logs'), // path where log files will be stored
+
     
     // *** BIOSERVER CONNECTIVITY
     // Bioserver-core server api endpoint
@@ -82,7 +88,7 @@ module.exports = {
 /**
  * Read a secret from a file. Only the first line will be read, line breaks are not returned.
  * @param {string?} filePath the path of the file containing the secret to load
- * @return the secret read or null of no path was supplied
+ * @return {string} the secret read or null of no path was supplied
  */
 function loadSecretFromFile(filePath) {
     if (!filePath) {
