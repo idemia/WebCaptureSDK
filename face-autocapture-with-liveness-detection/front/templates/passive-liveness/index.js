@@ -16,7 +16,7 @@ limitations under the License.
 
 // this file is the main program that uses video server api for passive liveness
 
-/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, BioserverVideoUI __ */
+/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, BioserverVideoUI, __ */
 /* eslint-disable no-console */
 const commonutils = require('../../utils/commons');
 
@@ -90,7 +90,6 @@ function getFaceCaptureOptions() {
             session.bestImageInfo = msgBody && msgBody.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const result = await commonutils.getLivenessChallengeResult(settings.basePath, settings.enablePolling, session.sessionId)
                 .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
-            session.loadingChallenge.classList.add(settings.D_NONE_FADEOUT);
             console.log('Liveness result ', result);
             // result.diagnostic not currently set as last param of stopVideoCaptureAndProcessResult(), as we need to know the impact of displaying it to the user
             if (result) {
@@ -312,9 +311,15 @@ function refreshImgAnimations() {
  * suspend video camera and return result
  */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', extendedMsg) {
-    await commonutils.stopVideoCaptureAndProcessResult(session, settings, resetLivenessDesign, success, msg, faceId, extendedMsg);
+    // Download the image first
+    let faceImg;
     if (faceId) {
-        const faceImg = await commonutils.getFaceImage(settings.basePath, session.sessionId, faceId);
+        faceImg = await commonutils.getFaceImage(settings.basePath, session.sessionId, faceId);
+    }
+    // Then reset the UI to show result
+    commonutils.stopVideoCaptureAndProcessResult(session, settings, resetLivenessDesign, success, msg, faceId, extendedMsg);
+    // Finally display the image
+    if (faceImg) {
         BioserverVideoUI.displayAndCenterBestImage(faceImg, session.bestImageInfo, BEST_IMG_ID);
     }
 }

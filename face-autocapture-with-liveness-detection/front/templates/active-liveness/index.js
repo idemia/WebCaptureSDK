@@ -57,7 +57,7 @@ function getFaceCaptureOptions() {
         bioSessionId: session.sessionId,
         showChallengeInstruction: (challengeInstruction) => {
             if (challengeInstruction === 'TRACKER_CHALLENGE_PENDING') {
-            // pending ==> display waiting msg meanwhile the showChallengeResult callback is called with result
+                // pending ==> display waiting msg meanwhile the showChallengeResult callback is called with result
                 challengeInProgress = false;
                 challengePending = true;
                 BioserverVideoUI.resetLivenessActiveGraphics();
@@ -308,9 +308,15 @@ function refreshImgAnimations() {
  * suspend video camera and return result
  */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', extendedMsg) {
-    await commonutils.stopVideoCaptureAndProcessResult(session, settings, resetLivenessDesign, success, msg, faceId, extendedMsg);
+    // Download the image first
+    let faceImg;
     if (faceId) {
-        const faceImg = await commonutils.getFaceImage(settings.basePath, session.sessionId, faceId);
+        faceImg = await commonutils.getFaceImage(settings.basePath, session.sessionId, faceId);
+    }
+    // Then reset the UI to show result
+    commonutils.stopVideoCaptureAndProcessResult(session, settings, resetLivenessDesign, success, msg, faceId, extendedMsg);
+    // Finally display the image
+    if (faceImg) {
         BioserverVideoUI.displayAndCenterBestImage(faceImg, session.bestImageInfo, BEST_IMG_ID);
     }
 }

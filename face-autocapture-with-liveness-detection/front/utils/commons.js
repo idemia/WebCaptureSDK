@@ -668,7 +668,7 @@ exports.genericResetLivenessDesign = async function (session) {
     session.bestImgElement.style.backgroundImage = null;
 };
 
-exports.stopVideoCaptureAndProcessResult = async function (session, settings, resetLivenessDesign, success, msg, faceId = '', extendedMsg) {
+exports.stopVideoCaptureAndProcessResult = function (session, settings, resetLivenessDesign, success, msg, faceId = '', extendedMsg) {
     session.bestImageId = faceId;
     // we reset the session when we finished the liveness check real session
     resetLivenessDesign();
@@ -678,9 +678,6 @@ exports.stopVideoCaptureAndProcessResult = async function (session, settings, re
         document.querySelector('#step-liveness-ok').classList.remove('d-none');
         document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add('d-none'));
         if (!settings.idProofingWorkflow) {
-            const faceImg = await this.getFaceImage(settings.basePath, session.sessionId, faceId);
-            session.bestImageURL = window.URL.createObjectURL(faceImg);
-            session.bestImgElement.style.backgroundImage = `url(${session.bestImageURL})`;
             document.querySelector('.success-no-ipv').classList.remove('d-none');
         } else {
             document.querySelector('.success-ipv').classList.remove('d-none');

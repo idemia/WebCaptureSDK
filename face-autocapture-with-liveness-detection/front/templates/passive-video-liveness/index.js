@@ -22,6 +22,7 @@ const commonutils = require('../../utils/commons');
 
 const ID_SOCKET_INIT = '#socket-init';
 const ID_STEP_LIVENESS = '#step-liveness';
+const ID_STEP_LIVENESS_OK = '#step-liveness-ok';
 const D_NONE_FADEOUT = 'd-none-fadeout';
 const CLASS_SIGNAL_VALUE = '.signal-value';
 const CLASS_MIN_SIGNAL_VALUE = '.signal-min-value';
@@ -73,6 +74,7 @@ let cameraPermissionAlreadyAsked;
 let identityId;
 let initCalled; // used to avoid double call to init
 let bestImageInfo;
+let faceImg;
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
 const isMatchingEnabled = urlParams.get('enableMatching') === 'true';
 
@@ -184,7 +186,7 @@ async function init(options = {}) {
             bestImageInfo = result && result.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const livenessResult = await commonutils.getLivenessChallengeResult(basePath, enablePolling, sessionId)
                 .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
-            console.log('Liveness result : ' + livenessResult.message, livenessResult);
+            console.log('Liveness result: ' + livenessResult.message, livenessResult);
             // result.diagnostic not currently set as last param of stopVideoCaptureAndProcessResult(), as we need to know the impact of displaying it to the user
             if (livenessResult) {
                 stopVideoCaptureAndProcessResult(livenessResult.isLivenessSucceeded, livenessResult.message, livenessResult.bestImageId);
@@ -382,6 +384,18 @@ function refreshImgAnimations() {
     });
 }
 
+function displayBestImage() {
+    if (faceImg && bestImageInfo) {
+        BioserverVideoUI.displayPassiveVideoBestImage(faceImg, bestImageInfo, BEST_IMG_ID);
+    }
+}
+
+window.addEventListener('resize', () => {
+    // re-center best image display in case of screen rotation (only if we are displaying result screen)
+    if (!document.querySelector(ID_STEP_LIVENESS_OK).classList.contains('d-none')) {
+        displayBestImage();
+    }
+});
 /**
  * suspend video camera and return result
  */
@@ -396,14 +410,14 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
         if (!idProofingWorkflow) {
             // display loader while loading best image
             loadingResults.classList.remove(D_NONE);
-            const faceImg = await commonutils.getFaceImage(basePath, sessionId, faceId);
-            document.querySelector('#step-liveness-ok').classList.remove(D_NONE);
+            faceImg = await commonutils.getFaceImage(basePath, sessionId, faceId);
+            document.querySelector(ID_STEP_LIVENESS_OK).classList.remove(D_NONE);
             document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add(D_NONE));
             document.querySelector('.success-no-ipv').classList.remove(D_NONE);
             loadingResults.classList.add(D_NONE);
-            BioserverVideoUI.displayPassiveVideoBestImage(faceImg, bestImageInfo, BEST_IMG_ID);
+            displayBestImage();
         } else {
-            document.querySelector('#step-liveness-ok').classList.remove(D_NONE);
+            document.querySelector(ID_STEP_LIVENESS_OK).classList.remove(D_NONE);
             document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add(D_NONE));
             document.querySelector('.success-ipv').classList.remove(D_NONE);
             document.querySelector('#get-ipv-transaction').classList.remove(D_NONE);
@@ -739,12 +753,14 @@ function handlePositionInfo(trackingInfo) {
         logText = logText + 'No position info. ';
         displayMsgAndCircle(headStartPositionOutline, trackingInfo);
     }
-    if (trackingInfo.targetInfo.targetR) {
-        logText = logText + 'Radius ... ' + trackingInfo.targetInfo.targetR + '. ';
-    }
-    // Circle Animation management
-    if (trackingInfo.targetInfo && trackingInfo.targetInfo.stability && trackingInfo.targetInfo.stability > 0) {
-        logText = logText + 'Stability ... ' + trackingInfo.targetInfo.stability;
+    if (trackingInfo.targetInfo) {
+        if (trackingInfo.targetInfo.targetR) {
+            logText = logText + 'Radius ... ' + trackingInfo.targetInfo.targetR + '. ';
+        }
+        // Circle Animation management
+        if (trackingInfo.targetInfo.stability && trackingInfo.targetInfo.stability > 0) {
+            logText = logText + 'Stability ... ' + trackingInfo.targetInfo.stability;
+        }
     }
     console.log(logText);
 }

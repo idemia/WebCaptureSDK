@@ -154,6 +154,7 @@ small ul {
 #step-weak-network .animation,
 #loading-doc-results .animation,
 #loading-initialization .animation,
+#init-session-loader .animation,
 #connectivity-check .animation {
     align-items: center;
     flex-direction: column;
@@ -1016,4 +1017,11 @@ video {background-color: black}
     color: #656565;
     letter-spacing: normal;
     text-align: center;
+}
+#step-country-selection .loader-animation-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }

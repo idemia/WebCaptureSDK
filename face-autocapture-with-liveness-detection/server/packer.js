@@ -18,7 +18,7 @@ limitations under the License.
 
 const path = require('path');
 const config = require('./config');
-const debug = require('debug')('front:packer');
+const logger = require('./logger');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const I18nPlugin = require('@zainulbr/i18n-webpack-plugin');
@@ -29,11 +29,12 @@ const MODE = process.env.NODE_ENV === 'production' ? 'production' : 'development
 const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const DEVTOOL = process.env.NODE_ENV === 'production' ? false : 'source-map';
 
-const PATH_DETECT_ENV = '../front/utils/detect-env.js';
-const PATH_INDEX_HTML = '../index.html';
+const DETECT_ENV_PATH = '../front/utils/detect-env.js';
+const TEMPLATES_PATH = '../front/templates/';
+const OUTPUT_ROOT_PATH = '../front/dist/';
+
 const PACK_ERRORS = 'pack errors';
 const PACK_WARNINGS = 'pack warnings';
-const PATH_TEMPLATE = '../front/templates/';
 
 config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
     try {
@@ -41,14 +42,14 @@ config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
             languages[lang] = require(`./config/i18n/${lang}.json`);
         }
     } catch (err) {
-        debug(`Warning! No ${lang}.json found, fallback to english for this language`);
+        logger.warn(`No ${lang}.json found, fallback to english for this language`);
     }
 });
 
 // generate liveness package by mode
 
 exports.pack = function pack() {
-    debug('>> process.env.NODE_ENV = ', process.env.NODE_ENV, { mode: MODE }, { devtool: DEVTOOL });
+    logger.info('>> process.env.NODE_ENV = ', process.env.NODE_ENV, { mode: MODE }, { devtool: DEVTOOL });
     // generate active liveness package
     if (config.LIVENESS_MODE === 'LIVENESS_ACTIVE') {
         livenessPackage('active');
@@ -61,22 +62,22 @@ exports.pack = function pack() {
 
 function livenessPackage(liveness) {
     Object.keys(languages).forEach(function (language) {
-        debug(`Generating ${language} package...`);
+        logger.info(`Generating ${language} package...`);
         // eslint-disable-next-line no-unused-expressions
         webpack({
             mode: MODE,
             name: language,
             context: __dirname,
             entry: {
-                index: `${PATH_TEMPLATE}${liveness}-liveness/index.js`,
-                'detect-env': PATH_DETECT_ENV
+                index: path.join(__dirname, TEMPLATES_PATH, `${liveness}-liveness/index.js`),
+                'detect-env': path.join(__dirname, DETECT_ENV_PATH)
             },
             devtool: DEVTOOL,
             optimization: {
                 minimize: MODE === 'production'
             },
             output: {
-                path: path.join(__dirname, `../front/${liveness}-liveness/${language}/js/`),
+                path: path.join(__dirname, OUTPUT_ROOT_PATH, `${liveness}-liveness/${language}/js/`),
                 publicPath: 'js',
                 filename: '[name].js',
                 hashFunction: 'sha256'
@@ -101,13 +102,13 @@ function livenessPackage(liveness) {
                 new I18nPlugin(languages[language], { failOnMissing: true }),
                 new HtmlWebpackPlugin({
                     inject: false,
-                    filename: PATH_INDEX_HTML, // relative to thisObj.output.path
-                    template: `${PATH_TEMPLATE}${liveness}-liveness/index.html`
+                    filename: path.join(__dirname, OUTPUT_ROOT_PATH, `${liveness}-liveness/${language}/index.html`),
+                    template: path.join(__dirname, TEMPLATES_PATH, `${liveness}-liveness/index.html`)
                 }),
                 new HtmlWebpackPlugin({
                     inject: false,
-                    filename: `../../../home-${liveness}/index.html`, // relative to thisObj.output.path
-                    template: `${PATH_TEMPLATE}${liveness}-liveness/home.html`
+                    filename: path.join(__dirname, OUTPUT_ROOT_PATH, `home-${liveness}/index.html`),
+                    template: path.join(__dirname, TEMPLATES_PATH, `${liveness}-liveness/home.html`)
                 }),
                 new HtmlReplaceWebpackPlugin(
                     [
@@ -138,8 +139,8 @@ function livenessPackage(liveness) {
                     {
                         patterns: [
                             {
-                                from: `${PATH_TEMPLATE}${liveness}-liveness/statics/`,
-                                to: path.join(__dirname, `../front/${liveness}-liveness/${language}/`)
+                                from: path.join(__dirname, TEMPLATES_PATH, `${liveness}-liveness/statics/`),
+                                to: path.join(__dirname, OUTPUT_ROOT_PATH, `${liveness}-liveness/${language}/`)
                             }
                         ]
                     }
@@ -147,17 +148,17 @@ function livenessPackage(liveness) {
             ]
         }, (err, stats) => {
             if (err) {
-                debug('Failed to pack assets with error', err);
+                logger.error('Failed to pack assets with error', err);
                 return;
             }
             const jsonStats = stats.toJson();
             if (jsonStats.errors.length > 0) {
-                debug(PACK_ERRORS, jsonStats.errors);
+                logger.error(PACK_ERRORS, jsonStats.errors);
             }
             if (jsonStats.warnings.length > 0) {
-                debug(PACK_WARNINGS, jsonStats.warnings);
+                logger.warn(PACK_WARNINGS, jsonStats.warnings);
             }
-            debug(`>> ${liveness} liveness package generated for ${language}`);
+            logger.info(`>> ${liveness} liveness package generated for ${language}`);
         });
     });
 }

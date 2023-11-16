@@ -34,18 +34,19 @@ for (const [key, value] of Object.entries(process.env)) {
 }
 
 // Server vars which should not change
-values.VIDEO_HEALTH_PATH = values.VIDEO_HEALTH_PATH || '/v2/capabilities';
-values.VIDEO_SERVER_BASE_PATH = values.VIDEO_SERVER_BASE_PATH || '/video-server';
-values.DEMO_HEALTH_PATH = values.DEMO_HEALTH_PATH || '/capabilities';
-values.CODING_QUALITY_THRESHOLD = values.CODING_QUALITY_THRESHOLD || 0;
-values.MATCHING_SCORE_THRESHOLD = values.MATCHING_SCORE_THRESHOLD || 3000;
-values.GIPS_TENANT_ROLE = values.GIPS_TENANT_ROLE || 'RELYING_SERVICE';
-values.API_KEY_SECRET_BIOMETRICS = values.API_KEY_SECRET_BIOMETRICS || values.WEB_SDK_LIVENESS_ID_DOC;
-values.API_KEY_SECRET_WEBSDK = values.API_KEY_SECRET_WEBSDK || values.WEB_SDK_LIVENESS_ID_DOC;
-values.ENABLE_IMAGE_COMPRESSION = values.ENABLE_IMAGE_COMPRESSION || false;
-values.WBS_TLS_TRUSTSTORE_PATH = values.WBS_TLS_TRUSTSTORE_PATH || null;
-values.GIPS_TLS_TRUSTSTORE_PATH = values.GIPS_TLS_TRUSTSTORE_PATH || null;
-values.PROXY_URL = values.PROXY_URL || null;
+values.VIDEO_HEALTH_PATH ||= '/v2/capabilities';
+values.VIDEO_SERVER_BASE_PATH ||= '/video-server';
+values.DEMO_HEALTH_PATH ||= '/capabilities';
+values.CODING_QUALITY_THRESHOLD ||= 0;
+values.MATCHING_SCORE_THRESHOLD ||= 3000;
+values.GIPS_TENANT_ROLE ||= 'RELYING_SERVICE';
+values.API_KEY_SECRET_BIOMETRICS ||= values.WEB_SDK_LIVENESS_ID_DOC;
+values.API_KEY_SECRET_WEBSDK ||= values.WEB_SDK_LIVENESS_ID_DOC;
+values.ENABLE_IMAGE_COMPRESSION ||= false;
+values.WBS_TLS_TRUSTSTORE_PATH ||= null;
+values.GIPS_TLS_TRUSTSTORE_PATH ||= null;
+values.PROXY_URL ||= null;
+values.NON_PROXY_HOSTS ||= 'localhost,127.0.0.1';
 
 // Global Node environment vars
 process.env.DEBUG = values.DEBUG || 'front:*';

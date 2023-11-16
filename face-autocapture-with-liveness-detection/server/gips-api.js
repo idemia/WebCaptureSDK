@@ -18,10 +18,10 @@ limitations under the License.
 
 const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const config = require('./config');
-const debug = require('debug')('front:gips:api');
+const logger = require('./logger');
 const multipart = require('parse-multipart');
-const { getAgent, validateResponseStatus } = require('./httpUtils');
-const agent = getAgent(config.GIPS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
+const { getAgent, validateResponseStatus, HTTP_REQUEST_FAILED } = require('./httpUtils');
+const agent = getAgent(config.GIPS_TLS_TRUSTSTORE_PATH, config.PROXY_URL, config.NON_PROXY_HOSTS);
 const context = [{
     key: 'BUSINESS_ID',
     value: 'LOA1P'
@@ -68,21 +68,19 @@ async function getSession(identityId) {
 }
 
 /**
- * retrieve GIPS status from a given session
+ * Retrieve GIPS status from a given session
  * @param session
  * @returns gipsStatus
  */
 async function getGipsStatus(session) {
-    debug('getGipsStatus called');
-
+    logger.info('Calling GIPS for status');
     const gipsStatus = await getGlobalStatus(session.identityId);
-    debug('getGipsStatus called', gipsStatus);
-
+    logger.info('Status:', gipsStatus);
     return gipsStatus;
 }
 
 /**
- * retrieve challenge result for a given session
+ * Retrieve challenge result for a given session
  * @param session
  * @returns livenessResult
  */
@@ -158,6 +156,9 @@ async function createIdentity() {
         body: JSON.stringify(context),
         headers: mutipartContentType(authenticationHeader()),
         agent: agent
+    }).catch(err => {
+        logger.error('createIdentity failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -190,6 +191,9 @@ async function postConsent(identityId) {
         body: JSON.stringify(consent),
         headers: jsonContentType(authenticationHeader()),
         agent: agent
+    }).catch(err => {
+        logger.error('postConsent failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -241,6 +245,9 @@ async function startVideoCapture(identityId) {
         body: JSON.stringify(livenessParamerters),
         headers: jsonContentType(authenticationHeader()),
         agent: agent
+    }).catch(err => {
+        logger.error('startVideoCapture failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -263,6 +270,9 @@ async function getStatus(identityId, portraitId) {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
+    }).catch(err => {
+        logger.error('getStatus failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -303,6 +313,9 @@ async function getGlobalStatus(identityId) {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
+    }).catch(err => {
+        logger.error('getGlobalStatus failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     return res.json();
@@ -319,6 +332,9 @@ async function getFaceImage(identityId) {
         method: 'GET',
         headers: authenticationHeader(),
         agent: agent
+    }).catch(err => {
+        logger.error('getFaceImage failed:', err);
+        throw new Error(HTTP_REQUEST_FAILED);
     });
     validateResponseStatus(res);
     const multiPartBodyBuffer = Buffer.from(await res.arrayBuffer());
@@ -332,7 +348,6 @@ function authenticationHeader() {
     headers.apikey = config.GIPS_RS_API_Key;
     headers['Tenant-Role'] = config.GIPS_TENANT_ROLE;
     headers['X-Forwarded-For'] = 'to-specify';
-
     return headers;
 }
 

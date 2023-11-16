@@ -16,17 +16,19 @@ limitations under the License.
 
 const http = require('http');
 const https = require('https');
-const ProxyAgent = require('proxy-agent');
 const splitca = require('split-ca');
+const { ProxyAgent } = require('proxy-agent');
+const proxyFromEnv = require('proxy-from-env');
 
 /**
  * Creates an agent to be used by node-fetch with connection and TLS configuration
  * If a proxy url is defined, it will be used for non localhost connections, ignoring custom truststore configuration
  * @param {string?} trustStorePath the path of the truststore to load (bundle of pem certificates)
  * @param {string?} proxyUrl the url of the proxy
- * @returns {function(*): module:http.Agent|module:https.Agent}
+ * @param {string?} nonProxyHosts A comma/space/pipe separated list of hosts that the client is allowed to access without going through the proxy
+ * @returns {ProxyAgent} an instance of ProxyAgent with a configured httpAgent & httpsAgent for non proxy connections
  */
-function getAgent(trustStorePath, proxyUrl) {
+function getAgent(trustStorePath, proxyUrl, nonProxyHosts) {
     // Array of pem certificates of the truststore bundle
     const trustStore = trustStorePath ? splitca(trustStorePath) : null;
 
@@ -40,18 +42,28 @@ function getAgent(trustStorePath, proxyUrl) {
         keepAlive: true
     });
 
-    const proxyAgent = proxyUrl && new ProxyAgent(proxyUrl);
+    // NO_PROXY only supports comma and space as separator, so convert pipe if any
+    nonProxyHosts = nonProxyHosts?.replace?.('|', ',') || '';
 
-    // method expected as agent
-    return url => {
-        if (proxyAgent && !['localhost', '127.0.0.1'].includes(url.hostname)) {
-            return proxyAgent;
-        }
-        if (url.protocol === 'http:') {
-            return httpAgent;
-        }
-        return httpsAgent;
-    };
+    const proxyAgent = new ProxyAgent({
+        keepAlive: true,
+        getProxyForUrl: url => {
+            if (!proxyUrl) {
+                return '';
+            }
+            // Export back our proxy configuration as environment variables as required by proxy-from-env
+            // This is safe as long as method proxyFromEnv.getProxyForUrl() is synchronous
+            process.env.HTTP_PROXY = proxyUrl;
+            process.env.HTTPS_PROXY = proxyUrl;
+            process.env.NO_PROXY = nonProxyHosts;
+            const proxy = proxyFromEnv.getProxyForUrl(url);
+            return proxy;
+        },
+        httpAgent, // http fallback if getProxyForUrl return no proxy value
+        httpsAgent // https fallback if getProxyForUrl return no proxy value
+    });
+
+    return proxyAgent;
 }
 
 module.exports = {

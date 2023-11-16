@@ -34,11 +34,13 @@ for (const [key, value] of Object.entries(process.env)) {
 }
 
 // Server vars which should not change
-values.DOC_SERVER_BASE_PATH = values.DOC_SERVER_BASE_PATH || '/doc-server';
-values.DOC_CAPTURE_SESSION_TTL = values.DOC_CAPTURE_SESSION_TTL || 1800; // time to live in seconds
-values.GIPS_TENANT_ROLE = values.GIPS_TENANT_ROLE || 'RELYING_SERVICE';
-values.WDS_TLS_TRUSTSTORE_PATH = values.WDS_TLS_TRUSTSTORE_PATH || null;
-values.GIPS_TLS_TRUSTSTORE_PATH = values.GIPS_TLS_TRUSTSTORE_PATH || null;
+values.DOC_SERVER_BASE_PATH ||= '/doc-server';
+values.DOC_CAPTURE_SESSION_TTL ||= 1800; // time to live in seconds
+values.GIPS_TENANT_ROLE ||= 'RELYING_SERVICE';
+values.WDS_TLS_TRUSTSTORE_PATH ||= null;
+values.GIPS_TLS_TRUSTSTORE_PATH ||= null;
+values.PROXY_URL ||= null;
+values.NON_PROXY_HOSTS ||= 'localhost,127.0.0.1';
 
 // Global Node environment vars
 process.env.DEBUG = values.DEBUG || '*';

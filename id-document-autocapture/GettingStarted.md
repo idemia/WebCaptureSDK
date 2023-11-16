@@ -68,16 +68,16 @@ All the configuration variables from the demonstration code are explained here :
 
 
 
-| **Variable**                  | **Description**                                              | **Value**                                                    |
-| :---------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| DOCSERVER_VIDEO_URL           | This server is used by the Websdk for document live capture <br/>Default value is Europe UAT | https://ipv-api-v2-eu-service.stg.dsa.idemia.io/doc-server   |
-| WEB_SDK_LIVENESS_ID_DOC       | Api key value sent via 'apikey' header to access document sdk endpoints | ********************                                         |
-| DISABLE_CALLBACK              | Disable the callback functionality from WebDocServer. <br/>The callback is thrown by WebDocServer when the document capture is finished.<br/>Callback URL = SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH | true                                                         |
+| **Variable**                  | **Description**                                              | **Value**                                                     |
+| :---------------------------- | :----------------------------------------------------------- |:--------------------------------------------------------------|
+| DOCSERVER_VIDEO_URL           | This server is used by the Websdk for document live capture  | https://FILL_ME:443                                           |
+| WEB_SDK_LIVENESS_ID_DOC       | Api key value sent via 'apikey' header to access document sdk endpoints | ********************                                          |
+| DISABLE_CALLBACK              | Disable the callback functionality from WebDocServer. <br/>The callback is thrown by WebDocServer when the document capture is finished.<br/>Callback URL = SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH | true                                                          |
 | SERVER_PUBLIC_ADDRESS         | Used in callback URL to receive results from WebDocServer (See DISABLE_CALLBACK) | https://[ip_or_servername]:[port]. Ex: https://localhost:9943 |
-| LIVENESS_RESULT_CALLBACK_PATH | Used in callback URL to receive results from WebDocServer (See DISABLE_CALLBACK) | "/liveness-result-callback                                   |
-| TLS_API_PORT                  | Port of tls server                                           | 9943                                                         |
-| BASE_PATH                     | Base path of the server                                      | '/demo-doc'                                                  |
-| SUPPORTED_LANGUAGES           | Supported language of UX                                     | 'en,es,fr,ja'                                                |
+| LIVENESS_RESULT_CALLBACK_PATH | Used in callback URL to receive results from WebDocServer (See DISABLE_CALLBACK) | "/liveness-result-callback                                    |
+| TLS_API_PORT                  | Port of tls server                                           | 9943                                                          |
+| BASE_PATH                     | Base path of the server                                      | '/demo-doc'                                                   |
+| SUPPORTED_LANGUAGES           | Supported language of UX                                     | 'en,es,fr,ja'                                                 |
 
 Description of the files from source code :
 

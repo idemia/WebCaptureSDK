@@ -19,7 +19,7 @@ limitations under the License.
  */
 const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
 const config = require('./config');
-const agent = require('./httpUtils').getAgent(config.WDS_TLS_TRUSTSTORE_PATH, config.PROXY_URL);
+const agent = require('./httpUtils').getAgent(config.WDS_TLS_TRUSTSTORE_PATH, config.PROXY_URL, config.NON_PROXY_HOSTS);
 const logger = require('./config/demoLogConf').getLogger();
 
 module.exports = {

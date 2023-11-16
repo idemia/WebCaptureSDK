@@ -20,23 +20,29 @@ const fs = require('fs');
 
 // this file contains configuration of sample app
 module.exports = {
+    DEBUG: 'mph:*',
+    LOG_LEVEL: 'info',
+    LOG_FORMAT: 'json', // 'json' for production env | 'raw' with colors for development env
+    LOG_APPENDER: 'console', // console or file
+    LOG_FILE_PATH: path.join(path.dirname(require.main.filename), 'logs'), // path where log files will be stored
+
     
     // *** BIOSERVER CONNECTIVITY
     // Bioserver-core server api endpoint
-    BIOSERVER_CORE_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443/bioserver-app/v2',
+    BIOSERVER_CORE_URL: 'https://FILL_ME:443/bioserver-app/v2',
     // Bioserver-video server
-    BIOSERVER_VIDEO_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443',
+    BIOSERVER_VIDEO_URL: 'https://FILL_ME:443',
     // The value of the apikey to contact Biometric’s services and webSDK services
     WEB_SDK_LIVENESS_ID_DOC: 'PLEASE_FILL_WITH_YOUR_APIKEY',
 
     // *** GIPS CONNECTIVITY
     // Note : only needed if using ID&V
     // URL of GIPS component
-    GIPS_URL: 'https://ipv-api-v2-eu-service.stg.dsa.idemia.io:443/gips',
+    GIPS_URL: 'https://FILL_ME:443/gips',
     // Api key value sent via 'apikey' header to access gips services
     GIPS_RS_API_Key: 'PLEASE_FILL_WITH_YOUR_APIKEY',
     // To link sample application server with gips. Enable ID&V integration to use ID&V for initialisation and retrieve results on the liveness
-    IDPROOFING: false,
+    IDPROOFING: true,
 
     // *** CALLBACK
     // Set this key to true to disable callback functionality between demo-server backend and webBioserver. Default value is false.
@@ -82,7 +88,7 @@ module.exports = {
 /**
  * Read a secret from a file. Only the first line will be read, line breaks are not returned.
  * @param {string?} filePath the path of the file containing the secret to load
- * @return the secret read or null of no path was supplied
+ * @return {string} the secret read or null of no path was supplied
  */
 function loadSecretFromFile(filePath) {
     if (!filePath) {

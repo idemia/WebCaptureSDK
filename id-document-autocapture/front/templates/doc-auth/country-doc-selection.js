@@ -23,6 +23,7 @@ const urlParams = new URLSearchParams(window.location.search); // let you extrac
 const sessionIdParam = urlParams.get('sessionId');
 
 const countrySelectionElement = $('ul#countries');
+const countrySelectionLoaderElement = $('#step-country-selection .loader-animation-wrapper');
 
 const allCountries = Allcountries // reorder the list of countries alphabetically (taking into account accent chars)
     .sort((a, b) => {
@@ -35,8 +36,12 @@ let identityId; // store identity of the GIPS transaction (if GIPS workflow)
 
 // Start of the process, loading supported countries + document types from docserver
 // In addition predefined capture rules (store on SP server)  are also loaded in the "other country" part
+
 if (!sessionIdParam) {
+    // display loader while loading country selection list
+    countrySelectionLoaderElement.classList.remove('d-none');
     retrieveCountryDocTypes().then(function (res) {
+        countrySelectionLoaderElement.classList.add('d-none');
         const supportedCountriesDoctypes = res;
         // Map supported countries with  SP  all countries (and identify most frequently used countries)
         const acceptedCountries = res
@@ -73,10 +78,9 @@ if (!sessionIdParam) {
                                         ${firstLetterOfCurrentCountry.toUpperCase()}
                                       </li>`;
                 }
-                return countryLetterHeaderElement +
-              `<li>
-          <a href="#" data-code="${c.code}" class="${countryLetterHeaderElement ? 'no-borders' : ''}">${c.name}</a>
-        </li>`;
+                return countryLetterHeaderElement + `<li>
+                  <a href="#" data-code="${c.code}" class="${countryLetterHeaderElement ? 'no-borders' : ''}">${c.name}</a>
+                </li>`;
             });
 
         // Display country collection on html page
@@ -177,28 +181,23 @@ function displayDoctypeOrSessionError(extendedMsg, error) {
  * @param docTypesForSelectedCountry
  */
 function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCountry) {
-    if (docTypesForSelectedCountry &&
-    docTypesForSelectedCountry.length) {
-        let docTypesElements = '';
-        // create list document type html element ( content html with specific image )
-        docTypesForSelectedCountry.forEach(docType => {
-            const img = docType.startsWith('DOCUMENT') ? 'unknown' : docType.toLowerCase();
-            docTypesElements += `<div class="document-type row-center" data-doc-type="${docType}">
-                                <div class="document-img"><img src="./img/${img}_x2.png" alt="${docType.toLowerCase()}"></div>
-                                <div class="document-type-name">${snakeCaseToTitleCase(docType, true)}</div>
-                            </div>`;
-        });
-
-        // display document type list  html element
-        $('#step-doctype-selection .animation').innerHTML = docTypesElements;
-
-        // Process each document type on click event
+    if (docTypesForSelectedCountry && docTypesForSelectedCountry.length) {
+        // Display & Process each document type on click event
         //  if (country + document type)  selected , then docserver is requested to create session and retrieve capture rules
         // if (other country + rules identifier ) selected, then SP server retrieves the related rules and request docserver  for session creation with specific rules
         $$('#step-doctype-selection .animation .document-type').forEach(docTypeElmt => {
-            docTypeElmt.addEventListener('click', async () => {
+            docTypeElmt.classList.add('d-none'); // reset old visibility status
+            if (!docTypesForSelectedCountry.includes(docTypeElmt.getAttribute('data-doc-type'))) {
+                // keep it hidden if not this docType is not supported by the selected country
+                return;
+            }
+            docTypeElmt.classList.remove('d-none');
+            docTypeElmt.onclick = async () => {
                 const selectedDocType = docTypeElmt.getAttribute('data-doc-type');
                 // Ask for document capture session creation
+                // display loader while initializing the session
+                $$('.step').forEach(s => s.classList.add('d-none'));
+                $('#init-session-loader').classList.remove('d-none');
                 const docCaptureSession = await initSessionAndRetrieveDocRules(selectedCountryCode, selectedDocType)
                     .catch(function (error) {
                         const extendedMsg = 'Create document capture session failed';
@@ -231,9 +230,7 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
                     const extendedMsg = 'Create document capture session failed';
                     displayDoctypeOrSessionError(extendedMsg, 'Session not created');
                 }
-            }
-
-            );
+            };
         });
 
         $('#step-doctype-selection #selected-country').innerText = selectedCountryCode === 'XXX' ? '' : selectedCountryCode; // TODO: get country name instead of code?

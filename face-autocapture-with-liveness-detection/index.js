@@ -20,17 +20,18 @@ const startDate = Date.now();
 const express = require('express');
 const compression = require('compression');
 const config = require('./server/config');
+const logger = require('./server/logger');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const debug = require('debug')('front:app:server');
 const packer = require('./server/packer');
 const httpEndpoints = require('./server/httpEndpoints');
 const crypto = require('crypto');
 
 
 const DEFAULT_LANG = 'en'; // default language
+const OUTPUT_ROOT_PATH = 'front/dist/';
 
 packer.pack();
 
@@ -39,12 +40,12 @@ packer.pack();
     app.use(compression());
 
     // serve demos
-    debug('Available web applications:');
-    debug('Home page => /');
+    logger.info('Available web applications:');
+    logger.info('Home page => /');
 
     // Manage Server liveness mode
     const manageServerLivenessMode = (mode) => {
-        app.use(config.BASE_PATH, express.static(path.resolve(__dirname, `front/home-${mode}`)));
+        app.use(config.BASE_PATH, express.static(path.resolve(__dirname, OUTPUT_ROOT_PATH, `home-${mode}`)));
         app.use(config.BASE_PATH + '/video/tutorial.mp4', express.static(path.resolve(__dirname, 'assets/tutorial.mp4')));
         app.use(`${config.BASE_PATH}/${mode}-liveness`, (req, res, next) => {
             const locale = req.acceptsLanguages()[0].split('-')[0];
@@ -52,26 +53,26 @@ packer.pack();
             if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
                 lang = locale;
             }
-            express.static(path.resolve(__dirname, `front/${mode}-liveness/${lang}/`))(req, res, next);
+            express.static(path.resolve(__dirname, OUTPUT_ROOT_PATH, `${mode}-liveness/${lang}/`))(req, res, next);
         });
         app.use(`/:lang${config.BASE_PATH}/${mode}-liveness`, (req, res, next) => {
             let lang = DEFAULT_LANG;
             if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
                 lang = req.params.lang;
             }
-            express.static(path.resolve(__dirname, `front/${mode}-liveness/${lang}/`))(req, res, next);
+            express.static(path.resolve(__dirname, OUTPUT_ROOT_PATH, `${mode}-liveness/${lang}/`))(req, res, next);
         });
     };
 
     if (config.LIVENESS_MODE === 'LIVENESS_ACTIVE') {
         manageServerLivenessMode('active');
-        debug('Active liveness configured => /active-liveness');
+        logger.info('Active liveness configured => /active-liveness');
     } else if (config.LIVENESS_MODE === 'LIVENESS_PASSIVE_VIDEO') {
         manageServerLivenessMode('passive-video');
-        debug('Passive liveness video configured => /passive-video-liveness');
+        logger.info('Passive liveness video configured => /passive-video-liveness');
     }  else {
         manageServerLivenessMode('passive'); /// LIVENESS_PASSIVE by default
-        debug('Passive liveness configured => /passive-liveness');
+        logger.info('Passive liveness configured => /passive-liveness');
     }
 
     // Parse URL-encoded bodies (as sent by HTML forms)
@@ -92,7 +93,7 @@ packer.pack();
             passphrase: config.TLS_KEYSTORE_PASSWORD, 
             secureOptions: protocolOptionsList.reduce((previous, current) => previous | crypto.constants[current])
         };
-        debug(`Creating server with secure options: ${options.secureOptions}`);
+        logger.info(`Creating server with secure options: ${options.secureOptions}`);
 
         const server = https.createServer(options, app);
 
@@ -100,7 +101,7 @@ packer.pack();
         await new Promise(resolve => {
             server.listen(config.TLS_API_PORT, () => resolve());
         });
-        debug(`Https server started - https://localhost:${config.TLS_API_PORT}${config.BASE_PATH}`);
+        logger.info(`Https server started - https://localhost:${config.TLS_API_PORT}${config.BASE_PATH}`);
     }
     // HTTP server
     if (config.HTTP_SERVER_PORT) {
@@ -109,17 +110,17 @@ packer.pack();
         await new Promise(resolve => {
             server.listen(config.HTTP_SERVER_PORT, () => resolve());
         });
-        debug(`Http server started - http://localhost:${config.HTTP_SERVER_PORT}${config.BASE_PATH}`);
+        logger.info(`Http server started - http://localhost:${config.HTTP_SERVER_PORT}${config.BASE_PATH}`);
     }
 
-    debug(`Total starting time: ${Date.now() - startDate} ms`);
+    logger.info(`Total starting time: ${Date.now() - startDate} ms`);
     if (config.IDPROOFING) {
-        debug(`Using GIPS API on url: ${config.GIPS_URL}`);
+        logger.info(`Using GIPS API on url: ${config.GIPS_URL}`);
     }
 
     ['SIGTERM', 'SIGINT'].forEach(event => {
         process.on(event, () => {
-            debug(`<<< Caught ${event}, exiting app !`);
+            logger.error(`<<< Caught ${event}, exiting app !`);
             process.exit(0);
         });
     });
