@@ -23,7 +23,7 @@ To access these resources, please contact IDEMIA for an account. Once you have a
 - The unique URL for the Bioserver (SDK backend) and GIPS.
 - API keys for secure backend connections ('GIPS RS' API key for GIPS and 'GIPS UA' API key for Bioserver).
 
-![](.\screenshot_portal.png)
+![alt text](https://raw.githubusercontent.com/idemia/WebCaptureSDK/master/screenshot_portal.png)
 
 #### Capture SDK
 
