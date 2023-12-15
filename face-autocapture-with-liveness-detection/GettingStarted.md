@@ -29,10 +29,10 @@ As an integrator, you can follow the three steps  below (~15 minutes) to test an
 
 To facilitate integration with the Biometric Services SDK, we provide a web application in source code as an integration good practice example.
 
-This sample application is developed in Nodejs. To use it, install Nodejs:
+This sample application is developed in Nodejs. To use it, install Nodejs (at least v16) :
 
--   Linux: Download & install https://nodejs.org/dist/v8.11.1/node-v8.11.1-linux-x64.tar.gz
--   Windows: Download & install https://nodejs.org/dist/v8.11.1/
+-   *Linux:* Download & install https://nodejs.org/dist/v16.17.1/node-v16.17.1-linux-x64.tar.gz
+-   *Windows*: Download & install https://nodejs.org/dist/v16.17.1/node-v16.17.1-x64.msi
 
 In order to start the integration, you need an API key and a sandbox environment. You can obtain these by registering yourself through https://developer.idemia.com/signup/.
 
@@ -64,7 +64,7 @@ Within the dashboard `API_KEY`, the required values are:
    ```
    ```text
    Put the password of the keystore within secrets/tls_keystore_password.txt
-   ``` 
+   ```
 
 
 ### Step 3: Run and test the sample application
@@ -90,9 +90,7 @@ If you want to link Biometric Services with ID&V/GIPS, edit the file `/server/co
 
 -	set `GIPS_URL` to the url you received
 
--	set `GIPS_RS_API_Key` with the API key header to use
-
--	set `GIPS_API_KEY_SECRET` with your API key value
+-	set `GIPS_RS_API_Key` with your API key value
 
 ### Annex:
 
@@ -119,10 +117,10 @@ If you want to link Biometric Services with ID&V/GIPS, edit the file `/server/co
 | LIVENESS_RESULT_CALLBACK_PATH     | Used in the callback URL to receive liveness result from the WebBioServer | `/liveness-result-callback`   |
 | BIOSERVER_CORE_URL  | WBS core url for images coding and matching. WBS exposes a simple REST API to detect and recognize faces from still images. It also exposes rest API to save and retrieve the liveness capture result in a session. This server is used by the WebCapture SDK for the coding captured best image and to save and retrieve the liveness capture result in a session. | https://[ip_or_servername]:[port]/bioserver-app/<br/>https://localhost/bioserver-app/ |
 | BIOSERVER_VIDEO_URL  | WebCapture SDK server url    | https://[ip_or_servername]:[port]/<br/>https://localhost:9443 |
-| WEB_SDK_LIVENESS_ID_DOC       | API key value sent via `API_KEY_HEADER` | ********************   |
+| WEB_SDK_LIVENESS_ID_DOC       | Apikey value of WebBioServer | ********************   |
 | IDPROOFING | To link sample application server with ID&V | `false`  |
 | GIPS_URL  | ID&V gips API URL     | https://[ip_or_servername]:[port]/gips/rest     |
-| GIPS_RS_API_Key | ID&V user role   | RELYING_SERVICE      |
+| GIPS_RS_API_Key | Apikey value of ID&V gips | ******************** |
 | DISABLE_CALLBACK | Disable the callback functionality from WebBioServer. <br/>The callback is thrown by WebBioServer when the liveness is finished.<br/>Callback URL = SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH | true |
 | SERVER_PUBLIC_ADDRESS | Used in callback URL to receive results from WebBioServer (See DISABLE_CALLBACK) | https://[ip_or_servername]:[port]. Ex: https://localhost:9943 |
 |  |  |  |

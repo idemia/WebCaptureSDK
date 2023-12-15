@@ -17,8 +17,9 @@ By default, GIPS is enabled in this sample application (IDPROOFING = true).
 
 #### Getting Started
 
-Before launching the sample application, certain prerequisites must be fulfilled. These are accessible through the IDEMIA Experience Portal: https://experience.idemia.com/dashboard/my-identity-proofing/
-To access these resources, please contact IDEMIA for an account. Once you have access to the portal, you will need to retrieve the following information from the displayed dashboard to connect to the EU production environment:
+Before launching the sample application, certain prerequisites must be fulfilled. These are accessible through the IDEMIA Experience Portal: https://experience.idemia.com/
+To access these resources, please contact IDEMIA for an account. Once you have access to the portal, click on 'Dashboard' then 'Environment' and finally choose 'Trial (Preprod)' for your tests.
+The following information has to be retrieved from the displayed dashboard to connect to the testing environment:
 
 - The unique URL for the Bioserver (SDK backend) and GIPS.
 - API keys for secure backend connections ('GIPS RS' API key for GIPS and 'GIPS UA' API key for Bioserver).

@@ -29,10 +29,10 @@ Required services:
 
 To facilitate integration with Document capture SDK, we provide a web application in source code as an integration good practice example.
 
-This sample application is developed in Nodejs. To use it, install Nodejs :
+This sample application is developed in Nodejs. To use it, install Nodejs (at least v16) :
 
--   Linux: Download & install https://nodejs.org/dist/v8.11.1/node-v8.11.1-linux-x64.tar.gz
--   Windows: Download & install https://nodejs.org/dist/v8.11.1/
+- *Linux:* Download & install https://nodejs.org/dist/v16.17.1/node-v16.17.1-linux-x64.tar.gz
+- *Windows*: Download & install https://nodejs.org/dist/v16.17.1/node-v16.17.1-x64.msi
 
 In order to start integration, you need an API key which corresponds to a sandbox environment, you need to register yourself through https://developer.idemia.com.
 
@@ -61,6 +61,20 @@ Now you can open a browser and run https://localhost:9943/demo-doc/
 
 Since the frontend sources and the backend sources are located under this same package, everything should be protected behind an authentication tool (except for local test purpose). The defaults.js source file should not be exposed at any time to the world (it contains the apikey used to communicate with document webCapture SDK). A good practice, is to use an external tool to retrieve the apikey and any sensitive information such as KMS or VAULT.
 
+#### Use Case #1: integration without ID&V global offer
+
+The provided sample is ready to be used. No further modifications are required.
+
+#### Use Case #2: integration with the ID&V global offer to benefit of all service
+
+If you want to link Document Autocapture Services with ID&V/GIPS, edit the file `/server/config/default.js` and update the variables as follows:
+
+-	set `IDPROOFING` to `true`
+
+-	set `GIPS_URL` to the url you received
+
+-	set `GIPS_RS_API_Key` with your API key value
+
 Annex : configuration parameters
 ====================
 
@@ -72,6 +86,9 @@ All the configuration variables from the demonstration code are explained here :
 | :---------------------------- | :----------------------------------------------------------- |:--------------------------------------------------------------|
 | DOCSERVER_VIDEO_URL           | This server is used by the Websdk for document live capture  | https://FILL_ME:443                                           |
 | WEB_SDK_LIVENESS_ID_DOC       | Api key value sent via 'apikey' header to access document sdk endpoints | ********************                                          |
+| IDPROOFING | To link sample application server with ID&V | `false`  |
+| GIPS_URL  | ID&V gips API URL     | https://[ip_or_servername]:[port]/gips/rest     |
+| GIPS_RS_API_Key | Apikey value of ID&V gips | ******************** |
 | DISABLE_CALLBACK              | Disable the callback functionality from WebDocServer. <br/>The callback is thrown by WebDocServer when the document capture is finished.<br/>Callback URL = SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH | true                                                          |
 | SERVER_PUBLIC_ADDRESS         | Used in callback URL to receive results from WebDocServer (See DISABLE_CALLBACK) | https://[ip_or_servername]:[port]. Ex: https://localhost:9943 |
 | LIVENESS_RESULT_CALLBACK_PATH | Used in callback URL to receive results from WebDocServer (See DISABLE_CALLBACK) | "/liveness-result-callback                                    |
