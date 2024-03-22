@@ -96,10 +96,7 @@ function getFaceCaptureOptions() {
             if (result) {
                 stopVideoCaptureAndProcessResult(result.isLivenessSucceeded, result.message, result.bestImageId);
             }
-            if (session.client) {
-                session.videoOutput.srcObject = null;
-                session.client.disconnect();
-            }
+            await commonutils.abortCapture(session);
         },
         trackingFn: (trackingInfo) => {
             if (!challengePending) { // tracking info can be received  after challengeInstruction === 'TRACKER_CHALLENGE_PENDING'
@@ -108,7 +105,7 @@ function getFaceCaptureOptions() {
                 BioserverVideoUI.updateLivenessActiveGraphics('user-video', trackingInfo);
             }
         },
-        errorFn: (error) => {
+        errorFn: async (error) => {
             console.log('got error', error);
             challengeInProgress = false;
             if (error.code && error.code === 429) { //  enduser is blocked
@@ -129,10 +126,7 @@ function getFaceCaptureOptions() {
             } else {
                 stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
             }
-            if (session.client) {
-                session.videoOutput.srcObject = null;
-                session.client.disconnect();
-            }
+            await commonutils.abortCapture(session);
         }
     };
 }
@@ -168,10 +162,14 @@ async function init(options = {}) {
     faceCaptureOptions.bioserverVideoUrl = settings.videoUrl;
     
     session.client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
-
+    // if user stops capture and client is not yet initialized, then abort capture
+    if (session.toAbort) {
+        await commonutils.abortCapture(session);
+        return;
+    }
     if (session.client) {
         // get user camera video (front camera is default)
-        session.videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video', video: { deviceId: options.deviceId } })
+        session.videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video' })
             .catch((e) => {
                 let msg = __('Failed to get camera device stream');
                 let extendedMsg;
@@ -186,8 +184,7 @@ async function init(options = {}) {
                 stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
             });
         if (!session.videoStream) {
-            session.videoOutput.srcObject = null;
-            session.client.disconnect();
+            await commonutils.abortCapture(session);
             return;
         }
         // display the video stream
@@ -281,10 +278,7 @@ async function processStep(targetStepId, displayWithDelay) {
 
 document.querySelector('#step-liveness .tutorial').addEventListener('click', async () => {
     resetLivenessDesign();
-    if (session.client) {
-        session.videoOutput.srcObject = null;
-        session.client.disconnect();
-    }
+    await commonutils.abortCapture(session);
 });
 // gif animations are played only once, this will make them play again
 document.querySelectorAll('.reset-animations').forEach((btn) => {

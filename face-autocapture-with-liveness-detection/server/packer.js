@@ -17,13 +17,13 @@ limitations under the License.
 // This file allow you to pack your sample app according to your security level
 
 const path = require('path');
+const fs = require('fs');
 const config = require('./config');
 const logger = require('./logger');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const I18nPlugin = require('@zainulbr/i18n-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const languages = { en: null };
 const MODE = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
@@ -50,6 +50,8 @@ config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
 
 exports.pack = function pack() {
     logger.info('>> process.env.NODE_ENV = ', process.env.NODE_ENV, { mode: MODE }, { devtool: DEVTOOL });
+    // Cleanup dist dir before packing
+    fs.rmSync(path.join(__dirname, OUTPUT_ROOT_PATH), { recursive: true, force: true });
     // generate active liveness package
     if (config.LIVENESS_MODE === 'LIVENESS_ACTIVE') {
         livenessPackage('active');
@@ -98,7 +100,6 @@ function livenessPackage(liveness) {
                 ]
             },
             plugins: [
-                new CleanWebpackPlugin(),
                 new I18nPlugin(languages[language], { failOnMissing: true }),
                 new HtmlWebpackPlugin({
                     inject: false,

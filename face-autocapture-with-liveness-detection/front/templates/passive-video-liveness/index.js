@@ -21,6 +21,7 @@ limitations under the License.
 const commonutils = require('../../utils/commons');
 
 const ID_SOCKET_INIT = '#socket-init';
+const ID_STEP_ACCESS_PERMISSION = '#step-access-permission';
 const ID_STEP_LIVENESS = '#step-liveness';
 const ID_STEP_LIVENESS_OK = '#step-liveness-ok';
 const D_NONE_FADEOUT = 'd-none-fadeout';
@@ -72,7 +73,6 @@ let sessionId; // current sessionId
 let bestImageId; // best image captured from user video stream
 let cameraPermissionAlreadyAsked;
 let identityId;
-let initCalled; // used to avoid double call to init
 let bestImageInfo;
 let faceImg;
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
@@ -125,15 +125,11 @@ stopCapture.addEventListener('click', async () => {
 const D_NONE = 'd-none';
 
 async function init(options = {}) {
-    if (initCalled) {
-        return;
-    }
     // Disconnect any existing client
     if (client) {
         client.disconnect();
     }
     client = undefined;
-    initCalled = true;
     videoOutput.disablePictureInPicture = true;
 
     // request a sessionId from backend (if we are switching camera we use the same session)
@@ -144,7 +140,6 @@ async function init(options = {}) {
             identityId = session.identityId;
         } catch (err) {
             clearTimeout(timeoutCheckConnectivity);
-            initCalled = false; // force init next time
             sessionId = false;
             await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
         }
@@ -201,7 +196,6 @@ async function init(options = {}) {
         },
         errorFn: (error) => {
             clearTimeout(timeoutCheckConnectivity);
-            initCalled = false; // force init next time
             console.log('got error', error);
             challengeInProgress = false;
             if (error.code && error.code === 429) { //  enduser is blocked
@@ -227,11 +221,11 @@ async function init(options = {}) {
     client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
 }
 
-async function initStream(options = {}) {
+async function initStream() {
     initLivenessDesign();
     if (client) {
         // get user camera video (front camera is default)
-        videoStream = await BioserverVideo.getMediaStream({ videoId: VIDEO_ID, video: { deviceId: options.deviceId } })
+        videoStream = await BioserverVideo.getMediaStream({ videoId: VIDEO_ID })
             .catch((e) => {
                 let msg = __('Failed to get camera device stream');
                 let extendedMsg;
@@ -291,16 +285,13 @@ function processTargetStep(targetStepId, displayWithDelay) {
     const targetStep = document.querySelector(targetStepId);
     targetStep.classList.remove(D_NONE);
     const targetStepFooter = targetStep.querySelector('.footer');
-    if (targetStepFooter) {
+    if (targetStepFooter && displayWithDelay) {
+        // hide "next step" button for a few seconds
         targetStepFooter.classList.add(D_NONE);
-        if (displayWithDelay) {
-            // display next button after few seconds
-            setTimeout(() => targetStepFooter.classList.remove(D_NONE), displayWithDelay);
-        } else {
-            targetStepFooter.classList.remove(D_NONE);
-        }
+        setTimeout(() => targetStepFooter.classList.remove(D_NONE), displayWithDelay);
     }
 }
+
 async function processStep(targetStepId, displayWithDelay) {
     // init debug ipv
     bestImageIPV.classList.add(D_NONE);
@@ -317,39 +308,35 @@ async function processStep(targetStepId, displayWithDelay) {
     hideAllSteps();
     if (targetStepId === '#step-1') {
         scrollTo(0, 0);
-        initCalled = false; // if we come to this page, we reinitialise the initCalled to false so that next call to init is forced
     } else if (targetStepId === '#step-1-restore') {
         // We come from the tutorial or another step where we 'restore' the initial step (without forcing init call)
         scrollTo(0, 0);
         targetStepId = '#step-1';
-    } else if (targetStepId === ID_CONNECTIVITY_CHECK) { // << if client clicks on start capture or start training
+    } else if (targetStepId === ID_CONNECTIVITY_CHECK) { // << if client clicks on start capture
         if (!connectivityOK) { // bypass this waiting time if we are still here 5 seconds
             connectivityCheck.classList.remove(D_NONE);
             timeoutCheckConnectivity = setTimeout(() => {
                 processStep(targetStepId, displayWithDelay);
             }, 1000); // call this method until we got the results from the network connectivity
+        } else if (!cameraPermissionAlreadyAsked) {
+            cameraPermissionAlreadyAsked = true;
+            targetStepId = ID_STEP_ACCESS_PERMISSION;
         } else {
             targetStepId = ID_SOCKET_INIT; // connectivity check done/failed, move to the next step
         }
     }
     if (targetStepId === ID_SOCKET_INIT) { // << if client clicks on start capture or retry
-        init(); // this call will be ignored if init was previously called
-        if (!client) {
-            // waits until the client was initialized
-            socketInitDocument.classList.remove(D_NONE);
-            timeoutCheckConnectivity = setTimeout(() => {
-                processStep(targetStepId, displayWithDelay);
-            }, 1000); // call this method until we got the results from the network connectivity
-        } else {
-            targetStepId = ID_STEP_LIVENESS; // init socket done, move to the next step
-        }
+        socketInitDocument.classList.remove(D_NONE);
+        await init();
+        socketInitDocument.classList.add(D_NONE);
+        targetStepId = ID_STEP_LIVENESS; // init socket done, move to the next step
     }
     // Liveness page
     if (targetStepId === ID_STEP_LIVENESS) { // << if client clicks on start capture && socket initialisation is already done
         if (!cameraPermissionAlreadyAsked) {
             cameraPermissionAlreadyAsked = true;
             displayWithDelay = null; // no delay applied to show the button
-            targetStepId = '#step-access-permission';
+            targetStepId = ID_STEP_ACCESS_PERMISSION;
         } else {
             stepLiveness.classList.remove(D_NONE);
             await initStream();
@@ -443,8 +430,6 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
         // No-camera-access issue
     } else {
         document.querySelector('#step-liveness-failed').classList.remove(D_NONE);
-        // when spoof received, we force a new session creation on backend side on next init call
-        initCalled = false;
     }
 }
 
@@ -558,17 +543,16 @@ function displayStep(step) {
     hideAllSteps();
     typeof step === 'string' ? document.querySelector(step).classList.remove(D_NONE) : step.classList.remove(D_NONE);
 }
-/**
- * display messages to user during capture (eg: move closer, center your face ...)
- * @param trackingInfo face tracking info
- * @param challengeInProgress challenge has started?
- * @param trainingMode training mode enabled ?
- */
+
 let headAnimationOn;
 let headAnimationOff;
 let userInstructionMsgDisplayed;
 let userInstructionMsgToDisplay;
-
+/**
+ * display messages to user during capture (eg: move closer, center your face ...)
+ * @param trackingInfo face tracking info
+ * @param challengeInProgress challenge has started?
+ */
 function displayInstructionsToUser(trackingInfo, challengeInProgress) {
     if (challengeInProgress || userInstructionMsgDisplayed) {
         return;
@@ -655,12 +639,8 @@ window.onload = () => {
                 displayStep(goodNetworkCheckPage);
                 displayGoodSignal = false;
                 connectivityOK = true; // connectivity results retrieved enough (page displayed)
-                // calling init function right after network check success
-                init();
             } else {
                 connectivityOK = true; // connectivity results retrieved enough
-                // calling init function right after network check success
-                init();
             }
             if (!connectivityOK) { // clear the other waiting screen since we are going to show data from network event
                 clearTimeout(timeoutCheckConnectivity); // clear the timeout connectivity check

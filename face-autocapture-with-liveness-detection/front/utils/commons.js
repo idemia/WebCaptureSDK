@@ -737,10 +737,7 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
      **/
     document.querySelector('#stop-capture').addEventListener('click', async () => {
         resetLivenessDesign();
-        if (session.client) {
-            session.videoOutput.srcObject = null;
-            session.client.disconnect();
-        }
+        abortCapture(session);
     });
 
     /**
@@ -799,3 +796,21 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
     this.initLivenessAnimationsPart2();
     this.initLivenessAnimationsPartFull();
 };
+
+async function abortCapture(session = {}) {
+    if (session.client) {
+        console.warn('Capture aborted ...');
+        session.videoOutput.srcObject = null;
+        await session.client.disconnect().catch(_ => {});
+        // wait until the client is fully disconnected before removing it from the session
+        session.client = null;
+        session.toAbort = null;
+    } else {
+        // user stops capture and the client is not yet initialized,
+        // this flag will allow abort capture just after init is finished
+        console.warn('client not initialized, abort delayed ...');
+        session.toAbort = true;
+    }
+}
+
+exports.abortCapture = abortCapture;

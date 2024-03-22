@@ -29,18 +29,18 @@ module.exports = {
     
     // *** BIOSERVER CONNECTIVITY
     // Bioserver-core server api endpoint
-    BIOSERVER_CORE_URL: 'https://FILL_ME:443/bioserver-app/v2',
+    BIOSERVER_CORE_URL: '<URL_FROM_EXPERIENCE_PORTAL>/bioserver-app/v2',
     // Bioserver-video server
-    BIOSERVER_VIDEO_URL: 'https://FILL_ME:443',
+    BIOSERVER_VIDEO_URL: '<URL_FROM_EXPERIENCE_PORTAL>',
     // The value of the apikey to contact Biometric’s services and webSDK services
-    WEB_SDK_LIVENESS_ID_DOC: 'PLEASE_FILL_WITH_YOUR_APIKEY',
+    WEB_SDK_LIVENESS_ID_DOC: '<WEBC_SDK_APIKEY_FROM_EXPERIENCE_PORTAL>',
 
     // *** GIPS CONNECTIVITY
     // Note : only needed if using ID&V
     // URL of GIPS component
-    GIPS_URL: 'https://FILL_ME:443/gips',
+    GIPS_URL: '<URL_FROM_EXPERIENCE_PORTAL>/gips',
     // Api key value sent via 'apikey' header to access gips services
-    GIPS_RS_API_Key: 'PLEASE_FILL_WITH_YOUR_APIKEY',
+    GIPS_RS_API_Key: '<GIPS_RS_APIKEY_FROM_EXPERIENCE_PORTAL>',
     // To link sample application server with gips. Enable ID&V integration to use ID&V for initialisation and retrieve results on the liveness
     IDPROOFING: true,
 
