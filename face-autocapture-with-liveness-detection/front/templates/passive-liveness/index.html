@@ -407,7 +407,8 @@ limitations under the License.
                 <img src="./img/failure.svg" alt="failure">
                 <span class="description text-center"><%= __("Liveness failed") %></span>
                 <span class="description"><small class="text-center"></small></span>
-                <button class="btn btn-primary reset-animations" data-target="#step-liveness-light"><%= __("try again") %></button>
+                <button class="btn btn-primary reset-animations refresh d-none" onclick="window.location.reload(); return false;"><%= __("Refresh the page") %></button>
+                <button class="btn btn-primary reset-animations restart-demo" data-target="#step-1"><%= __("restart demo") %></button>
             </div>
         </div>
 

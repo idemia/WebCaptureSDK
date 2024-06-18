@@ -169,7 +169,7 @@ limitations under the License.
                             <div class="col">
                                 <div class="watch-tutorial-link">
                                     <img alt="Play tutorial" src="./img/play-tutorial.svg">
-                                    <a class="watch-tutorial-text" data-target="#tutorial-anim"><%= __("Watch tutorial") %></a>
+                                    <a class="watch-tutorial-text" data-target="#tutorial-anim" data-delay="5000"><%= __("Watch tutorial") %></a>
                                 </div>
                             </div>
                         </div>
@@ -258,9 +258,7 @@ limitations under the License.
                     <div class="footer">
                         <div class="row">
                             <div class="col">
-                                <button class="btn btn-primary btn-block reset-animations" data-target="#step-1">
-                                    <%= __("Try again") %>
-                                </button>
+                                <button class="btn btn-primary btn-block reset-animations refresh" onclick="window.location.reload(); return false;"><%= __("Refresh the page") %></button>
                             </div>
                         </div>
                     </div>

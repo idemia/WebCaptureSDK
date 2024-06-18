@@ -92,9 +92,9 @@ function getFaceCaptureOptions() {
             console.log('Liveness Challenge done > requesting result ...');
             session.bestImageInfo = msgBody && msgBody.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const result = await commonutils.getLivenessChallengeResult(settings.basePath, settings.enablePolling, session.sessionId)
-                .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
+                .catch(async () => await stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
             if (result) {
-                stopVideoCaptureAndProcessResult(result.isLivenessSucceeded, result.message, result.bestImageId);
+                await stopVideoCaptureAndProcessResult(result.isLivenessSucceeded, result.message, result.bestImageId);
             }
             await commonutils.abortCapture(session);
         },
@@ -124,7 +124,7 @@ function getFaceCaptureOptions() {
                 document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
                 document.querySelector('#step-server-overloaded').classList.remove(settings.D_NONE);
             } else {
-                stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
+                await stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
             }
             await commonutils.abortCapture(session);
         }
@@ -170,18 +170,14 @@ async function init(options = {}) {
     if (session.client) {
         // get user camera video (front camera is default)
         session.videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video' })
-            .catch((e) => {
+            .catch(async (e) => {
                 let msg = __('Failed to get camera device stream');
                 let extendedMsg;
                 if (e.name && e.name.indexOf('NotAllowed') > -1) {
                     msg = __('You denied camera permissions, either by accident or on purpose.');
                     extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
-
-                    // we hide the restart button so the user is not in a error loop. User should refresh his browser
-                    const restartButton = document.querySelector('#step-liveness-ko button');
-                    restartButton.classList.add(settings.D_NONE);
                 }
-                stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
+                await stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
             });
         if (!session.videoStream) {
             await commonutils.abortCapture(session);
@@ -210,9 +206,9 @@ document.querySelectorAll('*[data-target]')
     .forEach((btn) => btn.addEventListener('click', async () => {
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
-            .catch(() => {
+            .catch(async () => {
                 if (!tooManyAttempts && !serverOverloaded) {
-                    stopVideoCaptureAndProcessResult(false);
+                    await stopVideoCaptureAndProcessResult(false);
                 }
             });
     }));

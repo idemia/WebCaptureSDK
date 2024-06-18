@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/* global VIDEO_URL, VIDEO_BASE_PATH, BioserverNetworkCheck */
+/* global VIDEO_URL, VIDEO_BASE_PATH, BioserverNetworkCheck, __ */
 /* eslint-disable no-console */
 const lottie = require('lottie-web/build/player/lottie_light.js');
 
@@ -615,17 +615,15 @@ function displayMsg(elementToDisplay, userInstructionMsgDisplayed, livenessActiv
         }, 2000);
     }
 }
-
+const headStartPositionOutline = document.querySelector('#center-head-animation');
+const moveCloserMsg = document.querySelector('#move-closer-animation');
+const moveFurtherMsg = document.querySelector('#move-further-animation');
+const tooBrightMsg = document.querySelector('#darkness');
+const tooDarkMsg = document.querySelector('#brightness');
 exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed, livenessActive = false) {
-    const headStartPositionOutline = document.querySelector('#center-head-animation');
-    const moveCloserMsg = document.querySelector('#move-closer-animation');
-    const moveFurtherMsg = document.querySelector('#move-further-animation');
-    const tooBrightMsg = document.querySelector('#darkness');
-    const tooDarkMsg = document.querySelector('#brightness');
-
     // do not show brightness information for active liveness
-    if (livenessActive && (positionInfo === 'TRACKER_POSITION_INFO_MOVE_DARKER_AREA' ||
-      positionInfo === 'TRACKER_POSITION_INFO_MOVE_BRIGHTER_AREA')) {
+    if (livenessActive &&
+        ['TRACKER_POSITION_INFO_MOVE_DARKER_AREA', 'TRACKER_POSITION_INFO_MOVE_BRIGHTER_AREA'].includes(positionInfo)) {
         displayMsg(headStartPositionOutline, userInstructionMsgDisplayed, livenessActive);
     } else {
         switch (positionInfo) {
@@ -688,7 +686,7 @@ exports.stopVideoCaptureAndProcessResult = function (session, settings, resetLiv
         const nextButton = isMatchingEnabled ? 'next-step' : 'reset-step';
 
         document.querySelectorAll(`#step-liveness-ok button.${nextButton}`).forEach((step) => step.classList.remove('d-none'));
-    } else if (msg && (msg.indexOf('Timeout') > -1 || msg.indexOf('failed') > -1)) {
+    } else if (msg?.includes('Timeout') || msg?.includes('Liveness failed')) { // msg from /liveness-challenge-result endpoint
         // We handle failed and timeout similarly, but one may use the id #step-liveness-failed if needed
         document.querySelector('#step-liveness-timeout').classList.remove('d-none');
         document.querySelector('#step-liveness-timeout .footer').classList.add('d-none');
@@ -703,6 +701,19 @@ exports.stopVideoCaptureAndProcessResult = function (session, settings, resetLiv
         }
         const small = document.querySelector('#step-liveness-ko small');
         small.textContent = (extendedMsg && extendedMsg !== 'blur') ? extendedMsg : '';
+
+        const refreshButton = document.querySelector('#step-liveness-ko .refresh');
+        const restartButton = document.querySelector('#step-liveness-ko .restart-demo');
+
+        // Special case for camera permission error
+        if (msg === __('You denied camera permissions, either by accident or on purpose.')) {
+            // Display refresh button instead of restart
+            refreshButton?.classList.remove('d-none');
+            restartButton.classList.add('d-none');
+        } else {
+            refreshButton?.classList.add('d-none');
+            restartButton?.classList.remove('d-none');
+        }
     }
 };
 
@@ -799,7 +810,7 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
 
 async function abortCapture(session = {}) {
     if (session.client) {
-        console.warn('Capture aborted ...');
+        console.info('Capture aborted');
         session.videoOutput.srcObject = null;
         await session.client.disconnect().catch(_ => {});
         // wait until the client is fully disconnected before removing it from the session
@@ -808,7 +819,7 @@ async function abortCapture(session = {}) {
     } else {
         // user stops capture and the client is not yet initialized,
         // this flag will allow abort capture just after init is finished
-        console.warn('client not initialized, abort delayed ...');
+        console.warn('Client not initialized, abort delayed');
         session.toAbort = true;
     }
 }

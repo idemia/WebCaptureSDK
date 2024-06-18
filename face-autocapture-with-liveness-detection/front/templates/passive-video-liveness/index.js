@@ -16,7 +16,7 @@ limitations under the License.
 
 // this file is the main program that uses video server api for passive liveness
 
-/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, BioserverVideoUI __ */
+/* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, BioserverVideoUI, __ */
 /* eslint-disable no-console */
 const commonutils = require('../../utils/commons');
 
@@ -107,8 +107,8 @@ commonutils.getCapabilities(basePath, healthPath).then(
             monitoring.forEach((element) => { element.innerHTML = `${response.version}`; });
         }
     }
-).catch(() => {
-    stopVideoCaptureAndProcessResult(false, 'Service unavailable');
+).catch(async () => {
+    await stopVideoCaptureAndProcessResult(false, 'Service unavailable');
 });
 
 /**
@@ -123,6 +123,7 @@ stopCapture.addEventListener('click', async () => {
 });
 
 const D_NONE = 'd-none';
+const D_NONE_VISIBLE = 'invisible';
 
 async function init(options = {}) {
     // Disconnect any existing client
@@ -165,8 +166,7 @@ async function init(options = {}) {
                 // When 'TRACKER_CHALLENGE_PENDING' message under showChallengeInstruction callback is received, a loader should be displayed to
                 // the end user so he understands that the capture is yet finished but best image is still being computing
                 // and that he should wait for his results. If you don't implement this way, a black screen should be visible !
-                videoInstructionMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
-                videoLoadingMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
+                hideCaptureInstructions();
                 loadingChallenge.classList.remove(D_NONE_FADEOUT);
                 stopCapture.classList.add(D_NONE_FADEOUT); // remove
             } else { // challengeInstruction == TRACKER_CHALLENGE_DONT_MOVE
@@ -180,21 +180,21 @@ async function init(options = {}) {
             loadingResults.classList.remove(D_NONE);
             bestImageInfo = result && result.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const livenessResult = await commonutils.getLivenessChallengeResult(basePath, enablePolling, sessionId)
-                .catch(() => stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
+                .catch(async () => await stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
             console.log('Liveness result: ' + livenessResult.message, livenessResult);
-            // result.diagnostic not currently set as last param of stopVideoCaptureAndProcessResult(), as we need to know the impact of displaying it to the user
-            if (livenessResult) {
-                stopVideoCaptureAndProcessResult(livenessResult.isLivenessSucceeded, livenessResult.message, livenessResult.bestImageId);
-            }
             if (client) {
                 videoOutput.srcObject = null;
                 client.disconnect();
+            }
+            // result.diagnostic not currently set as last param of stopVideoCaptureAndProcessResult(), as we need to know the impact of displaying it to the user
+            if (livenessResult) {
+                await stopVideoCaptureAndProcessResult(livenessResult.isLivenessSucceeded, livenessResult.message, livenessResult.bestImageId);
             }
         },
         trackingFn: (trackingInfo) => {
             displayInstructionsToUser(trackingInfo, challengeInProgress);
         },
-        errorFn: (error) => {
+        errorFn: async (error) => {
             clearTimeout(timeoutCheckConnectivity);
             console.log('got error', error);
             challengeInProgress = false;
@@ -207,7 +207,7 @@ async function init(options = {}) {
                 resetLivenessDesign();
                 displayStep('#step-server-overloaded');
             } else {
-                stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
+                await stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
             }
             if (client) {
                 videoOutput.srcObject = null;
@@ -226,18 +226,14 @@ async function initStream() {
     if (client) {
         // get user camera video (front camera is default)
         videoStream = await BioserverVideo.getMediaStream({ videoId: VIDEO_ID })
-            .catch((e) => {
+            .catch(async (e) => {
                 let msg = __('Failed to get camera device stream');
                 let extendedMsg;
                 if (e.name && e.name.indexOf('NotAllowed') > -1) {
                     msg = __('You denied camera permissions, either by accident or on purpose.');
                     extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
-
-                    // we hide the restart button so the user is not in a error loop. User should refresh his browser
-                    const restartButton = document.querySelector('#step-No-camera-access button');
-                    restartButton.classList.add(D_NONE);
                 }
-                stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
+                await stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
             });
         if (!videoStream) {
             videoOutput.srcObject = null;
@@ -278,7 +274,7 @@ document.querySelectorAll('*[data-target]')
     .forEach((btn) => btn.addEventListener('click', async () => {
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
-            .catch(() => stopVideoCaptureAndProcessResult(false));
+            .catch(async () => await stopVideoCaptureAndProcessResult(false));
     }));
 
 function processTargetStep(targetStepId, displayWithDelay) {
@@ -286,9 +282,10 @@ function processTargetStep(targetStepId, displayWithDelay) {
     targetStep.classList.remove(D_NONE);
     const targetStepFooter = targetStep.querySelector('.footer');
     if (targetStepFooter && displayWithDelay) {
-        // hide "next step" button for a few seconds
-        targetStepFooter.classList.add(D_NONE);
-        setTimeout(() => targetStepFooter.classList.remove(D_NONE), displayWithDelay);
+        // make "next step" button invisible for a few seconds
+        // "invisible" to avoid css jump when it's displayed
+        targetStepFooter.classList.add(D_NONE_VISIBLE);
+        setTimeout(() => targetStepFooter.classList.remove(D_NONE_VISIBLE), displayWithDelay);
     }
 }
 
@@ -320,6 +317,7 @@ async function processStep(targetStepId, displayWithDelay) {
             }, 1000); // call this method until we got the results from the network connectivity
         } else if (!cameraPermissionAlreadyAsked) {
             cameraPermissionAlreadyAsked = true;
+            displayWithDelay = null; // no delay applied to show the button
             targetStepId = ID_STEP_ACCESS_PERMISSION;
         } else {
             targetStepId = ID_SOCKET_INIT; // connectivity check done/failed, move to the next step
@@ -335,7 +333,6 @@ async function processStep(targetStepId, displayWithDelay) {
     if (targetStepId === ID_STEP_LIVENESS) { // << if client clicks on start capture && socket initialisation is already done
         if (!cameraPermissionAlreadyAsked) {
             cameraPermissionAlreadyAsked = true;
-            displayWithDelay = null; // no delay applied to show the button
             targetStepId = ID_STEP_ACCESS_PERMISSION;
         } else {
             stepLiveness.classList.remove(D_NONE);
@@ -392,8 +389,8 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
     // we reset the session when we finished the liveness check real session
     resetLivenessDesign();
     hideAllSteps();
-    // Liveness is successful
     if (success) {
+        // Liveness is successful
         if (!idProofingWorkflow) {
             // display loader while loading best image
             loadingResults.classList.remove(D_NONE);
@@ -413,22 +410,20 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', _) {
         const nextButton = isMatchingEnabled ? 'next-step' : 'reset-step';
 
         document.querySelectorAll(`#step-liveness-ok button.${nextButton}`).forEach((step) => step.classList.remove(D_NONE));
-
+    } else if (msg?.includes('Timeout')) { // msg from /liveness-challenge-result endpoint
         // Liveness goes until timeout, maybe face is not detected
-    } else if (msg && (msg.indexOf('Timeout') > -1)) {
         document.querySelector('#step-liveness-timeout').classList.remove(D_NONE);
         setTimeout(() => {
             document.querySelector('#step-liveness-timeout .footer').classList.remove(D_NONE);
         }, 2000);
-
+    } else if (msg?.includes('Liveness failed')) { // msg from /liveness-challenge-result endpoint
         // Liveness fails
-    } else if (msg && (msg.indexOf('Liveness failed') > -1)) {
         document.querySelector('#step-liveness-ko').classList.remove(D_NONE);
-        // Technical issue
-    } else if (msg && (msg.indexOf('You denied camera permissions') > -1)) {
-        document.querySelector('#step-No-camera-access').classList.remove(D_NONE);
+    } else if (msg === __('You denied camera permissions, either by accident or on purpose.')) {
         // No-camera-access issue
+        document.querySelector('#step-No-camera-access').classList.remove(D_NONE);
     } else {
+        // All other fatal errors
         document.querySelector('#step-liveness-failed').classList.remove(D_NONE);
     }
 }
@@ -513,12 +508,13 @@ function countTimeLeft(timeLeft) {
 function initLivenessDesign() {
     document.querySelector('header').classList.add(D_NONE);
     document.querySelector('main').classList.add('darker-bg');
-    videoInstructionMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
-    videoLoadingMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
+    hideCaptureInstructions();
     loadingInitialized.classList.remove(D_NONE_FADEOUT); // display loading until initialization is done
     BioserverVideoUI.stopPassiveVideoAnimation();
 }
 
+let headAnimationOn;
+let headAnimationOff;
 /**
  * reset video capture elements at the end of the process
  */
@@ -544,35 +540,21 @@ function displayStep(step) {
     typeof step === 'string' ? document.querySelector(step).classList.remove(D_NONE) : step.classList.remove(D_NONE);
 }
 
-let headAnimationOn;
-let headAnimationOff;
-let userInstructionMsgDisplayed;
-let userInstructionMsgToDisplay;
 /**
  * display messages to user during capture (eg: move closer, center your face ...)
  * @param trackingInfo face tracking info
  * @param challengeInProgress challenge has started?
  */
 function displayInstructionsToUser(trackingInfo, challengeInProgress) {
-    if (challengeInProgress || userInstructionMsgDisplayed) {
+    if (challengeInProgress) {
         return;
     }
 
     // Tracking : Keep your phone vertical
     if (trackingInfo.phoneNotVertical) { // << user phone not up to face
-        videoInstructionMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
-        videoLoadingMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
-        phoneNotVerticalMsg.classList.remove(D_NONE_FADEOUT);
-        if (userInstructionMsgToDisplay) {
-            userInstructionMsgToDisplay = window.clearTimeout(userInstructionMsgToDisplay);
-        }
-        userInstructionMsgToDisplay = window.setTimeout(() => {
-            userInstructionMsgToDisplay = false;
-        }, 3000);
-        // Tracking : User position
+        displayMsg({ elementToDisplay: phoneNotVerticalMsg, forceDisplay: true, ttl: 3000 });
     } else {
-        videoInstructionMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
-        videoLoadingMsgOverlays.forEach((overlay) => overlay.classList.add(D_NONE_FADEOUT));
+        // Tracking : User position
         handlePositionInfo(trackingInfo);
     }
 }
@@ -676,10 +658,36 @@ window.onload = () => {
 };
 
 function displayMsgAndCircle(elementToDisplay, trackingInfo) {
-    elementToDisplay.classList.remove(D_NONE_FADEOUT); // add
+    displayMsg({ elementToDisplay });
     BioserverVideoUI.displayPassiveVideoAnimation(trackingInfo);
 }
-
+let msgCurrentlyDisplayed = false;
+let msgCurrentlyDisplayedTimer;
+/**
+ * display a message during ttl and ignore any incoming message during this duration
+ * @param {Object} displayOption
+ * @param {Element} displayOption.elementToDisplay html element to be displayed during 2s
+ * @param {boolean?} displayOption.forceDisplay allow to force display of the provided element even if a message is being displayed
+ * @param {number?} displayOption.ttl=2000 duration of message display
+ */
+function displayMsg({ elementToDisplay, forceDisplay, ttl = 2000 }) {
+    if (msgCurrentlyDisplayed && !forceDisplay) {
+        return; // discard other messages when a message is already being displayed
+    }
+    window.clearTimeout(msgCurrentlyDisplayedTimer);
+    hideCaptureInstructions();
+    // for phoneNotVertical, we don't force the display of the message for 3 sec
+    msgCurrentlyDisplayed = elementToDisplay !== phoneNotVerticalMsg;
+    elementToDisplay.classList.remove(D_NONE_FADEOUT);
+    msgCurrentlyDisplayedTimer = setTimeout(() => {
+        msgCurrentlyDisplayed = false;
+        elementToDisplay.classList.add(D_NONE_FADEOUT);
+    }, ttl);
+}
+function hideCaptureInstructions() {
+    videoInstructionMsgOverlays.forEach((overlay) => !overlay.classList.contains(D_NONE_FADEOUT) && overlay.classList.add(D_NONE_FADEOUT));
+    videoLoadingMsgOverlays.forEach((overlay) => !overlay.classList.contains(D_NONE_FADEOUT) && overlay.classList.add(D_NONE_FADEOUT));
+}
 /**
  PositionInfo are :
  TRACKER_POSITION_INFO_GOOD

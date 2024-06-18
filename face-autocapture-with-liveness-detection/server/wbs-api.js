@@ -37,7 +37,8 @@ async function getSession() {
     const bodyContent = {
         livenessMode: config.LIVENESS_MODE,
         numberOfChallenge: config.LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE,
-        correlationId: 'wbs-demo-id'
+        correlationId: 'wbs-demo-correlation-id',
+        evidenceId: 'wbs-demo-evidence-id'
     };
     if (config.LIVENESS_SECURITY_LEVEL) {
         bodyContent.securityLevel = config.LIVENESS_SECURITY_LEVEL;
