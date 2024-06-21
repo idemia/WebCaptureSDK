@@ -24,7 +24,6 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const I18nPlugin = require('@zainulbr/i18n-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const languages = { en: null };
 
 config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
@@ -70,7 +69,6 @@ exports.pack = function pack() {
                 hashFunction: 'sha256'
             },
             plugins: [
-                new CleanWebpackPlugin(),
                 new I18nPlugin(languages[language], { failOnMissing: true }),
                 new HtmlWebpackPlugin({
                     inject: false,

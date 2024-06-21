@@ -60,7 +60,9 @@ async function getDocSession(sessionId) {
 async function initDocSession(countryCode, docType, rules) {
     const contentBody = {
         ttlSeconds: config.DOC_CAPTURE_SESSION_TTL,
-        countryCode: countryCode
+        countryCode: countryCode,
+        correlationId: 'wds-demo-correlation-id',
+        evidenceId: 'wds-demo-evidence-id'
     };
 
     if (countryCode) { // TODO validate countryCode
@@ -81,7 +83,7 @@ async function initDocSession(countryCode, docType, rules) {
         contentBody.callbackURL = config.SERVER_PUBLIC_ADDRESS + config.BASE_PATH + config.DOC_CAPTURE_CALLBACK_URL;
     }
     const url = config.DOCSERVER_VIDEO_URL + config.DOC_SERVER_BASE_PATH + '/v1/document-sessions';
-    logger.debug(`initDocSession: POST ${url}, Parameters: ${JSON.stringify(contentBody, null, 2)}`);
+    logger.debug(`initDocSession: POST ${url}`, contentBody);
 
     const res = await fetch(url, {
         method: 'POST',

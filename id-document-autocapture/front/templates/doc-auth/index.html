@@ -681,6 +681,7 @@ limitations under the License.
                 <img src="./img/failure.svg" alt="failure">
                 <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
                 <span class="description"><small class="text-center"></small></span>
+                <button class="btn btn-primary reset-animations refresh d-none" onclick="window.location.reload(); return false;"><%= __("Refresh the page") %></button>
                 <button class="btn btn-primary reset-animations restart-demo" data-target="#step-country-selection"><%= __("Restart Demo") %></button>
                 <button id="retry" class="btn btn-primary reset-animations"
                         data-doc-side="FRONT"  data-target="#step-doc-auth" ><%= __("Retry again") %></button>

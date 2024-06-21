@@ -120,5 +120,6 @@
   "This might take a few moments": "Esto podría tomar un momento",
   "Server is at capacity" : "El servidor está lleno",
   "The server is currently unable to handle your request. Please try again in a few moments." : "El servidor actualmente no puede manejar su solicitud. Vuelva a intentarlo en unos momentos.",
-  "Try again":"Inténtelo de nuevo"
+  "Try again":"Inténtelo de nuevo",
+  "Refresh the page": "Actualizar la página"
 }

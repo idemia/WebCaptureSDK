@@ -541,6 +541,22 @@ function processCaptureResultForSide(result, side, msg, extendedMsg) {
         }
         const small = $('#step-doc-auth-ko small');
         small.textContent = extendedMsg || '';
+
+        const btnRefresh = $('#step-doc-auth-ko .refresh');
+        const btnRestart = $('#step-doc-auth-ko .restart-demo');
+        const btnRetry = $('#retry');
+
+        // Special case for camera permission error
+        if (msg === __('You denied camera permissions, either by accident or on purpose.')) {
+            // Display refresh button instead of other buttons
+            btnRefresh && btnRefresh.classList.remove('d-none');
+            btnRestart && btnRestart.classList.add('d-none');
+            btnRetry && btnRetry.classList.add('d-none');
+        } else {
+            btnRefresh && btnRefresh.classList.add('d-none');
+            btnRestart && btnRestart.classList.remove('d-none');
+            btnRetry && btnRetry.classList.remove('d-none');
+        }
     }
     return stepId;
 }

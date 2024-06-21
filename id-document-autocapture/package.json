@@ -16,7 +16,6 @@
   "dependencies": {
     "@zainulbr/i18n-webpack-plugin": "^2.0.3",
     "asn1-ber": "^1.1.1",
-    "clean-webpack-plugin": "^4.0.0",
     "compression": "^1.7.4",
     "copy-webpack-plugin": "^9.0.1",
     "express": "^4.18.2",
@@ -31,7 +30,7 @@
     "sanitize-filename": "^1.6.3",
     "split-ca": "^1.0.1",
     "webpack": "^5.76.3",
-    "winston": "3.3.3"
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.15.8",

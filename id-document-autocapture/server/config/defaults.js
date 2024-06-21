@@ -30,8 +30,8 @@ module.exports = {
     LOG_FILE_PATH: path.join(path.dirname(require.main.filename), 'logs'), // path where log files will be stored
 
     // ******************* APIKEY/URL for DOCSERVER/GIPS *******************
-    DOCSERVER_VIDEO_URL: 'https://FILL_ME:443',
-    WEB_SDK_LIVENESS_ID_DOC: 'PLEASE_FILL_WITH_YOUR_APIKEY',
+    DOCSERVER_VIDEO_URL: '<URL_FROM_EXPERIENCE_PORTAL>',
+    WEB_SDK_LIVENESS_ID_DOC: '<WEB_SDK_APIKEY_FROM_EXPERIENCE_PORTAL>',
 
     // callbackURL = SERVER_PUBLIC_ADDRESS + BASE_PATH + DOC_CAPTURE_CALLBACK_URL
     DISABLE_CALLBACK: true, // set this key to true to disable callback functionality
@@ -39,8 +39,8 @@ module.exports = {
     DOC_CAPTURE_CALLBACK_URL: '/doccapture-result-callback',
 
     // only needed if using ID&V
-    GIPS_URL: 'https://FILL_ME:443/gips',
-    GIPS_RS_API_Key: 'PLEASE_FILL_WITH_YOUR_APIKEY',
+    GIPS_URL: '<URL_FROM_EXPERIENCE_PORTAL>/gips',
+    GIPS_RS_API_Key: '<GIPS_RS_APIKEY_FROM_EXPERIENCE_PORTAL>',
     IDPROOFING: true, // enable ID&V integration to use ID&V for initialisation and retrieve results during the doc capture
     // *******************************************************************
 

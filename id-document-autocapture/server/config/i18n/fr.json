@@ -119,5 +119,6 @@
   "This might take a few moments": "Cela peut prendre quelques instants",
   "Server is at capacity" : "Le serveur est à pleine capacité",
   "The server is currently unable to handle your request. Please try again in a few moments." : "Le serveur est actuellement incapable de traiter votre demande. Merci de réessayer dans quelques instants.",
-  "Try again":"Réessayer"
+  "Try again":"Réessayer",
+  "Refresh the page": "Actualiser la page"
 }

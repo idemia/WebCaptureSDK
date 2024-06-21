@@ -52,11 +52,12 @@ module.exports.initHttpEndpoints = (app) => {
                 docCaptureSession = await webDocApi.initDocSession(session.countryCode, session.docType, session.rules);
                 response = { sessionId: docCaptureSession.id, rules: docCaptureSession.docSideRules, format: docCaptureSession.docFormat };
             }
-
-            documentCaptureResults[docCaptureSession.id] = docCaptureSession;
-            logger.info('Document session created:', { logContext: { sessionId: docCaptureSession.id }, docCaptureSession });
+            const sessionId = docCaptureSession.id;
+            logger.updateContext({ sessionId });
+            documentCaptureResults[sessionId] = docCaptureSession;
+            logger.info('Document session created:', docCaptureSession);
             setTimeout(() => {
-                delete documentCaptureResults[docCaptureSession.id];
+                delete documentCaptureResults[sessionId];
             }, parseInt(config.DOC_CAPTURE_SESSION_TTL) * 1000);
 
             res.json(response);
@@ -71,14 +72,16 @@ module.exports.initHttpEndpoints = (app) => {
      */
     app.get(config.BASE_PATH + '/document-sessions/:sessionId', async (req, res) => {
         const sessionId = req.params.sessionId;
-        logger.info('Retrieve Document session:', { sessionId });
+        logger.updateContext({ sessionId });
+        logger.info('Retrieve Document session');
         if (!sessionId) {
             res.status(400).json({ error: 'missing sessionId in request' });
+            return;
         }
         try {
             const docCaptureSession = await webDocApi.getDocSession(sessionId);
             documentCaptureResults[docCaptureSession.id] = docCaptureSession;
-            logger.info('Document session retrieved:', { logContext: { sessionId }, docCaptureSession });
+            logger.info('Document session retrieved:', docCaptureSession);
             setTimeout(() => {
                 delete documentCaptureResults[docCaptureSession.id];
             }, parseInt(config.DOC_CAPTURE_SESSION_TTL) * 1000);
@@ -90,7 +93,7 @@ module.exports.initHttpEndpoints = (app) => {
                 countryCode: docCaptureSession.countryCode
             });
         } catch (err) {
-            logger.error(`Retrieve Document session have failed: ${err.stack}`, { logContext: { sessionId } });
+            logger.error(`Retrieve Document session have failed: ${err.stack}`);
             res.status(err.status ? err.status : 500).send();
         }
     });
@@ -138,6 +141,7 @@ module.exports.initHttpEndpoints = (app) => {
     app.get(config.BASE_PATH + '/doc-capture-result/:sessionId/:docType/:docSide', async (req, res) => {
         let finalResult = {};
         const sessionId = req.params.sessionId;
+        logger.updateContext({ sessionId });
         const docSide = req.params.docSide;
         const polling = req.query.polling && req.query.polling === 'true';
         try {
@@ -146,7 +150,7 @@ module.exports.initHttpEndpoints = (app) => {
             } else if (config.IDPROOFING) {
                 const gipsStatus = await gipsApi.getStatus(documentCaptureResults[sessionId].identity);
                 const status = gipsStatus.idDocuments[gipsStatus.idDocuments.length - 1].evidenceStatus.status;
-                logger.info(`GIPS Transaction is on ${status}`, { logContext: { sessionId } });
+                logger.info(`GIPS Transaction is on ${status}`);
                 // GIPS is still on PROCESSING
                 if (status === 'PROCESSING') {
                     res.status(404).send({ error: 'Result is not available' });
@@ -155,14 +159,14 @@ module.exports.initHttpEndpoints = (app) => {
                     const docCaptureSession = await gipsApi.getDocCaptureResult(gipsStatus, documentCaptureResults[sessionId].identity);
                     documentCaptureResults[sessionId] = docCaptureSession;
                     // finalResult = getDataToDisplay(docCaptureSession, docSide);
-                    logger.info(`Document capture result for side=${req.params.docSide}:`, { logContext: { sessionId }, result: removePIIDatat(docCaptureSession) });
+                    logger.info(`Document capture result for side=${req.params.docSide}:`, removePiiData(docCaptureSession));
                     res.json(docCaptureSession);
                 }
             } else if (!config.DISABLE_CALLBACK && !documentCaptureResults[sessionId].callback) {
-                logger.info('Callback is not yet received for session', { logContext: { sessionId } });
+                logger.info('Callback is not yet received for session');
                 res.status(404).send({ error: 'Result is not available' });
             } else {
-                logger.info('Retrieve document capture result (polling):', { logContext: { sessionId }, polling: polling });
+                logger.info('Retrieve document capture result (polling):', polling);
                 if (!sessionId) {
                     const error = { error: 'Missing mandatory param sessionId' };
                     logger.error('Document capture retrieval result has failed', { error });
@@ -171,12 +175,12 @@ module.exports.initHttpEndpoints = (app) => {
                     const docCaptureSession = await webDocApi.getDocCaptureResult(sessionId, documentCaptureResults[sessionId].captureId);
                     documentCaptureResults[sessionId] = docCaptureSession;
                     finalResult = getDataToDisplay(docCaptureSession, docSide);
-                    logger.info(`Document capture result for side=${req.params.docSide}:`, { logContext: { sessionId }, result: removePIIDatat(finalResult) });
+                    logger.info(`Document capture result for side=${req.params.docSide}:`, removePiiData(finalResult));
                     res.json(finalResult);
                 }
             }
         } catch (err) {
-            logger.error(`Document capture error for side ${req.params.docSide}: ${err.stack}`, { logContext: { sessionId } });
+            logger.error(`Document capture error for side ${req.params.docSide}: ${err.stack}`);
             res.status(err.status ? err.status : 500).send();
         }
     });
@@ -209,17 +213,18 @@ module.exports.initHttpEndpoints = (app) => {
     //
     app.post(config.BASE_PATH + config.DOC_CAPTURE_CALLBACK_URL, async (req, res) => {
         const { sessionId, captureId, documentId } = req.body || {};
-        logger.info('Callback reception: ' + config.DOC_CAPTURE_CALLBACK_URL, { logContext: { sessionId }, body: req.body });
+        logger.updateContext({ sessionId });
+        logger.info('Callback reception: ' + config.DOC_CAPTURE_CALLBACK_URL, req.body);
         if (!sessionId || (!captureId && !documentId)) {
             const err = { error: 'Missing mandatory param' };
-            logger.error('A failure occurred during callback reception: ', { logContext: { sessionId }, err });
+            logger.error('A failure occurred during callback reception:', err);
             res.status(400).send(err);
         } else if (captureId) {
-            logger.info('Document capture result is available', { logContext: { sessionId } });
+            logger.info('Document capture result is available');
             documentCaptureResults[sessionId] = { callback: true, captureId: captureId };
             res.status(204).send();
         } else if (documentId) {
-            logger.info('Document result is available', { logContext: { sessionId } });
+            logger.info('Document result is available');
             // TODO handle document received result
             res.status(204).send();
         }
@@ -275,7 +280,7 @@ function getDataToDisplay(documentResult, documentSide) {
     return finalResult;
 }
 
-function removePIIDatat(document) {
+function removePiiData(document) {
     const documentToLog = Object.assign({}, document);
     if (document.docImage) {
         delete documentToLog.docImage;
