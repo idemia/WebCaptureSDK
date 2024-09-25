@@ -45,20 +45,16 @@ const loadingResults = $('#loading-doc-results');
 const loadingInitialization = $('#loading-initialization');
 const videoScanOverlays = $$('#step-doc-auth .video-overlay');
 const stopCaptureButton = $('#stop-capture-button');
-const retryOnErrorButton = $('#step-doc-auth-ko #retry');
+
+const manualCaptureInput = $('#upload-document-photo');
 
 const gipsImageBlock = $('#gips-image-block');
 const gipsImageButton = $('#gips-image-button');
-const continueButtonBack = $('#back-button-continue');
-const continueButtonFront = $('#front-button-continue');
-const continueButtonPassport = $('#button-continue-passport');
-const continueButtonUnknown = $('#unknown-button-continue');
 const gipsLoadingProcessing = $('#gips-loading-processing');
-
 const gipsTransactionBlock = $('#gips-transaction-block');
 const gipsTransactionButton = $('#gips-transaction-button');
 const gipsContinueButton = $('#gips-continue-button');
-const gipsTransactionContent = $('#gips-transaction-content');
+const gipsTransactionContent = $('#gips-transaction-content pre');
 
 let timeoutCheckConnectivity; // settimeout used to stop if network event received
 let connectivityOK; // network connectivity result even received and is enough (keep undefined by default)
@@ -68,14 +64,14 @@ let identityId; // identity of the GIPS transaction (if GIPS workflow)
 let evidenceId; // evidenceId associated to a document on GIPS (if GIPS workflow)
 let bestImageURL; // best image url (in memory window.URL.createObjectURL) (if GIPS workflow)
 let videoStream; // user video camera stream
-let docSide; // current captured document type (front/back)
+let currentDocSide; // current captured document type (front/back)
 let captureInProgress;
 let changeSideRequired;
 let cameraPermissionAlreadyAsked;
 let imagesDocCorners;
 let countDownTimer; // flip timer
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
-const recordLabel = urlParams.get('videoBackup');
+
 const showLiveCorners = urlParams.get('showLiveCorners') === 'true';
 const sessionIdParam = urlParams.get('sessionId');
 const connectivityCheckId = '#connectivity-check';
@@ -93,7 +89,8 @@ const signalValueClass = '.signal-value';
 const signalMinValueClass = '.signal-min-value';
 const networkSpeedString = '/network-speed';
 const networkLatencyString = '/network-latency';
-const dateDocSideAttribute = 'data-doc-side';
+const dataDocSideAttribute = 'data-doc-side';
+let waitingForManualCapturePhoto;
 
 // TODO read these values from css file
 const progressBarBackgroundColor = '#D1C4E3';
@@ -116,7 +113,7 @@ stopCaptureButton.onclick = function () {
     videoStream = null;
     videoOutput.srcObject = null;
     let currentTargetStepId;
-    switch (docSide.toLowerCase()) {
+    switch (currentDocSide.toLowerCase()) {
         case 'inside_page':
             currentTargetStepId = '#step-scan-passport';
             break;
@@ -125,11 +122,11 @@ stopCaptureButton.onclick = function () {
             currentTargetStepId = '#step-scan-doc-front';
             break;
         default:
-            currentTargetStepId = `#step-scan-doc-${docSide.toLowerCase()}`;
+            currentTargetStepId = `#step-scan-doc-${currentDocSide.toLowerCase()}`;
             break;
     }
     // display the side to scan again
-    processStep('step-doc-auth', currentTargetStepId)
+    processStep('step-doc-auth', currentTargetStepId, null, currentDocSide)
         .catch((err) => {
             console.log('Caught error calling processStep in stopCaptureButton onclick', err);
         });
@@ -138,9 +135,13 @@ stopCaptureButton.onclick = function () {
 // once user has chosen the document type on UI
 // we trigger the capture initialization
 // this event ensure document session is created before calling the init
-document.addEventListener('sessionId', async function ({ detail: { sessionId, docType } }) {
+document.addEventListener('sessionId', async function ({ detail: { sessionId, docType, firstSide } }) {
     console.log('<< Got session created', { sessionId, docType });
-    await initDocCaptureClient({ sessionId, docSide: docType === 'PASSPORT' ? 'INSIDE_PAGE' : 'FRONT' });
+    if (client) {
+        client.disconnect();
+        client = undefined;
+    }
+    await initDocCaptureClient({ sessionId, docSide: firstSide });
 });
 
 async function initDocCaptureClient(options = {}) {
@@ -149,9 +150,8 @@ async function initDocCaptureClient(options = {}) {
         return;
     }
     imagesDocCorners = new Map();
-    docSide = options.docSide;
-    console.log('Init called in full document capture mode. Side is: ' + docSide);
-    client = undefined;
+    currentDocSide = options.docSide || 'FRONT';
+    console.log('Init called in full document capture mode. Side is: ' + currentDocSide);
     // initialize the doc capture client with callbacks
     const docCaptureOptions = {
         docserverVideoUrl: DOCSERVER_VIDEO_URL_WITH_BASE_PATH,
@@ -163,7 +163,7 @@ async function initDocCaptureClient(options = {}) {
             alignDocMsg.classList.remove(dNoneFadeoutString);
         },
         onChangeDocumentSide: (data) => {
-            console.log('Document side ' + docSide + ' is captured...');
+            console.log('Document side ' + currentDocSide + ' is captured...');
             console.log('Received onChangeDocumentSide: ', data);
             changeSideRequired = true;
             processStep('step-scan-doc-back', stepDocAuthId, false, 'BACK', data.delay)
@@ -177,7 +177,7 @@ async function initDocCaptureClient(options = {}) {
             captureInProgress = false;
             processCaptureResult(result);
 
-            if (client) {
+            if (client && !window.manualCapture) {
                 videoOutput.srcObject = null;
                 videoStream = null; // it will allow to reload the stream on next capture
                 client.disconnect();
@@ -198,7 +198,7 @@ async function initDocCaptureClient(options = {}) {
             }
         }
     };
-    console.log('Init document capture client. Side is : ' + docSide);
+    console.log('Init document capture client. Side is : ' + currentDocSide);
     try {
         client = await DocserverVideo.initDocCaptureClient(docCaptureOptions);
     } catch (err) {
@@ -295,12 +295,12 @@ gipsImageButton.addEventListener('click', async () => {
 // when next button is clicked go to targeted step
 $$('*[data-target]')
     .forEach(btn => btn.addEventListener('click', async (e) => {
-        const sourceStep = e.path && e.path.length && e.path.find(p => p.classList.contains('step'));
-        const sourceStepId = sourceStep && sourceStep.id;
+        const sourceStep = e.target.closest('.step');
+        const sourceStepId = '#' + sourceStep.id;
         const targetStepId = btn.getAttribute('data-target');
         await processStep(sourceStepId, targetStepId,
             btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000),
-            btn.getAttribute(dateDocSideAttribute))
+            btn.getAttribute(dataDocSideAttribute))
             .catch((err) => {
                 console.log('Caught error calling processStep', err);
                 processCaptureResult(false);
@@ -342,6 +342,28 @@ function removeAbortButton() {
 }
 
 async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide, startDelay = 3000) {
+    currentDocSide = docSide;
+    if (targetStepId === '#step-manual-capture' || (targetStepId === stepDocAuthId && window.manualCapture)) {
+        console.log('Switching to manual capture mode');
+        window.manualCapture = true;
+        // user already selected a doc type ? => go to front manual capture otherwise go to country selection
+        const currentDocumentRule = getCurrentDocumentRule();
+        if (currentDocumentRule) {
+            targetStepId = currentDocSide === 'INSIDE_PAGE' ? '#step-scan-passport-manual' : '#step-scan-doc-front-manual';
+            console.log('User switched to manual capture mode with an already selected document', currentDocumentRule);
+        } else { // ask user to select a doc type to capture if he has not selected one yet
+            targetStepId = '#step-country-selection';
+            console.log('User switched to manual capture mode, no docType selected yet');
+        }
+    }
+    if (targetStepId.startsWith('#start-manual-capture')) {
+        const retry = targetStepId.endsWith('retry');
+        console.log('start manual capture', { retry });
+        waitingForManualCapturePhoto = true;
+        client?.startManualCapture({ isRetry: retry });
+        manualCaptureInput.click(); // no wait for onInitEnd to not lose user interaction and avoid iOS blocking camera popup to be displayed
+        return;
+    }
     // d-none all steps
     $$('.step').forEach(row => row.classList.add('d-none'));
     if (targetStepId === connectivityCheckId) {
@@ -360,13 +382,11 @@ async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide
         }
     }
     if (targetStepId === stepDocAuthId) { // << if client clicks on start capture
-        // we save inside the abort div and technical error, the last capture doc type, so we have one generic div for all type of document to retry
-        docSide !== 'BACK' && retryOnErrorButton.setAttribute(dateDocSideAttribute, docSide);
         if (!cameraPermissionAlreadyAsked) { // << display the camera access permission step the first time only
             cameraPermissionAlreadyAsked = true; // TODO: use localStorage ??
             targetStepId = '#step-access-permission';
             // when client accepts camera permission access > we redirect it to the document capture check
-            $(targetStepId + ' button').setAttribute(dateDocSideAttribute, docSide);
+            $(targetStepId + ' button').setAttribute(dataDocSideAttribute, docSide);
         } else {
             $(stepDocAuthId).classList.remove('d-none');
             initDocAuthDesign(docSide.toLowerCase());
@@ -413,22 +433,23 @@ function processCaptureResult(result, msg, extendedMsg) {
     $$('.step').forEach(step => step.classList.add('d-none'));
     $$('.status-result').forEach(status => status.classList.add('d-none'));
     const error = !result || result.code;
+    waitingForManualCapturePhoto = false;
     if (!error) {
         console.log('Full Document ID: ' + result.id);
         console.log('Full Document status: ', result.status);
         if (result.status) {
-            if (docSide === 'INSIDE_PAGE') {
-                document.querySelector('#passport-status-' + result.status.toLowerCase()).classList.remove('d-none');
-            } else {
-                document.querySelector('#document-status-' + result.status.toLowerCase()).classList.remove('d-none');
-            }
+            const resultStepId = (currentDocSide === 'INSIDE_PAGE' ? '#step-scan-passport-result' : `#step-scan-doc-${currentDocSide.toLowerCase()}-result`) + (window.manualCapture ? '-manual' : '');
+            const resultStatusId = resultStepId + ' .status-result-' + result.status.toLowerCase();
+            document.querySelector(resultStatusId).classList.remove('d-none');
         }
     }
 
     const captures = !error && result.captures;
     if (captures) {
+        // display front and back results on the same page
+        // merge #step-front-result and #step-back-result and remove footer with buttons from #step-front-result
         captures.forEach((capture, index) => {
-            const stepId = processCaptureResultForSide(getDataToDisplay(capture, capture.side), capture.side.name);
+            const stepId = processCaptureResultForSide(getDataToDisplay(capture), capture.side.name);
             console.log('Capture ID: ' + capture.id);
             if (index) {
                 // Hide logo for elements after the first one
@@ -441,84 +462,156 @@ function processCaptureResult(result, msg, extendedMsg) {
                 // Display footer with buttons
                 $(stepId + ' .footer').classList.remove('d-none');
                 // Display the correct restart button depending of the workflow
-                selectRestartButton(stepId);
-                selectRetryButton(stepId);
+                displayRestartAndRetryButtons(stepId, result);
                 // Last element: Add margin to allow scrolling to the bottom of the image (otherwise it overlaps with footer)
                 addMarginForScrollingResult(stepId);
             }
         });
     } else {
-        const stepId = processCaptureResultForSide(result, docSide, msg, extendedMsg);
-        $(stepId + ' .footer').classList.remove('d-none'); // d-none could have been added from previous capture
-        selectRestartButton(stepId);
-        selectRetryButton(stepId);
-        addMarginForScrollingResult(stepId);
+        // case of error or manual capture with only one result
+        const stepId = processCaptureResultForSide(getDataToDisplay(result), currentDocSide, msg, extendedMsg);
+        if (stepId) {
+            $(stepId + ' .footer').classList.remove('d-none'); // d-none could have been added from previous capture
+            displayRestartAndRetryButtons(stepId, result);
+            addMarginForScrollingResult(stepId);
+        }
     }
 }
 
 function addMarginForScrollingResult(stepId) {
-    // Currently only done for step-scan-doc-back-result (maybe find a better solution or add other steps...)
-    if (stepId === '#step-scan-doc-back-result' || stepId === '#step-scan-passport-result' || stepId === '#step-scan-doc-unknown-result') {
+    //  stepId === '#step-scan-doc-back-result' || stepId === '#step-scan-passport-result' || stepId === '#step-scan-doc-unknown-result')
+    if (/^#step-scan-(doc-\w*|passport)-result(-manual)?$/.test(stepId)) {
         $(stepId + ' .formatted-results').style.marginBottom = $(stepId + ' .footer').offsetHeight + 'px';
+    }
+    // if both front & back are displayed then we remove margin from front step
+    if (stepId === '#step-scan-doc-back-result' && !$('#step-scan-doc-front-result').classList.contains('d-none')) {
+        $('#step-scan-doc-front-result .formatted-results').style.marginBottom = 'unset';
     }
 }
 
-function selectRestartButton(stepId) {
-    // Display the correct restart button depending of the workflow
-    const btnRestartFull = $(stepId + ' .restart-full');
-    btnRestartFull && btnRestartFull.classList.remove('d-none');
-
-    const btnRestartDemo = $(stepId + ' .restart-demo');
-    btnRestartDemo && btnRestartDemo.classList.remove('d-none');
+function displayRestartAndRetryButtons(stepId, result) {
+    const autoCaptureRetryButton = $(stepId + ' button[data-target="#step-doc-auth"]');
+    const manualCaptureButton = $(stepId + ' button[data-target="#step-manual-capture"]');
+    const manualCaptureRetryButton = $(stepId + ' button[data-target="#start-manual-capture-retry"]');
+    // depending on result we highlight the right buttons
+    const continueButtons = $$(stepId + ' .continue-btn button');
+    const retryButtons = $$(stepId + ' .retry-btn button');
+    // Hide all buttons to display only the necessary ones
+    $$(stepId + ' .footer button').forEach(button => button.parentElement.classList.add('d-none'));
+    // Display the correct restart button depending on the workflow
+    $(stepId + ' .continue-btn').classList.remove('d-none');
+    if (result.status !== 'DONE') {
+        if (window.manualCapture && result.status === 'TIMEOUT') {
+            // do not display retry button, no retry possible after a timeout in manual capture
+            // highlight continue button
+            continueButtons.forEach(btn => {
+                btn.classList.add('btn-primary');
+                btn.classList.remove('btn-outline-primary');
+            });
+            return;
+        }
+        // For auto capture, display retry button with manual capture only on a failure cases
+        autoCaptureRetryButton?.parentElement.classList.add('d-none');
+        manualCaptureButton?.parentElement.classList.remove('d-none');
+        manualCaptureRetryButton?.parentElement.classList.remove('d-none');
+        // in case of failure, we highlight the retry button
+        continueButtons.forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-primary');
+        });
+        retryButtons.forEach(btn => {
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-outline-primary');
+        });
+    } else {
+        // in case of a success we keep auto capture and highlight continue buttons
+        autoCaptureRetryButton?.parentElement.classList.remove('d-none');
+        manualCaptureButton?.parentElement.classList.add('d-none');
+        manualCaptureRetryButton?.parentElement.classList.remove('d-none');
+        // highlight continue button
+        continueButtons.forEach(btn => {
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-outline-primary');
+        });
+        retryButtons.forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-primary');
+        });
+    }
 }
-
-function selectRetryButton(stepId) {
-    // Display the correct retry button depending of the workflow
-    const btnRetryFront = $(stepId + ' .retry-front');
-    btnRetryFront && btnRetryFront.classList.remove('d-none');
-}
-
 function processCaptureResultForSide(result, side, msg, extendedMsg) {
+    let stepId = null;
     const error = !result || result.code;
+    if (!result) {
+        result = {};
+    }
     console.log('Processing result for side: ' + side);
     resetDocAuthDesigns();
-    const isPassport = side === 'INSIDE_PAGE';
-    const { status, ocr, pdf417, diagnostic, docImage, docCorners } = result;
-    const stepId = isPassport ? '#step-scan-passport-result' : `#step-scan-doc-${side.toLowerCase()}-result`;
-    const stepResult = $(stepId + ' .formatted-results');
-    stepResult.innerHTML = '';
 
     if (!error) {
-        if (IDPROOFING) {
-            if (!urlParams.get('identityId')) {
-                identityId = getCurrentDocumentRule().identityId;
+        const isPassport = side === 'INSIDE_PAGE';
+        let { status, ocr, pdf417, diagnostic, docImage, docCorners } = result;
+        stepId = (isPassport ? '#step-scan-passport-result' : `#step-scan-doc-${side.toLowerCase()}-result`) + (window.manualCapture ? '-manual' : '');
+        const stepResult = $(stepId + ' .formatted-results');
+        stepResult.innerHTML = '';
+        const lastSide = getCurrentDocumentRule().selectedDocRule.length === 1 || side === 'BACK';
+        const continueButton = $(stepId + ' .continue-btn button');
+        if (lastSide || status === 'TIMEOUT') {
+            // handle the case where we have a document with only FRONT side
+            // so when we click on continue we should finish the session
+            if (side === 'FRONT') {
+                updateButtonDataTarget(continueButton, '#step-country-selection', true);
             }
-            evidenceId = result.evidenceId;
-            gipsImageBlock.classList.remove('d-none');
-            gipsTransactionBlock.classList.remove('d-none');
-            continueButtonBack.setAttribute('data-target', '#step-scan-gips-result');
-            continueButtonFront.setAttribute('data-target', '#step-scan-gips-result');
-            continueButtonPassport.setAttribute('data-target', '#step-scan-gips-result');
-            continueButtonUnknown.setAttribute('data-target', '#step-scan-gips-result');
-        } else {
-            continueButtonBack.setAttribute('data-target', '#step-country-selection');
-            continueButtonFront.setAttribute('data-target', '#step-country-selection');
-            continueButtonPassport.setAttribute('data-target', '#step-country-selection');
-            continueButtonUnknown.setAttribute('data-target', '#step-country-selection');
+            if (IDPROOFING) {
+                if (!urlParams.get('identityId')) {
+                    identityId = getCurrentDocumentRule().identityId;
+                }
+                evidenceId = result.evidenceId;
+                gipsImageBlock.classList.remove('d-none');
+                gipsTransactionBlock.classList.remove('d-none');
+                updateButtonDataTarget(continueButton, '#step-scan-gips-result');
+            }
+        } else if (side === 'FRONT') { // do not finish the session if there is BACK side to scan
+            // reset next side for new retry
+            resetButtonDataTarget(continueButton, true);
         }
 
-        // Display document data
-        appendResultsTo(stepResult, 'Side status', status);
+        // Display capture status
+        !window.manualCapture && appendResultsTo(stepResult, 'Side status', status);
         // Display image captured
         docImageCase(docImage, stepResult, docCorners, side.toLowerCase());
+
+        // Handle the case of timeout in manual capture where there is no diagnostic
+        if (window.manualCapture && status === 'TIMEOUT') {
+            diagnostic = { timeout: true };
+        }
         // Display diagnostic
         if (diagnostic) { // we cannot have diagnostic when status is done
-            appendResultsTo(stepResult, 'Diagnostic', Object.keys(diagnostic).join(', '));
+            const diagnosticList = Object.keys(diagnostic);
+            if (window.manualCapture) {
+                // display only issues that are related to diagnostic
+                $$(stepId + ' .status-result-failed .results-diagnostic li').forEach(li => {
+                    if (diagnosticList.some(diagnostic => li.classList.contains(diagnostic))) {
+                        li.classList.remove('d-none');
+                    } else {
+                        li.classList.add('d-none');
+                    }
+                });
+                $$(stepId + ' .status-result-failed .results-reminder li').forEach(li => {
+                    if (diagnosticList.some(diagnostic => li.classList.contains(diagnostic))) {
+                        li.classList.remove('d-none');
+                    } else {
+                        li.classList.add('d-none');
+                    }
+                });
+            } else {
+                appendResultsTo(stepResult, 'Diagnostic', diagnosticList.join(', '));
+            }
         }
 
         if (status !== 'DONE' && !pdf417 && !ocr) { // if status is not done and we are not against results from pdf417 or mrz
             console.log('Timeout or no result found or partial result found against several rules', result);
-            const errorStepId = isPassport ? '#step-scan-passport-result' : `#step-scan-doc-${side.toLowerCase()}-result`;
+            const errorStepId = (isPassport ? '#step-scan-passport-result' : `#step-scan-doc-${side.toLowerCase()}-result`) + (window.manualCapture ? '-manual' : '');
             $(errorStepId).classList.remove('d-none');
             return errorStepId;
         } else if (pdf417 || ocr) {
@@ -528,8 +621,8 @@ function processCaptureResultForSide(result, side, msg, extendedMsg) {
             if (ocrFound) {
                 $(stepId).classList.remove('d-none');
             }
-        } else if (docImage) { // we display captured doc for unknown doc - rectangle rule
-            console.log('Unknown doc captured', result);
+        } else if (docImage) { // we display captured document with only detected corners
+            console.log('Corners captured on document', result);
             $(stepId).classList.remove('d-none');
         }
     } else if (result.code === 503) { // server overloaded
@@ -544,18 +637,17 @@ function processCaptureResultForSide(result, side, msg, extendedMsg) {
 
         const btnRefresh = $('#step-doc-auth-ko .refresh');
         const btnRestart = $('#step-doc-auth-ko .restart-demo');
-        const btnRetry = $('#retry');
-
+        const manualCaptureButton = $('#step-doc-auth-ko button[data-target="#step-manual-capture"]');
         // Special case for camera permission error
         if (msg === __('You denied camera permissions, either by accident or on purpose.')) {
             // Display refresh button instead of other buttons
-            btnRefresh && btnRefresh.classList.remove('d-none');
-            btnRestart && btnRestart.classList.add('d-none');
-            btnRetry && btnRetry.classList.add('d-none');
+            btnRefresh.classList.remove('d-none');
+            btnRestart.classList.add('d-none');
+            manualCaptureButton.classList.remove('d-none'); // add retry with manual capture
         } else {
-            btnRefresh && btnRefresh.classList.add('d-none');
-            btnRestart && btnRestart.classList.remove('d-none');
-            btnRetry && btnRetry.classList.remove('d-none');
+            btnRefresh.classList.add('d-none');
+            btnRestart.classList.remove('d-none');
+            manualCaptureButton.classList.add('d-none');
         }
     }
     return stepId;
@@ -633,8 +725,9 @@ function ocrCase(ocr, stepResult) {
 function docImageCase(docImage, stepResult, docCorners, side) {
     if (docImage) {
         const imgLabel = document.createElement('div');
-        imgLabel.className = 'result-header';
-        imgLabel.innerText = 'Extracted image :';
+        imgLabel.className = 'result-header-img';
+        // FIXME add translation to this text
+        imgLabel.innerText = `${side.toUpperCase().replace('_', ' ')} of the document`;
         const img = document.createElement('img');
 
         const imgWrapper = document.createElement('div');
@@ -676,7 +769,6 @@ function docImageCase(docImage, stepResult, docCorners, side) {
 function initDocAuthDesign(docSide) {
     gipsImageBlock.classList.add('d-none');
     gipsTransactionBlock.classList.add('d-none');
-    continueButtonUnknown.classList.add('d-none');
     $('header').classList.add('d-none');
     $('main').classList.add('darker-bg');
     videoScanOverlays.forEach(overlay => overlay.classList.add(dNoneFadeoutString));
@@ -955,12 +1047,14 @@ function initDocAuthAnimations() {
             animationData: require('./animations/doc-scan-back-doc.json') // the animation data
         });
     });
-    lottie.loadAnimation({
-        container: $('.doc-scan-passport'), // the dom element that will contain the animation
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        animationData: require('./animations/doc-scan-passport.json') // the animation data
+    $$('.doc-scan-passport').forEach(anim => {
+        lottie.loadAnimation({
+            container: anim, // the dom element that will contain the animation
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: require('./animations/doc-scan-passport.json') // the animation data
+        });
     });
     $$('.doc-scan-front-doc').forEach(anim => {
         lottie.loadAnimation({
@@ -1181,26 +1275,19 @@ function buildFullName(identity) {
 /**
  * Return expected result format to ui
  * @param documentResult
- * @param documentSide
  */
-function getDataToDisplay(documentResult, documentSide) {
-    const finalResult = {};
-    let currentSideResult;
-    if (Array.isArray(documentResult)) {
-        currentSideResult = documentResult.pop();
-        while (currentSideResult.side.name.toUpperCase() !== documentSide.toUpperCase()) {
-            currentSideResult = documentResult.pop();
-        }
-    } else {
-        currentSideResult = documentResult;
+function getDataToDisplay(documentResult) {
+    if (!documentResult || documentResult.error) {
+        return documentResult; // do not process result in case of error
     }
+    const finalResult = {};
 
-    finalResult.status = currentSideResult.status;
-    finalResult.diagnostic = currentSideResult.diagnostic;
-    finalResult.docImage = currentSideResult.image;
-    finalResult.docCorners = currentSideResult.corners;
+    finalResult.status = documentResult.status;
+    finalResult.diagnostic = documentResult.diagnostic;
+    finalResult.docImage = documentResult.image;
+    finalResult.docCorners = documentResult.corners;
     // ocr mrz ...
-    currentSideResult.rules.forEach(
+    documentResult.rules.forEach(
         rule => {
             if (rule.name === 'OCR') {
                 if (finalResult.ocr) {
@@ -1223,18 +1310,23 @@ function getDataToDisplay(documentResult, documentSide) {
 
     return finalResult;
 }
-$$('.restart-demo').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        if (client) {
-            await client.finishSession();
-            console.log('Disconnecting client socket...');
-            // stop the websocket
-            client.disconnect();
-            client = undefined;
-        }
-        videoStream = null;
-    });
+
+$$('.restart-demo button').forEach(btn => {
+    btn.addEventListener('click', restartDemoListener);
 });
+async function restartDemoListener() {
+    if (client) {
+        console.log('Finishing document capture session ...');
+        await client.finishSession();
+        // switch to original mode "auto-capture" for a new attempt only if manualCapture is not forced in url and connectivity is OK
+        window.manualCapture =  !connectivityOK;
+        console.log('Disconnecting client socket...');
+        // stop the websocket
+        client.disconnect();
+        client = undefined;
+    }
+    videoStream = null;
+}
 
 function setProgress(progress) {
     $('#progress-spinner').style.background = `conic-gradient(${progressBarColor} ${progress}%,${progressBarBackgroundColor} ${progress}%)`;
@@ -1247,4 +1339,40 @@ function displayTechnicalError(extendedMsg) {
     $('#step-doc-auth-technical-ko').classList.remove('d-none');
     const small = $('#step-doc-auth-technical-ko small');
     small.textContent = extendedMsg || '';
+}
+
+manualCaptureInput.onchange = async (event) => {
+    const file = event.target.files[0];
+    // Reset value to allow further upload
+    event.target.value = '';
+    if (!waitingForManualCapturePhoto) {
+        console.log('Skip pushing manual capture photo, error or timeout occurred');
+        return;
+    }
+    // display upload progress
+    $$('.step').forEach(step => step.classList.add('d-none'));
+    uploadingCaptures.classList.remove('d-none');
+    // Display infinite loader first, hide progress bar since we don't know yet the percentage
+    uploadingInfinite.classList.remove('d-none');
+    uploadingProgress.classList.add('d-none');
+    console.log('Uploading document photo:', file);
+    client?.pushImage(file);
+};
+
+function updateButtonDataTarget(button, targetStepId, restartDemo) {
+    if (!button.hasAttribute('data-target-origin')) {
+        button.setAttribute('data-target-origin', button.getAttribute('data-target'));
+    }
+    button.setAttribute('data-target', targetStepId);
+    if (restartDemo) {
+        button.addEventListener('click', restartDemoListener);
+    }
+}
+function resetButtonDataTarget(button, removeRestartDemo) {
+    if (button.hasAttribute('data-target-origin')) {
+        button.setAttribute('data-target', button.getAttribute('data-target-origin'));
+    }
+    if (removeRestartDemo) {
+        button.removeEventListener('click', restartDemoListener);
+    }
 }

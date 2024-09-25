@@ -246,6 +246,8 @@ small ul {
     font-weight: 500!important;
     text-transform: uppercase;
     border-color: #430099;
+    background-color: white;
+    color: #430099;
     border-radius: 40px;
     display: flex;
     align-items: center;
@@ -264,7 +266,8 @@ small ul {
 
 .btn-primary,
 .btn-primary:active {
-    background-color: #430099!important
+    background-color: #430099!important;
+    color: white;
 }
 .btn,
 .btn:hover,
@@ -854,6 +857,12 @@ video {background-color: black}
     letter-spacing: normal;
     color: #4a4a4a;
 }
+.formatted-results .result-header-img {
+    font-size: 18px;
+    font-weight: 600;
+    color: #4a4a4a;
+    margin-bottom: 6px;
+}
 .formatted-results .result-value {
     white-space: nowrap;
     font-size: 16px;
@@ -874,10 +883,18 @@ video {background-color: black}
 }
 
 #gips-transaction-content {
-    white-space: pre-wrap;
+    margin-bottom: 100px;
+}
+#gips-transaction-content summary {
+    margin-bottom: -20px;
+}
+#gips-transaction-content pre {
+    white-space: pre;
     margin-top: 15px;
     border: ridge;
     border-radius:10px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch; /* ios auto scroll */
 }
 
 .gips-image-content {
@@ -944,30 +961,33 @@ video {background-color: black}
 /** Document status management **/
 
 .status-title {
+    padding: 10px 0;
+    display: flex;
     box-sizing: border-box;
     border-radius: 10px;
-    padding: 10px 10px 10px 0;
-    display: flex;
 }
 
-.document-done {
+.status-result-done .status-title{
     background: rgba(66, 148, 0, 0.1);
     color: #429400;
 }
 
-.document-failed, .document-error, .document-aborted {
+.status-result-failed .status-title,
+.status-result-error .status-title,
+.status-result-aborted .status-title {
     background: rgba(208, 2, 27, 0.1);
     color: #D0021B;
 }
 
-.document-timeout {
+.status-result-timeout .status-title {
     background: rgba(248, 171, 7, 0.1);
     color: #F8AB07;
 }
 
 .status-result {
     flex: 0 0 auto;
-    padding: 16px 0 0 0;
+    margin-top: 16px;
+    padding: 0;
 }
 
 .status-result img {
@@ -1024,4 +1044,71 @@ video {background-color: black}
     justify-content: center;
     width: 100%;
     height: 100%;
+}
+
+.results-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.results-status img {
+    width: 40px;
+    height: 40px;
+}
+.results-status-text {
+    font-size: 24px;
+    font-weight: 500;
+}
+.results-status-desc {
+    font-size: 16px;
+    font-weight: 400;
+    text-align: center;
+}
+.results-diagnostic {
+    font-size: 16px;
+    padding: 16px;
+    background: #FCEDF4;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+.results-diagnostic span {
+    font-weight: 600;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+.results-diagnostic ul {
+    margin: 0;
+    padding: 0;
+}
+.results-diagnostic ul li {
+    background: url(../img/tick_red.png) no-repeat left top;
+    padding: 6px 0 0 28px;
+    list-style: none;
+    background-size: 20px;
+    background-position-y: 7px;
+}
+.results-reminder {
+    font-size: 16px;
+}
+.results-reminder span {
+    font-size: 18px;
+    font-weight: 600;
+}
+.results-reminder ul {
+    padding: 0 24px;
+}
+.manual-description span {
+    text-align: center;
+    display: inline-block;
+    font-size: 24px;
+    font-weight: 500;
+}
+.manual-description ul {
+    font-size: 16px;
+    font-weight: 400;
+    padding: 20px;
+}
+.manual-description ul li {
+    margin-bottom: 6px;
 }

@@ -60,9 +60,7 @@ if (!sessionIdParam) {
         const frequentCountries = acceptedCountries
             .filter(c => c.frequent)
             .map(c => {
-                return `<li class="country-frequent">
-                    <a href="#" data-code="${c.code}">${c.name}</a>
-              </li>`;
+                return `<li class="country-frequent"><a href="#" data-code="${c.code}">${c.name}</a></li>`;
             });
 
         // group other countries by their first letter (taking into account accent chars)
@@ -74,18 +72,13 @@ if (!sessionIdParam) {
                 const firstLetterOfCurrentCountry = getNormalizedString(c.name.charAt(0));
                 if (lastDisplayedLetter !== firstLetterOfCurrentCountry) {
                     lastDisplayedLetter = firstLetterOfCurrentCountry;
-                    countryLetterHeaderElement = `<li class="country-header">
-                                        ${firstLetterOfCurrentCountry.toUpperCase()}
-                                      </li>`;
+                    countryLetterHeaderElement = `<li class="country-header">${firstLetterOfCurrentCountry.toUpperCase()}</li>`;
                 }
-                return countryLetterHeaderElement + `<li>
-                  <a href="#" data-code="${c.code}" class="${countryLetterHeaderElement ? 'no-borders' : ''}">${c.name}</a>
-                </li>`;
+                return countryLetterHeaderElement + `<li><a href="#" data-code="${c.code}" class="${countryLetterHeaderElement ? 'no-borders' : ''}">${c.name}</a></li>`;
             });
 
         // Display country collection on html page
-        countrySelectionElement.innerHTML += frequentCountries.join('') +
-        otherCountries.join('');
+        countrySelectionElement.innerHTML += frequentCountries.join('') + otherCountries.join('');
 
         // search a country
         $('#country-search-bar').addEventListener('keyup', e => {
@@ -100,8 +93,8 @@ if (!sessionIdParam) {
                 $$('ul#countries li').forEach(li => {
                     const a = li.querySelector('a');
                     if (a && a.textContent &&
-              getNormalizedString(a.textContent.toLowerCase())
-                  .indexOf(getNormalizedString(value.toLowerCase())) > -1) {
+                            getNormalizedString(a.textContent.toLowerCase())
+                                .indexOf(getNormalizedString(value.toLowerCase())) > -1) {
                         li.style.display = 'list-item';
                     }
                 });
@@ -213,7 +206,13 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
                     const format = docCaptureSession.format;
                     const identity = docCaptureSession.identity;
                     // inform listener in main js that session is created
-                    document.dispatchEvent(new CustomEvent('sessionId', { detail: { sessionId: currentSession, docType: selectedDocType } }));
+                    document.dispatchEvent(new CustomEvent('sessionId', {
+                        detail: {
+                            sessionId: currentSession,
+                            docType: selectedDocType,
+                            firstSide: docRules[0].side.name
+                        }
+                    }));
 
                     // Logs for debug purpose
                     console.log('Session initialized with sessionId ' + currentSession + ' and format ' + format);
@@ -252,7 +251,7 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
  */
 function processDocType(selectedCountryCode, docRules, selectedDocType, format) {
     console.log('Process document country=' + selectedCountryCode + ', type=' + selectedDocType + ', format= ' + format);
-    let targetStepId, firstSideToScan;
+    let targetStepId;
     $$('.step').forEach(row => row.classList.add('d-none'));
     // display document name
     $$('.document-name').forEach(txt => {
@@ -265,12 +264,16 @@ function processDocType(selectedCountryCode, docRules, selectedDocType, format) 
         const side = docTypeSide.side.name; const rules = docTypeSide.captureFeatures;
         const isPassport = side === 'INSIDE_PAGE';
         const sideName = side.toLowerCase();
-        const currentTargetStepId = isPassport ? '#step-scan-passport' : `#step-scan-doc-${sideName}`;
-        if (!targetStepId) { // get the first side to scandocType.toLowerCase
+        let currentTargetStepId = isPassport ? '#step-scan-passport' : `#step-scan-doc-${sideName}`;
+        if (!targetStepId) { // get the first side to scan
             targetStepId = currentTargetStepId;
-            firstSideToScan = sideName;
         }
-        $$(currentTargetStepId + `, #step-scan-doc-${sideName}-result, #step-scan-doc-${sideName}-error`)
+        let targetResultSteps = [`#step-scan-doc-${sideName}-result`, `#step-scan-doc-${sideName}-error`];
+        if (window.manualCapture) {
+            currentTargetStepId = currentTargetStepId + '-manual';
+            targetResultSteps = targetResultSteps.map(step => step + '-manual');
+        }
+        $$([currentTargetStepId, ...targetResultSteps].join(','))
             .forEach(step => {
                 step.querySelectorAll('.doc-rule-value').forEach(dr => {
                     const rulesInText = getRulesInText(rules, '#' + step.id === currentTargetStepId); // FIXME bofff
@@ -282,16 +285,15 @@ function processDocType(selectedCountryCode, docRules, selectedDocType, format) 
     });
     // chain the sides in UI
     const sidesNumber = Object.entries(selectedDocRule).length;
-    const targetResultStep = $(targetStepId + '-result');
+    const manualCaptureNextStep = $('#step-scan-doc-front-result-manual .continue-btn button');
+    manualCaptureNextStep.removeAttribute('data-target-origin'); // reset any existing chaining
     if (!selectedDocRule.find(rule => rule.side.name === DOC_TYPE.UNKNOWN)) { // TODO: temp ?
-        const restartDemoClass = '.restart-demo';
         if (sidesNumber === 1) {
-            // we do not continue to next side we have only one side
-            targetResultStep.querySelector(restartDemoClass).classList.remove('d-none');
+            // prepare manual capture workflow
+            manualCaptureNextStep.setAttribute('data-target', '#step-country-selection');
         } else { // we suppose we have two sides only (front & back) to scan
-            const nextResultSideStep = firstSideToScan === 'front' ? $('#step-scan-doc-back-result') : $('#step-scan-doc-front-result');
-            targetResultStep.querySelector(restartDemoClass).classList.add('d-none');
-            nextResultSideStep.querySelector(restartDemoClass).classList.remove('d-none');
+            // prepare manual capture workflow and chain next step with back side
+            manualCaptureNextStep.setAttribute('data-target', '#step-scan-doc-back-manual');
         }
         console.log('After this capture, all side required for this document will be captured, you could capture this document again or restart the demo');
     }
@@ -304,14 +306,14 @@ function processDocType(selectedCountryCode, docRules, selectedDocType, format) 
     $('body').className = `${selectedDocFormat} ${snakeCaseToKebabCase(selectedDocType)}`;
 
     // display the first side to scan
-    $(targetStepId).classList.remove('d-none');
+    $(`${targetStepId}${window.manualCapture ? '-manual' : ''}`).classList.remove('d-none');
 }
 
 exports.getCurrentDocumentRule = () => { return currentDocumentRule; };
 
 /**
  * Requests SP server for supported countries and their docuemnt types
- * @param countryCode
+ * @param {string?} countryCode
  * @returns {Promise<unknown>}
  */
 async function retrieveCountryDocTypes(countryCode) {

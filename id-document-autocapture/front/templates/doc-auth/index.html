@@ -29,6 +29,7 @@ limitations under the License.
     <link rel="manifest" href="./favicons/manifest.json">
     <link rel="mask-icon" href="./favicons/safari-pinned-tab.svg" color="#430099">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="WebSDK">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#430099"/>
@@ -56,7 +57,7 @@ limitations under the License.
                 </table>
             </div>
         </div>
-        <!-- Browser connectivity Check-->
+<!-- Browser connectivity Check-->
         <div id="step-weak-network" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
@@ -73,20 +74,26 @@ limitations under the License.
                 </div>
                 <div class="text-center description">
                     <span><%= __("Weak network signal") %> <span class="signal-value"></span></span>
-                    <small class="pt-2">
+                    <small class="pt-2 d-none">
                         <span class="download"><%= __("This process only works with a connection speed of at least") %></span>
                         <span class="upload"><%= __("This process only works with an upload connection speed of at least") %></span>
                         <span class="signal-min-value"></span>.
                         <%= __("It appears your network signal is too weak.") %>
-
+                    </small>
+                    <small class="pt-2">
+                        <%= __("Document auto-capture requires a good connection speed") %><br>
+                        <%= __("Please check your connection and retry") %><br>
+                        <%= __("You can also manually take a photo of your document and upload it.") %>
                     </small>
                 </div>
                 <div class="btn-footer w-100">
-                    <button class="btn btn-primary btn-block" id="check-network"><%= __("re-test network connection") %></button>
+                    <button class="btn btn-primary btn-block manual-capturer" data-target="#step-manual-capture"><%= __("take a photo on my own") %></button>
+                    <br>
+                    <button class="btn btn-outline-primary btn-block" id="check-network"><%= __("re-test network connection") %></button>
                 </div>
             </div>
         </div>
-        <!--displayed just before the livess start if no response from connectivity check-->
+<!--displayed just before the livess start if no response from connectivity check-->
         <div id="connectivity-check" class="row step d-none">
             <header class="row header">
                 <div class="col logo">
@@ -288,18 +295,22 @@ limitations under the License.
                 </div>
                 <div class="col-12 footer">
                     <div class="row">
-                        <div class="col-12">
-                            <button id="unknown-button-continue" class="btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
+                        <div class="col-12 restart-demo continue-btn">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
                         </div>
-                        <div class="col-12 pt-3">
+                        <div class="col-12 pt-3 retry-btn">
                             <button class="btn btn-outline-primary btn-block"
                                     data-doc-side="FRONT" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-side="FRONT" data-target="#step-manual-capture"><%= __("take a photo on my own") %></button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
 <!-- FRONT SIDE -->
         <div id="step-scan-doc-front" class="row step d-none">
             <header class="row header">
@@ -333,34 +344,33 @@ limitations under the License.
                     <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
-
             <!-- Document status management -->
-            <div id="document-status-done" class="col-12 status-result d-none">
+            <div class="col-12 status-result status-result-done d-none">
                 <div class="document-done status-title">
                     <img src="./img/tick_green.png">
                     <div class="status-text"><%= __("We extracted successfully information from your document.") %></div>
                 </div>
             </div>
-            <div id="document-status-timeout" class="col-12 status-result d-none">
+            <div class="col-12 status-result status-result-timeout d-none">
                 <div class="document-timeout status-title">
                     <img src="./img/tick_orange.png">
                     <div class="status-text"><%= __("We had some difficulties to capture your document.") %></div>
                 </div>
                 <div class="status-text-details"><%= __("Ensure all corners are visible.") %></div>
             </div>
-            <div id="document-status-failed" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-failed d-none">
                 <div class="document-failed status-title">
                     <img src="./img/tick_red.png">
                     <div class="status-text"><%= __("We did not extract correctly information from your document.") %></div>
                 </div>
             </div>
-            <div id="document-status-aborted" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-aborted d-none">
                 <div class="document-aborted status-title">
                     <img src="./img/tick_red.png">
                     <div class="status-text"><%= __("Capture was interrupted. We did not extract information from your document.") %></div>
                 </div>
             </div>
-            <div id="document-status-error" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-error d-none">
                 <div class="document-error status-title">
                     <img src="./img/tick_red.png">
                     <div class="status-text"><%= __("An error occurred. We did not extract information from your document.") %></div>
@@ -371,16 +381,129 @@ limitations under the License.
                 <span><%= __("Information extracted from the front of your") %> <span class="document-name"></span>.</span>
                 <small><%= __("If anything is incorrect, please retake a picture of your ID.") %></small>
             </div>
-            <div class="col-12 animation front-result-block">
+            <div class="col-12 animation">
                 <div class="formatted-results justify-content-start"><!-- results here --></div>
-                <div class="col-12 footer front-result-footer">
+                <div class="col-12 footer">
                     <div class="row">
-                        <div class="col-12">
-                            <button id="front-button-continue" class="btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
+                        <div class="col-12 restart-demo continue-btn">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
                         </div>
-                        <div class="col-12 pt-3">
+                        <div class="col-12 pt-3 retry-btn">
                             <button class="btn btn-outline-primary btn-block"
                                     data-doc-side="FRONT" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-side="FRONT" data-target="#step-manual-capture"><%= __("take a photo on my own") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- FRONT SIDE MANUAL -->
+        <div id="step-scan-doc-front-manual" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description manual-description">
+                <span><%= __("Take a photo of the front of your") %> <span class="document-name"></span>.</span>
+                <ul>
+                    <li><%= __("Make sure all data is visible") %></li>
+                    <li><%= __("Clean your back camera if it’s dirty") %></li>
+                    <li><%= __("Ensure good lighting conditions") %></li>
+                    <li><%= __("Press continue when ready") %></li>
+                </ul>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-scan-front-doc contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#start-manual-capture" data-doc-side="FRONT" ><%= __("Continue") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-front-result-manual" class="step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <!-- Document status management -->
+            <div  class="col-12 status-result status-result-failed status-result-timeout d-none">
+                <div class="results-status">
+                    <img src="./img/fail-icon.svg">
+                    <div class="results-status-text"><%= __("Capture failed!") %></div>
+                </div>
+                <div class="results-diagnostic">
+                    <span><%= __("We detected the following issues:") %></span>
+                    <ul>
+                        <li class="badFraming"><%= __("Not all corners of the document are visible in the picture") %></li>
+                        <li class="blur"><%= __("The photo of the document is blurry") %></li>
+                        <li class="glare"><%= __("There are light reflections on the document") %></li>
+                        <li class="tooClose"><%= __("Document is too close to the camera") %></li>
+                        <li class="tooFar"><%= __("Document is too far from the camera") %></li>
+                        <li class="holdStraight"><%= __("Document tilted and not properly aligned in front of the camera") %></li>
+                        <li class="lowlight"><%= __("Insufficient lighting conditions") %></li>
+                        <li class="noDocument"><%= __("No document detected") %></li>
+                        <li class="pdf417 mrzDecoding"><%= __("Some data on the document is not readable") %></li>
+                        <li class="duplicateRules missingRules"><%= __("You scanned the wrong side of the document") %></li>
+                        <li class="wrongOrientation"><%= __("Document is in the wrong orientation") %></li>
+                        <li class="timeout"><%= __("Timeout occurred during the capture of your photo") %></li>
+                    </ul>
+                </div>
+                <div class="results-reminder">
+                    <span><%= __("Make sure that:") %></span>
+                    <ul>
+                        <li class="timeout"><%= __("You don't take too much time before capturing your photo") %></li>
+                        <li class="blur"><%= __("You hold your phone steadily while taking a photo") %></li>
+                        <li class="blur"><%= __("If your hands are shaking, you may need to ask for someone's assistance") %></li>
+                        <li class="glare"><%= __("Light sources don't reflect on the document") %></li>
+                        <li class="glare"><%= __("If necessary, move to a more evenly lit environment") %></li>
+                        <li class="lowlight"><%= __("You are in a well-lit environment. It shouldn't be too dark or too bright") %></li>
+                        <li class="noDocument"><%= __("Document is fully visible in the picture") %></li>
+                        <li class="pdf417 mrzDecoding"><%= __("All data on the document is clearly visible and nothing is covered") %></li>
+                        <li class="tooFar pdf417 mrzDecoding"><%= __("Document fills the camera, but the image remains sharp") %></li>
+                        <li class="duplicateRules missingRules"><%= __("Please scan the front side of the document") %></li>
+                        <li class="wrongOrientation"><%= __("Document is aligned accordingly with the orientation of your phone. For instance, if you're holding your phone horizontally, make sure the document is positioned horizontally as well") %></li>
+                        <li class="badFraming tooClose tooFar holdStraight pdf417 mrzDecoding"><%= __("Document is centered and all four corners of the document are clearly visible in the camera") %></li>
+                    </ul>
+                </div>
+            </div>
+            <div  class="col-12 status-result status-result-done d-none">
+                <div class="results-status">
+                    <img src="./img/success-icon.svg">
+                    <div class="results-status-text"><%= __("Good job!") %></div>
+                    <div class="results-status-desc"><%= __("The photo looks good and seems to check all the quality criteria.") %></div>
+                </div>
+                <div class="results-reminder">
+                    <span><%= __("Make sure that:") %></span>
+                    <ul>
+                        <li><%= __("This is the photo of the front of your document") %></li>
+                        <li><%= __("All corners are visible") %></li>
+                        <li><%= __("All data is readable") %></li>
+                        <li><%= __("No glares and shadows") %></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 animation justify-content-start">
+                <div class="formatted-results"><!-- results here --></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col-12 continue-btn">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-scan-doc-back-manual"
+                                    data-delay><%= __("Continue") %></button>
+                        </div>
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-side="FRONT" data-target="#start-manual-capture-retry"><%= __("Retake photo") %></button>
                         </div>
                     </div>
                 </div>
@@ -413,13 +536,44 @@ limitations under the License.
                 </div>
             </div>
         </div>
-        </div>
         <div id="step-scan-doc-back-result" class="step d-none">
             <header class="row header">
                 <div class="col logo">
                     <img alt="Logo IDEMIA" src="./img/logo.png">
                 </div>
             </header>
+            <!-- Document status management -->
+            <div class="col-12 status-result status-result-done d-none">
+                <div class="document-done status-title">
+                    <img src="./img/tick_green.png">
+                    <div class="status-text"><%= __("We extracted successfully information from your document.") %></div>
+                </div>
+            </div>
+            <div class="col-12 status-result status-result-timeout d-none">
+                <div class="document-timeout status-title">
+                    <img src="./img/tick_orange.png">
+                    <div class="status-text"><%= __("We had some difficulties to capture your document.") %></div>
+                </div>
+                <div class="status-text-details"><%= __("Ensure all corners are visible.") %></div>
+            </div>
+            <div class="col-12 status-result status-result-failed d-none">
+                <div class="document-failed status-title">
+                    <img src="./img/tick_red.png">
+                    <div class="status-text"><%= __("We did not extract correctly information from your document.") %></div>
+                </div>
+            </div>
+            <div class="col-12 status-result status-result-aborted d-none">
+                <div class="document-aborted status-title">
+                    <img src="./img/tick_red.png">
+                    <div class="status-text"><%= __("Capture was interrupted. We did not extract information from your document.") %></div>
+                </div>
+            </div>
+            <div class="col-12 status-result status-result-error d-none">
+                <div class="document-error status-title">
+                    <img src="./img/tick_red.png">
+                    <div class="status-text"><%= __("An error occurred. We did not extract information from your document.") %></div>
+                </div>
+            </div>
             <div class="col-12 description">
                 <span><%= __("Information extracted from the back of your") %> <span class="document-name"></span>.</span>
                 <small><%= __("If anything is incorrect, please retake a picture of the back of your ID.") %></small>
@@ -428,12 +582,17 @@ limitations under the License.
                 <div class="formatted-results"></div>
                 <div class="col-12 footer">
                     <div class="row">
-                        <div class="col-12">
-                            <button id="back-button-continue" class="btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
+                        <div class="col-12 restart-demo continue-btn">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
                         </div>
-                        <div class="col-12 pt-3">
-                            <button class="d-none btn btn-outline-primary btn-block restart-full"
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="d-none btn btn-outline-primary btn-block"
                                     data-doc-side="FRONT" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-side="FRONT" data-target="#step-manual-capture"><%= __("take a photo on my own") %></button>
                         </div>
                     </div>
                 </div>
@@ -458,10 +617,122 @@ limitations under the License.
             </div>
             <div id="gips-transaction-block" class="col-12 pt-3">
                 <button id="gips-transaction-button"  class="btn btn-outline-primary btn-block btn-gips-transaction"><%= __("Get GIPS transaction - dev only !") %></button>
-                <pre id="gips-transaction-content" class=""></pre>
+                <div id="gips-transaction-content">
+                    <details open>
+                        <summary></summary>
+                        <pre></pre>
+                    </details>
+                </div>
             </div>
-            <div class="col-12">
+            <div class="col-12 footer">
                 <button id="gips-continue-button" class="btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
+            </div>
+        </div>
+<!-- BACK SIDE MANUAL -->
+        <div id="step-scan-doc-back-manual" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description manual-description">
+                <span><%= __("Take a photo of the back of your") %> <span class="document-name"></span>.</span>
+                <ul>
+                    <li><%= __("Make sure all data is visible") %></li>
+                    <li><%= __("Clean your back camera if it’s dirty") %></li>
+                    <li><%= __("Ensure good lighting conditions") %></li>
+                    <li><%= __("Press continue when ready") %></li>
+                </ul>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-scan-back-doc contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#start-manual-capture" data-doc-side="BACK"><%= __("Continue") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-doc-back-result-manual" class="step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <!-- Document status management -->
+            <div  class="col-12 status-result status-result-failed status-result-timeout d-none">
+                <div class="results-status">
+                    <img src="./img/fail-icon.svg">
+                    <div class="results-status-text"><%= __("Capture failed!") %></div>
+                </div>
+                <div class="results-diagnostic">
+                    <span><%= __("We detected the following issues:") %></span>
+                    <ul>
+                        <li class="badFraming"><%= __("Not all corners of the document are visible in the picture") %></li>
+                        <li class="blur"><%= __("The photo of the document is blurry") %></li>
+                        <li class="glare"><%= __("There are light reflections on the document") %></li>
+                        <li class="tooClose"><%= __("Document is too close to the camera") %></li>
+                        <li class="tooFar"><%= __("Document is too far from the camera") %></li>
+                        <li class="holdStraight"><%= __("Document tilted and not properly aligned in front of the camera") %></li>
+                        <li class="lowlight"><%= __("Insufficient lighting conditions") %></li>
+                        <li class="noDocument"><%= __("No document detected") %></li>
+                        <li class="pdf417 mrzDecoding"><%= __("Some data on the document is not readable") %></li>
+                        <li class="duplicateRules missingRules"><%= __("You scanned the wrong side of the document") %></li>
+                        <li class="wrongOrientation"><%= __("Document is in the wrong orientation") %></li>
+                        <li class="timeout"><%= __("Timeout occurred during the capture of your photo") %></li>
+                    </ul>
+                </div>
+                <div class="results-reminder">
+                    <span><%= __("Make sure that:") %></span>
+                    <ul>
+                        <li class="timeout"><%= __("You don't take too much time before capturing your photo") %></li>
+                        <li class="blur"><%= __("You hold your phone steadily while taking a photo") %></li>
+                        <li class="blur"><%= __("If your hands are shaking, you may need to ask for someone's assistance") %></li>
+                        <li class="glare"><%= __("Light sources don't reflect on the document") %></li>
+                        <li class="glare"><%= __("If necessary, move to a more evenly lit environment") %></li>
+                        <li class="lowlight"><%= __("You are in a well-lit environment. It shouldn't be too dark or too bright") %></li>
+                        <li class="noDocument"><%= __("Document is fully visible in the picture") %></li>
+                        <li class="pdf417 mrzDecoding"><%= __("All data on the document is clearly visible and nothing is covered") %></li>
+                        <li class="tooFar pdf417 mrzDecoding"><%= __("Document fills the camera, but the image remains sharp") %></li>
+                        <li class="duplicateRules missingRules"><%= __("Please scan the back side of the document") %></li>
+                        <li class="wrongOrientation"><%= __("Document is aligned accordingly with the orientation of your phone. For instance, if you're holding your phone horizontally, make sure the document is positioned horizontally as well") %></li>
+                        <li class="badFraming tooClose tooFar holdStraight pdf417 mrzDecoding"><%= __("Document is centered and all four corners of the document are clearly visible in the camera") %></li>
+                    </ul>
+                </div>
+            </div>
+            <div  class="col-12 status-result status-result-done d-none">
+                <div class="results-status">
+                    <img src="./img/success-icon.svg">
+                    <div class="results-status-text"><%= __("Good job!") %></div>
+                    <div class="results-status-desc"><%= __("The photo looks good and seems to check all the quality criteria.") %></div>
+                </div>
+                <div class="results-reminder">
+                    <span><%= __("Make sure that:") %></span>
+                    <ul>
+                        <li><%= __("This is the photo of the back of your document") %></li>
+                        <li><%= __("All corners are visible") %></li>
+                        <li><%= __("All data is readable") %></li>
+                        <li><%= __("No glares and shadows") %></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 animation justify-content-start">
+                <div class="formatted-results"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col-12 restart-demo continue-btn">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-country-selection" data-delay><%= __("Continue") %></button>
+                        </div>
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-side="BACK" data-target="#start-manual-capture-retry"><%= __("Retake photo") %></button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 <!-- PASSPORT INSIDE PAGE -->
@@ -496,32 +767,32 @@ limitations under the License.
                 </div>
             </header>
             <!-- Document status management -->
-            <div id="passport-status-done" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-done d-none">
                 <div class="document-done status-title">
                     <img src="./img/tick_green.png">
                     <div class="status-text"><%= __("We extracted successfully information from your document.") %></div>
                 </div>
             </div>
-            <div id="passport-status-timeout" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-timeout d-none">
                 <div class="document-timeout status-title">
                     <img src="./img/tick_orange.png">
                     <div class="status-text"><%= __("We had some difficulties to capture your document.") %></div>
                 </div>
                 <div class="status-text-details"><%= __("Ensure all corners are visible.") %></div>
             </div>
-            <div id="passport-status-failed" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-failed d-none">
                 <div class="document-failed status-title">
                     <img src="./img/tick_red.png">
                     <div class="status-text"><%= __("We did not extract correctly information from your document.") %></div>
                 </div>
             </div>
-            <div id="passport-status-aborted" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-aborted d-none">
                 <div class="document-aborted status-title">
                     <img src="./img/tick_red.png">
                     <div class="status-text"><%= __("Capture was interrupted. We did not extract information from your document.") %></div>
                 </div>
             </div>
-            <div id="passport-status-error" class="col-12 status-result d-none">
+            <div  class="col-12 status-result status-result-error d-none">
                 <div class="document-error status-title">
                     <img src="./img/tick_red.png">
                     <div class="status-text"><%= __("An error occurred. We did not extract information from your document.") %></div>
@@ -536,17 +807,131 @@ limitations under the License.
                 <div class="formatted-results"></div>
                 <div class="col-12 footer">
                     <div class="row">
-                        <div class="col-12">
-                            <button id="button-continue-passport" class="btn btn-primary btn-block restart-demo" data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
+                        <div class="col-12 restart-demo continue-btn">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-country-selection" data-delay><%= __("Confirm and continue") %></button>
                         </div>
-                        <div class="col-12 pt-3">
+                        <div class="col-12 pt-3 retry-btn">
                             <button class="btn btn-outline-primary btn-block"
                                     data-doc-side="INSIDE_PAGE" data-target="#step-doc-auth"><%= __("it's incorrect, rescan document") %></button>
+                        </div>
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-side="INSIDE_PAGE" data-target="#step-manual-capture"><%= __("take a photo on my own") %></button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+<!-- PASSPORT INSIDE PAGE MANUAL -->
+        <div id="step-scan-passport-manual" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <div class="col-12 description manual-description">
+                <span><%= __("Take a photo of the inside page of your passport") %></span>
+                <ul>
+                    <li><%= __("Make sure all data is visible") %></li>
+                    <li><%= __("Clean your back camera if it’s dirty") %></li>
+                    <li><%= __("Ensure good lighting conditions") %></li>
+                    <li><%= __("Press continue when ready") %></li>
+                </ul>
+            </div>
+            <div class="col-12 animation">
+                <div class="doc-scan-passport contain"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#start-manual-capture" data-doc-side="INSIDE_PAGE" ><%= __("Continue") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="step-scan-passport-result-manual" class="step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo IDEMIA" src="./img/logo.png">
+                </div>
+            </header>
+            <!-- Document status management -->
+            <div  class="col-12 status-result status-result-failed status-result-timeout d-none">
+                <div class="results-status">
+                    <img src="./img/fail-icon.svg">
+                    <div class="results-status-text"><%= __("Capture failed!") %></div>
+                </div>
+                <div class="results-diagnostic">
+                    <span><%= __("We detected the following issues:") %></span>
+                    <ul>
+                        <li class="badFraming"><%= __("Not all corners of the document are visible in the picture") %></li>
+                        <li class="blur"><%= __("The photo of the document is blurry") %></li>
+                        <li class="glare"><%= __("There are light reflections on the document") %></li>
+                        <li class="tooClose"><%= __("Document is too close to the camera") %></li>
+                        <li class="tooFar"><%= __("Document is too far from the camera") %></li>
+                        <li class="holdStraight"><%= __("Document tilted and not properly aligned in front of the camera") %></li>
+                        <li class="lowlight"><%= __("Insufficient lighting conditions") %></li>
+                        <li class="noDocument"><%= __("No document detected") %></li>
+                        <li class="pdf417 mrzDecoding"><%= __("Some data on the document is not readable") %></li>
+                        <li class="duplicateRules missingRules"><%= __("You scanned the wrong side of the document") %></li>
+                        <li class="wrongOrientation"><%= __("Document is in the wrong orientation") %></li>
+                        <li class="timeout"><%= __("Timeout occurred during the capture of your photo") %></li>
+                    </ul>
+                </div>
+                <div class="results-reminder">
+                    <span><%= __("Make sure that:") %></span>
+                    <ul>
+                        <li class="timeout"><%= __("You don't take too much time before capturing your photo") %></li>
+                        <li class="blur"><%= __("You hold your phone steadily while taking a photo") %></li>
+                        <li class="blur"><%= __("If your hands are shaking, you may need to ask for someone's assistance") %></li>
+                        <li class="glare"><%= __("Light sources don't reflect on the document") %></li>
+                        <li class="glare"><%= __("If necessary, move to a more evenly lit environment") %></li>
+                        <li class="lowlight"><%= __("You are in a well-lit environment. It shouldn't be too dark or too bright") %></li>
+                        <li class="noDocument"><%= __("Document is fully visible in the picture") %></li>
+                        <li class="pdf417 mrzDecoding"><%= __("All data on the document is clearly visible and nothing is covered") %></li>
+                        <li class="tooFar pdf417 mrzDecoding"><%= __("Document fills the camera, but the image remains sharp") %></li>
+                        <li class="duplicateRules missingRules"><%= __("Please scan the inside page of your passport") %></li>
+                        <li class="wrongOrientation"><%= __("Document is aligned accordingly with the orientation of your phone. For instance, if you're holding your phone horizontally, make sure the document is positioned horizontally as well") %></li>
+                        <li class="badFraming tooClose tooFar holdStraight pdf417 mrzDecoding"><%= __("Document is centered and all four corners of the document are clearly visible in the camera") %></li>
+                    </ul>
+                </div>
+            </div>
+            <div  class="col-12 status-result status-result-done d-none">
+                <div class="results-status">
+                    <img src="./img/success-icon.svg">
+                    <div class="results-status-text"><%= __("Good job!") %></div>
+                    <div class="results-status-desc"><%= __("The photo looks good and seems to check all the quality criteria.") %></div>
+                </div>
+                <div class="results-reminder">
+                    <span><%= __("Make sure that:") %></span>
+                    <ul>
+                        <li><%= __("This is the photo of the inside page of your passport") %></li>
+                        <li><%= __("All corners are visible") %></li>
+                        <li><%= __("All data is readable") %></li>
+                        <li><%= __("No glares and shadows") %></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 animation justify-content-start">
+                <div class="formatted-results"></div>
+                <div class="col-12 footer">
+                    <div class="row">
+                        <div class="col-12 restart-demo continue-btn">
+                            <button class="btn btn-primary btn-block"
+                                    data-target="#step-country-selection" data-delay><%= __("Continue") %></button>
+                        </div>
+                        <div class="col-12 pt-3 retry-btn">
+                            <button class="btn btn-outline-primary btn-block"
+                                    data-doc-side="INSIDE_PAGE" data-target="#start-manual-capture-retry"><%= __("Retake photo") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- Document Manual Capture-->
+        <input id="upload-document-photo" type="file" accept="image/png, image/jpeg" capture="environment" hidden>
 <!-- Document Capture-->
         <div id="step-access-permission" class="row step d-none">
             <header class="row header">
@@ -681,10 +1066,10 @@ limitations under the License.
                 <img src="./img/failure.svg" alt="failure">
                 <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
                 <span class="description"><small class="text-center"></small></span>
-                <button class="btn btn-primary reset-animations refresh d-none" onclick="window.location.reload(); return false;"><%= __("Refresh the page") %></button>
-                <button class="btn btn-primary reset-animations restart-demo" data-target="#step-country-selection"><%= __("Restart Demo") %></button>
-                <button id="retry" class="btn btn-primary reset-animations"
-                        data-doc-side="FRONT"  data-target="#step-doc-auth" ><%= __("Retry again") %></button>
+                <button class="btn btn-primary btn-block reset-animations refresh d-none" onclick="window.location.reload(); return false;"><%= __("Refresh the page") %></button>
+                <button class="btn btn-primary btn-block reset-animations mt-3 restart-demo" data-target="#step-country-selection"><%= __("Restart Demo") %></button>
+                <button class="btn btn-outline-primary btn-block mt-3 d-none"
+                        data-doc-side="FRONT" data-target="#step-manual-capture"><%= __("take a photo on my own") %></button>
             </div>
         </div>
         <div id="step-doc-auth-technical-ko" class="row step d-none results">
