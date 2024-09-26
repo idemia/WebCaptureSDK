@@ -28,7 +28,7 @@ limitations under the License.
         <link rel="icon" type="image/png" sizes="16x16" href="./favicons/logo-16.png">
         <link rel="manifest" href="./favicons/manifest.json">
         <link rel="mask-icon" href="./favicons/safari-pinned-tab.svg" color="#430099">
-        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-title" content="WebSDK">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="theme-color" content="#430099"/>
@@ -704,6 +704,26 @@ limitations under the License.
                         <div></div>
                     </div>
                     <span class="description text-center"><%= __("Loading results ...") %></span>
+                </div>
+            </div>
+            <div id="uploading-results" class="loading row step d-none">
+                <header class="row header">
+                    <div class="col logo">
+                        <img alt="Logo" src="./img/logo-passive-video.png">
+                    </div>
+                </header>
+                <div class="col-12 animation">
+                    <div id="uploading-infinite" class="loader-animation">
+                        <div></div>
+                    </div>
+                    <div id="uploading-progress" class="loader-progress">
+                        <div id="middle-circle"></div>
+                        <div id="progress-spinner"></div>
+                    </div>
+                    <span class="description text-center"><%= __("Uploading") %>
+                        <small class="text-center"><%= __("We are uploading your results") %></small>
+                        <small class="text-center"><%= __("This might take a few moments") %></small>
+                    </span>
                 </div>
             </div>
             <div id="socket-init" class="row step d-none">

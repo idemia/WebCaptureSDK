@@ -25,6 +25,7 @@ const CLASS_SIGNAL_VALUE = '.signal-value';
 const CLASS_SIGNAL_MIN_VALUE = '.signal-min-value';
 const ID_CONNECTIVITY_CHECK = '#connectivity-check';
 const D_NONE_FADEOUT = 'd-none-fadeout';
+const D_NONE = 'd-none';
 const CLASS_VIDEO_OVERLAY = '#step-liveness .video-overlay';
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
 
@@ -825,3 +826,15 @@ async function abortCapture(session = {}) {
 }
 
 exports.abortCapture = abortCapture;
+
+exports.hideAllSteps = function () {
+    document.querySelectorAll('.step').forEach(step => step.classList.add(D_NONE));
+};
+
+exports.hideAllStepsAndDisplay = function (step) {
+    exports.hideAllSteps();
+    if (typeof step === 'string') {
+        step = document.querySelector(step);
+    }
+    step?.classList.contains(D_NONE) && step.classList.remove(D_NONE);
+};

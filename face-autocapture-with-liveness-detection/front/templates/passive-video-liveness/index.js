@@ -55,7 +55,6 @@ const dontMoveMsg = document.querySelector('#dont-move-animation');
 const scanningMsg = document.querySelector('#scan-animation');
 
 const phoneNotVerticalMsg = document.querySelector('#phone-not-vertical-animation');
-const loadingChallenge = document.querySelector('#loading-challenge');
 const loadingInitialized = document.querySelector('#loading-initialized');
 const loadingResults = document.querySelector('#loading-results');
 
@@ -64,6 +63,11 @@ const weakNetworkCheckPage = document.querySelector('#step-weak-network');
 const goodNetworkCheckPage = document.querySelector('#step-good-network');
 const videoLoadingMsgOverlays = document.querySelectorAll('#step-liveness .video-overlay');
 const videoInstructionMsgOverlays = document.querySelectorAll('#step-liveness .move-message');
+
+const uploadingLoader = document.querySelector('#uploading-results');
+const uploadingInfinite = uploadingLoader.querySelector('#uploading-infinite');
+const uploadingProgress = uploadingLoader.querySelector('#uploading-progress');
+const { hideAllStepsAndDisplay, hideAllSteps } = commonutils;
 
 let timeoutCheckConnectivity; // settimeout used to stop if network event received
 let connectivityOK = false;
@@ -167,8 +171,12 @@ async function init(options = {}) {
                 // the end user so he understands that the capture is yet finished but best image is still being computing
                 // and that he should wait for his results. If you don't implement this way, a black screen should be visible !
                 hideCaptureInstructions();
-                loadingChallenge.classList.remove(D_NONE_FADEOUT);
-                stopCapture.classList.add(D_NONE_FADEOUT); // remove
+                // display of upload loader
+                resetLivenessDesign();
+                hideAllStepsAndDisplay(uploadingLoader);
+                // Display infinite loader first and hide progress bar since we don't know yet the percentage
+                uploadingInfinite.classList.remove(D_NONE);
+                uploadingProgress.classList.add(D_NONE);
             } else { // challengeInstruction == TRACKER_CHALLENGE_DONT_MOVE
                 challengeInProgress = true;
             }
@@ -176,8 +184,7 @@ async function init(options = {}) {
         showChallengeResult: async (result) => {
             console.log('Liveness Challenge done > requesting result ...', result);
             resetLivenessDesign();
-            hideAllSteps();
-            loadingResults.classList.remove(D_NONE);
+            hideAllStepsAndDisplay(loadingResults);
             bestImageInfo = result && result.bestImageInfo; // store best image info to be used to center the image when it'll be displayed
             const livenessResult = await commonutils.getLivenessChallengeResult(basePath, enablePolling, sessionId)
                 .catch(async () => await stopVideoCaptureAndProcessResult(false, __('Failed to retrieve liveness results')));
@@ -202,10 +209,10 @@ async function init(options = {}) {
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 userBlockInterval(new Date(error.unlockDateTime).getTime());
-                displayStep('#step-liveness-fp-block');
+                hideAllStepsAndDisplay('#step-liveness-fp-block');
             } else if (error.code && error.code === 503) { //  server overloaded
                 resetLivenessDesign();
-                displayStep('#step-server-overloaded');
+                hideAllStepsAndDisplay('#step-server-overloaded');
             } else {
                 await stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
             }
@@ -376,7 +383,7 @@ function displayBestImage() {
 
 window.addEventListener('resize', () => {
     // re-center best image display in case of screen rotation (only if we are displaying result screen)
-    if (!document.querySelector(ID_STEP_LIVENESS_OK).classList.contains('d-none')) {
+    if (!document.querySelector(ID_STEP_LIVENESS_OK).classList.contains(D_NONE)) {
         displayBestImage();
     }
 });
@@ -531,15 +538,6 @@ function resetLivenessDesign() {
     stopCapture.classList.add(D_NONE_FADEOUT); // remove
 }
 
-function hideAllSteps() {
-    document.querySelectorAll('.step').forEach(step => step.classList.add(D_NONE));
-}
-
-function displayStep(step) {
-    hideAllSteps();
-    typeof step === 'string' ? document.querySelector(step).classList.remove(D_NONE) : step.classList.remove(D_NONE);
-}
-
 /**
  * display messages to user during capture (eg: move closer, center your face ...)
  * @param trackingInfo face tracking info
@@ -547,6 +545,20 @@ function displayStep(step) {
  */
 function displayInstructionsToUser(trackingInfo, challengeInProgress) {
     if (challengeInProgress) {
+        return;
+    }
+    const uploadProgress = trackingInfo.uploadProgress;
+    if (uploadProgress) {
+        setProgress(Number(uploadProgress * 100).toFixed(0));
+        // Hide infinite loader, display progress bar
+        uploadingInfinite.classList.add(D_NONE);
+        uploadingProgress.classList.remove(D_NONE);
+
+        // When progress has reached 100%, we can switch to next screen
+        if (uploadProgress === 1) {
+            resetLivenessDesign();
+            hideAllStepsAndDisplay(loadingResults);
+        }
         return;
     }
 
@@ -580,7 +592,7 @@ function updateWeakNetworkCheckPage(networkConnectivity) {
     weakNetworkCheckPage.querySelector('.check-phone').classList.remove(D_NONE);
     weakNetworkCheckPage.querySelector('.upload').classList.add(D_NONE);
     weakNetworkCheckPage.querySelector('.download').classList.add(D_NONE);
-    displayStep(weakNetworkCheckPage);
+    hideAllStepsAndDisplay(weakNetworkCheckPage);
     if (networkConnectivity) {
         const uploadNotGood = !networkConnectivity.upload ? true : (networkConnectivity.upload < BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD);
         const signalValue = networkConnectivity.upload;
@@ -618,7 +630,7 @@ window.onload = () => {
             } else if (networkConnectivity && displayGoodSignal && networkConnectivity.goodConnectivity && networkConnectivity.upload) {
                 goodNetworkCheckPage.querySelector(CLASS_SIGNAL_VALUE).innerHTML = '(' + networkConnectivity.upload + ' kb/s)';
                 goodNetworkCheckPage.querySelector(CLASS_MIN_SIGNAL_VALUE).innerHTML = BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD + ' kb/s';
-                displayStep(goodNetworkCheckPage);
+                hideAllStepsAndDisplay(goodNetworkCheckPage);
                 displayGoodSignal = false;
                 connectivityOK = true; // connectivity results retrieved enough (page displayed)
             } else {
@@ -751,4 +763,8 @@ function handlePositionInfo(trackingInfo) {
         }
     }
     console.log(logText);
+}
+function setProgress(progress) {
+    document.querySelector('#progress-spinner').style.background = `conic-gradient(#430099 ${progress}%,#D1C4E3 ${progress}%)`;
+    document.querySelector('#middle-circle').innerHTML = progress.toString() + '%';
 }

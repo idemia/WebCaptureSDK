@@ -20,7 +20,7 @@
     "asn1-ber": "^1.1.1",
     "babel-loader": "^9.1.2",
     "compression": "^1.7.4",
-    "copy-webpack-plugin": "^9.0.1",
+    "copy-webpack-plugin": "^11.0.0",
     "debug": "~4.3.2",
     "express": "^4.18.2",
     "html-replace-webpack-plugin": "~2.6.0",
@@ -36,7 +36,7 @@
     "serve-static": "^1.14.1",
     "split-ca": "^1.0.1",
     "webpack": "^5.76.3",
-    "winston": "^3.10.0"
+    "winston": "^3.14.2"
   },
   "devDependencies": {
     "cross-env": "^6.0.3",

@@ -17,8 +17,6 @@
   "Next":"Suivant",
   "Please watch this quick video.":"Veuillez regarder cette vidéo svp.",
   "It will help you understand the next task.":"Cela vous aidera à comprendre la prochaine tâche.",
-  "Bring your phone up to eye level.":"Amenez votre téléphone à hauteur des yeux.",
-  "Hold your device still and make sure the light source is in front of you.":"Amenez votre téléphone à hauteur des yeux.",
   "For the next task, make sure your computer is flat on a table or other surface.":"Pour la tâche suivante, assurez-vous que votre ordinateur est à plat sur une table ou une autre surface.",
   "For this task, you'll need to center your face.":"Pour cette tâche, vous devrez centrer votre visage.",
   "For this task, center your face and stay still while the timer counts down.":"Pour cette tâche, vous devrez centrer votre visage et rester immobile pendant le compte à rebours.",
@@ -172,5 +170,8 @@
   "Ok, I got it": "OK j'ai compris",
   "Watch tutorial": "Regarder le tutoriel",
   "Check the tips below or try using a different device.": "Consultez les conseils ci-dessous ou essayez d'utiliser un autre appareil.",
-  "Refresh the page": "Actualiser la page"
+  "Refresh the page": "Actualiser la page",
+  "Uploading": "Chargement",
+  "We are uploading your results": "Nous téléchargeons vos résultats",
+  "This might take a few moments": "Cela peut prendre quelques instants"
 }

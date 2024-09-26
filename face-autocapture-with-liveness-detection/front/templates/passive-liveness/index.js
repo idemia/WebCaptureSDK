@@ -19,6 +19,7 @@ limitations under the License.
 /* global BASE_PATH, VIDEO_URL, VIDEO_BASE_PATH, DISABLE_CALLBACK, DEMO_HEALTH_PATH, IDPROOFING, BioserverVideo, BioserverNetworkCheck, BioserverVideoUI, __ */
 /* eslint-disable no-console */
 const commonutils = require('../../utils/commons');
+const { hideAllStepsAndDisplay } = commonutils;
 
 const settings = {
     idProofingWorkflow: IDPROOFING,
@@ -31,6 +32,7 @@ const settings = {
 };
 
 const D_NONE_FADEOUT = 'd-none-fadeout';
+const D_NONE = 'd-none';
 
 const BEST_IMG_ID = '.best-image';
 const bestImageIPV = document.querySelector('#best-image-ipv');
@@ -43,6 +45,11 @@ const monitoring = document.querySelectorAll('.monitoring');
 const countDown = document.querySelector('#count-down');
 let tooManyAttempts = false;
 let serverOverloaded = false;
+
+const uploadingLoader = document.querySelector('#uploading-results');
+const uploadingInfinite = uploadingLoader.querySelector('#uploading-infinite');
+const uploadingProgress = uploadingLoader.querySelector('#uploading-progress');
+const loadingResults = document.querySelector('#loading-results');
 
 /**
  * 1- init liveness session (from backend)
@@ -80,7 +87,12 @@ function getFaceCaptureOptions() {
                 // the end user so he understands that the capture is yet finished but best image is still being computing
                 // and that he should wait for his results. If you don't implement this way, a black screen should be visible !
                 session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
-                session.loadingChallenge.classList.remove(settings.D_NONE_FADEOUT);
+                // display of upload loader
+                resetLivenessDesign();
+                hideAllStepsAndDisplay(uploadingLoader);
+                // Display infinite loader first and hide progress bar since we don't know yet the percentage
+                uploadingInfinite.classList.remove(D_NONE);
+                uploadingProgress.classList.add(D_NONE);
             } else { // challengeInstruction == TRACKER_CHALLENGE_DONT_MOVE
                 challengeInProgress = true;
             }
@@ -345,6 +357,20 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
     if (challengeInProgress || userInstructionMsgDisplayed) {
         return;
     }
+    const uploadProgress = trackingInfo.uploadProgress;
+    if (uploadProgress) {
+        setProgress(Number(uploadProgress * 100).toFixed(0));
+        // Hide infinite loader, display progress bar
+        uploadingInfinite.classList.add(D_NONE);
+        uploadingProgress.classList.remove(D_NONE);
+
+        // When progress has reached 100%, we can switch to next screen
+        if (uploadProgress === 1) {
+            resetLivenessDesign();
+            hideAllStepsAndDisplay(loadingResults);
+        }
+        return;
+    }
     if (trackingInfo.phoneNotVertical) { // << user phone not up to face
         session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
         document.querySelector('#phone-not-vertical-animation').classList.remove(settings.D_NONE_FADEOUT);
@@ -369,6 +395,10 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
             commonutils.handlePositionInfo(trackingInfo.positionInfo);
         }
     }
+}
+function setProgress(progress) {
+    document.querySelector('#progress-spinner').style.background = `conic-gradient(#101010 ${progress}%,#cccccc ${progress}%)`;
+    document.querySelector('#middle-circle').innerHTML = progress.toString() + '%';
 }
 
 commonutils.initLivenessAnimationsPart3();

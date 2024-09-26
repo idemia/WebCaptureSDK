@@ -224,6 +224,8 @@ small ul {
 .check-phone img {max-height: 184px;}
 .pc .check-phone img {max-height: 250px;}
 #step-weak-network .animation,
+#loading-results .animation,
+#uploading-results .animation,
 #connectivity-check .animation {
     align-items: center;
     flex-direction: column;
@@ -645,12 +647,38 @@ video {background-color: black}
     align-items: center;
     justify-content: center;
 }
-.loader-animation {
+.loader-progress {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+#progress-spinner {
+    border-radius: 50%;
+    height: 100%;
+    width: 100%;
+}
+#middle-circle {
+    position: absolute;
+    border-radius: 50%;
+    height: calc(100% - 10px);
+    width: calc(100% - 10px);
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: larger;
+    font-weight: bold;
+}
+.loader-animation,
+.loader-progress {
     width: 80px;
     height: 80px;
     position: relative;
 }
-.pc .loader-animation {
+.pc .loader-animation,
+.pc .loader-progress {
     width: 100px;
     height: 100px;
 }
