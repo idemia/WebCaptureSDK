@@ -703,6 +703,7 @@ video {background-color: black}
 .pc .video-block,
 .pc .no-header-h-100{
     height:calc(100% - 88px);
+    width:calc(100%);
     margin-top:88px;
 }
 
