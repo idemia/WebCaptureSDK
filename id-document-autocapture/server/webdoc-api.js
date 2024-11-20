@@ -60,20 +60,13 @@ async function getDocSession(sessionId) {
 async function initDocSession(countryCode, docType, rules) {
     const contentBody = {
         ttlSeconds: config.DOC_CAPTURE_SESSION_TTL,
-        countryCode: countryCode,
         correlationId: 'wds-demo-correlation-id',
-        evidenceId: 'wds-demo-evidence-id'
+        evidenceId: 'wds-demo-evidence-id',
+        countryCode,
+        docType
     };
 
-    if (countryCode) { // TODO validate countryCode
-        contentBody.countryCode = countryCode;
-    }
-
-    if (docType) { // TODO validate doctype
-        contentBody.docType = docType;
-    }
-
-    if (rules) { // TODO validate rules
+    if (rules) {
         contentBody.docSideRules = rules;
         contentBody.countryCode = undefined;
         contentBody.docType = undefined;

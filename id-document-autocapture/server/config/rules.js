@@ -21,67 +21,48 @@ const logger = require('./demoLogConf').getLogger();
 /**
  * side: FRONT | BACK | INSIDE_PAGE | UNKNOWN
  * format: ID1 | ID2 | ID3 | undefined
- * captureFeatures: NONE | OCR | PORTRAIT | MRZ | PDF417
+ * captureFeatures: NONE | MRZ | PDF417
  */
-const documentRules =
-  [{
-      countries: [], // this is the default rules to be applied on unknown/unsupported countries
-      rules: [{
-          docType: 'DOCUMENT_ONLY',
-          format: 'ID1',
-          sides: [{
-              id: 'SIDE1',
-              name: 'FRONT',
-              captureFeatures: ['NONE']
-          }
-          ]
-      }, {
-          docType: 'DOCUMENT_WITH_OCR',
-          format: 'ID1',
-          sides: [{
-              id: 'SIDE1',
-              name: 'FRONT',
-              captureFeatures: ['OCR']
-          }
-          ]
-      }, {
-          docType: 'DOCUMENT_WITH_MRZ',
-          format: 'ID1',
-          sides: [{
-              id: 'SIDE1',
-              name: 'FRONT',
-              captureFeatures: ['MRZ']
-          }
-          ]
-      },
-      {
-          docType: 'DOCUMENT_WITH_PDF417',
-          format: 'ID1',
-          sides: [{
-              id: 'SIDE1',
-              name: 'FRONT',
-              captureFeatures: ['PDF417']
-          }
-          ]
-      }, 
-      {
-          docType: 'DOCUMENT_WITH_OCR_ON_SIDE1_PDF417_ON_SIDE2',
-          format: 'ID1',
-          sides: [{
-              id: 'SIDE1',
-              name: 'FRONT',
-              captureFeatures: ['OCR']
-          }, {
-              id: 'SIDE2',
-              name: 'BACK',
-              captureFeatures: ['PDF417']
-          }
-          ]
-
-      }
-      ]
-  }
-  ];
+const documentRules = [{
+    countries: [], // this is the default rules to be applied on unknown/unsupported countries
+    rules: [{
+        docType: 'DOCUMENT_ONLY', // Document type only used in the demo, do not supply to docserver
+        format: 'ID1',
+        sides: [{
+            id: 'SIDE1',
+            name: 'FRONT',
+            captureFeatures: ['NONE']
+        }]
+    }, {
+        docType: 'DOCUMENT_WITH_MRZ', // Document type only used in the demo, do not supply to docserver
+        format: 'ID1',
+        sides: [{
+            id: 'SIDE1',
+            name: 'FRONT',
+            captureFeatures: ['MRZ']
+        }]
+    }, {
+        docType: 'DOCUMENT_WITH_PDF417', // Document type only used in the demo, do not supply to docserver
+        format: 'ID1',
+        sides: [{
+            id: 'SIDE1',
+            name: 'FRONT',
+            captureFeatures: ['PDF417']
+        }]
+    }, {
+        docType: 'DOCUMENT_WITH_MRZ_ON_SIDE1_PDF417_ON_SIDE2', // Document type only used in the demo, do not supply to docserver
+        format: 'ID1',
+        sides: [{
+            id: 'SIDE1',
+            name: 'FRONT',
+            captureFeatures: ['MRZ']
+        }, {
+            id: 'SIDE2',
+            name: 'BACK',
+            captureFeatures: ['PDF417']
+        }]
+    }]
+}];
 
 function findDocTypesByCountry() {
     const docTypes = [];

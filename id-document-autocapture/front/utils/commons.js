@@ -73,22 +73,14 @@ exports.snakeCaseToTitleCase = (camelCaseTxt, capital) => {
     switch (result) {
         case 'document_only':
             return __('Document Only');
-        case 'document_with_ocr':
-            return __('OCR Only');
         case 'document_with_mrz':
             return __('MRZ Only');
         case 'document_with_pdf417':
             return __('Barcode Only');
         case 'document_with_mrz_pdf417':
             return __('MRZ & Barcode');
-        case 'document_with_mrz_ocr':
-            return __('MRZ & OCR');
-        case 'document_with_ocr_pdf417':
-            return __('OCR & Barcode');
-        case 'document_with_mrz_ocr_pdf417':
-            return __('MRZ & OCR & Barcode');
-        case 'document_with_ocr_on_side1_pdf417_on_side2' :
-            return __('OCR on first side & Barcode on second side');
+        case 'document_with_mrz_on_side1_pdf417_on_side2' :
+            return __('MRZ on first side & Barcode on second side');
         case 'identity_card' :
             return capital ? __('Identity Card') : __('identity card');
         case 'driving_license' :
@@ -136,39 +128,6 @@ exports.camelCaseToTitleCase = (camelCaseTxt) => {
         .trim();
     // capitalize the first letter
     return result && result.charAt(0).toUpperCase() + result.slice(1);
-};
-
-/**
- *
- * @param {DOC_SIDE_RULE[]} rules
- * @return {string}
- */
-exports.getRulesInText = (rules, extraTxt) => {
-    return rules && rules.map(rule => {
-        switch (rule) {
-            case this.DOC_SIDE_RULE.OCR:
-                return 'your name';
-            case this.DOC_SIDE_RULE.PDF417:
-                return 'bar code';
-            case this.DOC_SIDE_RULE.MRZ:
-                return 'MRZ';
-            case this.DOC_SIDE_RULE.FACE:
-            default:
-                return false; // 'portrait'
-        }
-    }).filter(txt => txt)
-        .map((txt, i, arr) => {
-            if (arr.length === 1) {
-                return (!extraTxt && txt) || (txt.startsWith('your') ? (txt + ' is') : ('the ' + txt + ' is'));
-            } else if (i === 0) {
-                return (!extraTxt && (txt + ',')) || (txt.startsWith('your') ? (txt + ',') : ('the ' + txt + ','));
-            } else if (arr.length === i + 1) {
-                return (!extraTxt && (' and ' + txt)) || (' and ' + txt + ' are');
-            } else {
-                return txt + ', ';
-            }
-        })
-        .join('');
 };
 
 exports.getMonitoring = async function (basePath, healthPath) {

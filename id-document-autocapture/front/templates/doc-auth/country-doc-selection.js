@@ -16,7 +16,7 @@ limitations under the License.
 
 /* global BASE_PATH */
 /* eslint no-console: ["error", { allow: ["log", "error"] }] */
-const { $, $$, DOC_TYPE, getRulesInText, getNormalizedString, snakeCaseToTitleCase, snakeCaseToKebabCase } = require('../../utils/commons');
+const { $, $$, DOC_TYPE, getNormalizedString, snakeCaseToTitleCase, snakeCaseToKebabCase } = require('../../utils/commons');
 const { Allcountries } = require('../../../server/config/countries');
 
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
@@ -261,27 +261,12 @@ function processDocType(selectedCountryCode, docRules, selectedDocType, format) 
     const selectedDocRule = docRules;
 
     selectedDocRule.forEach(docTypeSide => {
-        const side = docTypeSide.side.name; const rules = docTypeSide.captureFeatures;
+        const side = docTypeSide.side.name;
         const isPassport = side === 'INSIDE_PAGE';
         const sideName = side.toLowerCase();
-        let currentTargetStepId = isPassport ? '#step-scan-passport' : `#step-scan-doc-${sideName}`;
         if (!targetStepId) { // get the first side to scan
-            targetStepId = currentTargetStepId;
+            targetStepId = isPassport ? '#step-scan-passport' : `#step-scan-doc-${sideName}`;
         }
-        let targetResultSteps = [`#step-scan-doc-${sideName}-result`, `#step-scan-doc-${sideName}-error`];
-        if (window.manualCapture) {
-            currentTargetStepId = currentTargetStepId + '-manual';
-            targetResultSteps = targetResultSteps.map(step => step + '-manual');
-        }
-        $$([currentTargetStepId, ...targetResultSteps].join(','))
-            .forEach(step => {
-                step.querySelectorAll('.doc-rule-value').forEach(dr => {
-                    const rulesInText = getRulesInText(rules, '#' + step.id === currentTargetStepId); // FIXME bofff
-                    if (rulesInText) {
-                        dr.innerHTML = rulesInText;
-                    }
-                });
-            });
     });
     // chain the sides in UI
     const sidesNumber = Object.entries(selectedDocRule).length;
