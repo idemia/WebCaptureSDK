@@ -123,16 +123,7 @@ main.pc {
     border-width: 1px;
     line-height: 18px;
 }
-.liveness-header #switch-camera{
-    cursor: pointer;
-    padding: 0 10px;
-}
-.liveness-header #switch-camera img{
-    width: 34px;
-}
-.pc .liveness-header #switch-camera img {
-    width: 50px;
-}
+
 .pc .liveness-header .btn {
     height: 45px;
 }
@@ -447,7 +438,7 @@ video {background-color: black}
 
 #step-liveness .animation {
     align-items: center;
-    background-color: black
+    background-color: white
 }
 .pc #step-liveness .animation {
     justify-content: center;
@@ -698,12 +689,13 @@ video {background-color: black}
 .no-header-h-100 {
     height:calc(100% - 49px);
     margin-top:49px;
+    width: calc(100%);
 }
 
 .pc .video-block,
 .pc .no-header-h-100{
     height:calc(100% - 88px);
-    width:calc(100%);
+    width: calc(100%);
     margin-top:88px;
 }
 

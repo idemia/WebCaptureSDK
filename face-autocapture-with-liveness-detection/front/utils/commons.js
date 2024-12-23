@@ -748,8 +748,9 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
      * Button stop activated
      **/
     document.querySelector('#stop-capture').addEventListener('click', async () => {
+        console.log('Back button pressed');
         resetLivenessDesign();
-        abortCapture(session);
+        await abortCapture(session);
     });
 
     /**
@@ -816,12 +817,10 @@ async function abortCapture(session = {}) {
         await session.client.disconnect().catch(_ => {});
         // wait until the client is fully disconnected before removing it from the session
         session.client = null;
-        session.toAbort = null;
     } else {
-        // user stops capture and the client is not yet initialized,
-        // this flag will allow abort capture just after init is finished
-        console.warn('Client not initialized, abort delayed');
-        session.toAbort = true;
+        // user stops capture and the client is not yet initialized
+        // FIXME if it happens during client init, this is an integration error as one should always wait for the client init completion before doing something elese
+        console.warn('Client not initialized, abort not possible');
     }
 }
 

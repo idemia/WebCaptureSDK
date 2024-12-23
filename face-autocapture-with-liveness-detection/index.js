@@ -53,14 +53,18 @@ packer.pack();
             if (config.SUPPORTED_LANGUAGES.split(',').includes(locale)) {
                 lang = locale;
             }
-            express.static(path.resolve(__dirname, OUTPUT_ROOT_PATH, `${mode}-liveness/${lang}/`))(req, res, next);
+            express.static(path.resolve(__dirname, OUTPUT_ROOT_PATH, `${mode}-liveness/${lang}/`), {
+                setHeaders: setCrossOriginHeaders
+            })(req, res, next);
         });
         app.use(`/:lang${config.BASE_PATH}/${mode}-liveness`, (req, res, next) => {
             let lang = DEFAULT_LANG;
             if (config.SUPPORTED_LANGUAGES.split(',').includes(req.params.lang)) {
                 lang = req.params.lang;
             }
-            express.static(path.resolve(__dirname, OUTPUT_ROOT_PATH, `${mode}-liveness/${lang}/`))(req, res, next);
+            express.static(path.resolve(__dirname, OUTPUT_ROOT_PATH, `${mode}-liveness/${lang}/`), {
+                setHeaders: setCrossOriginHeaders
+            })(req, res, next);
         });
     };
 
@@ -125,3 +129,11 @@ packer.pack();
         });
     });
 })();
+
+function setCrossOriginHeaders(res, path) {
+    // Allow the demo to use SharedArrayBuffer (wasm with multithreading)
+    if (path.endsWith('index.html')) {
+        res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    }
+}

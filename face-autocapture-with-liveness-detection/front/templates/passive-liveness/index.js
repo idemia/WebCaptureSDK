@@ -51,6 +51,10 @@ const uploadingInfinite = uploadingLoader.querySelector('#uploading-infinite');
 const uploadingProgress = uploadingLoader.querySelector('#uploading-progress');
 const loadingResults = document.querySelector('#loading-results');
 
+const initLoader = document.querySelector('#init-loader');
+const downloadingLoader = document.querySelector('#downloading-loader');
+const downloadingProgress = downloadingLoader.querySelector('#downloading-progress');
+
 /**
  * 1- init liveness session (from backend)
  * 2- init the communication with the server via socket
@@ -134,27 +138,26 @@ function getFaceCaptureOptions() {
                 document.querySelector('#step-server-overloaded').classList.remove(settings.D_NONE);
             } else {
                 await stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
+                await commonutils.abortCapture(session);
             }
-            await commonutils.abortCapture(session);
         }
     };
 }
 
-async function init(options = {}) {
-    session.client = null;
+async function init() {
     initLivenessDesign();
-    // request a sessionId from backend (if we are switching camera we use the same session)
-    if (!session.sessionId || !options.switchCamera) {
-        try {
-            const createdSession = await commonutils.initLivenessSession(settings.basePath, session.sessionIdParam || '', session.identityIdParam || '');
-            session.sessionId = createdSession.sessionId;
-            session.identityId = createdSession.identityId;
-        } catch (err) {
-            session.sessionId = false;
-            await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
-        }
+    // Abort any previous client
+    if (session.client) {
+        await commonutils.abortCapture(session);
     }
-    if (!session.sessionId) {
+    // Request a sessionId from backend
+    try {
+        const createdSession = await commonutils.initLivenessSession(settings.basePath, session.sessionIdParam || '', session.identityIdParam || '');
+        session.sessionId = createdSession.sessionId;
+        session.identityId = createdSession.identityId;
+    } catch (err) {
+        session.sessionId = false;
+        await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
         return;
     }
     // initialize the face capture client with callbacks
@@ -163,33 +166,24 @@ async function init(options = {}) {
     faceCaptureOptions.bioserverVideoUrl = settings.videoUrl;
     
     session.client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
-    // if user stops capture during await init client, then abort capture
-    if (session.toAbort) {
+    // get user camera video (front camera is default)
+    try {
+        session.videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video' });
+    } catch (err) {
+        let msg = __('Failed to get camera device stream');
+        let extendedMsg;
+        if (err.name && err.name.indexOf('NotAllowed') > -1) {
+            msg = __('You denied camera permissions, either by accident or on purpose.');
+            extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
+        }
+        await stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
         await commonutils.abortCapture(session);
         return;
     }
-
-    if (session.client) {
-        // get user camera video (front camera is default)
-        session.videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video' })
-            .catch(async (e) => {
-                let msg = __('Failed to get camera device stream');
-                let extendedMsg;
-                if (e.name && e.name.indexOf('NotAllowed') > -1) {
-                    msg = __('You denied camera permissions, either by accident or on purpose.');
-                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
-                }
-                await stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
-            });
-        if (!session.videoStream) {
-            await commonutils.abortCapture(session);
-            return;
-        }
-        // display the video stream
-        session.videoOutput.srcObject = session.videoStream;
-        session.loadingInitialized.classList.add(settings.D_NONE_FADEOUT); // initialization successfully, remove loading for video
-        session.headStartPositionOutline.classList.remove(settings.D_NONE_FADEOUT);
-    }
+    // display the video stream
+    session.videoOutput.srcObject = session.videoStream;
+    session.loadingInitialized.classList.add(settings.D_NONE_FADEOUT); // initialization successfully, remove loading for video
+    session.headStartPositionOutline.classList.remove(settings.D_NONE_FADEOUT);
 }
 
 // when next button is clicked go to targeted step
@@ -198,8 +192,12 @@ document.querySelectorAll('*[data-target]')
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
             .catch(async () => {
+                // Too many attempts or server overloaded error have been caught by errorFn, so no need to call further method in that case, just reset variables
                 if (!tooManyAttempts && !serverOverloaded) {
                     await stopVideoCaptureAndProcessResult(false);
+                } else {
+                    tooManyAttempts = false;
+                    serverOverloaded = false;
                 }
             });
     }));
@@ -264,23 +262,29 @@ async function processLivenessStep() {
     document.querySelector(settings.ID_STEP_LIVENESS).classList.remove(settings.D_NONE);
     await init();
     if (session.client && session.videoStream) {
-        let timeleft = 3;
-        const downloadTimer = setInterval(function () {
+        let timeleft = 4;
+        const showCountDown = () => {
+            document.getElementById('count-down-txt-id').innerHTML = 'Countdown... ' + timeleft;
+            countDown.classList.remove(settings.D_NONE);
+            session.livenessHeader.classList.add(settings.D_NONE); // hide header when countdown is here
+        };
+        const countDownTimer = setInterval(function () {
+            timeleft--;
             if (timeleft <= 0) {
-                clearInterval(downloadTimer);
+                clearInterval(countDownTimer);
                 document.getElementById('count-down-txt-id').innerHTML = '';
-                session.livenessHeader.classList.remove(settings.D_NONE);
+                session.livenessHeader.classList.remove(settings.D_NONE); // Restore header during capture
                 countDown.classList.add(settings.D_NONE);
             } else {
-                document.getElementById('count-down-txt-id').innerHTML = 'Countdown... ' + timeleft;
-                countDown.classList.remove(settings.D_NONE);
-                session.livenessHeader.classList.add(settings.D_NONE); // hide header when countdown is here
+                showCountDown();
             }
-            timeleft -= 1;
         }, 1000);
+        // Show countdown immediately
+        showCountDown();
         setTimeout(() => {
+            console.log('Starting capture after timeout');
             session.client.startCapture({ stream: session.videoStream });
-        }, 4000);
+        }, timeleft * 1000);
         return true;
     } else {
         console.log('client or videoStream not available, start aborted');
@@ -334,7 +338,10 @@ function initLivenessDesign() {
     document.querySelector('header').classList.add(settings.D_NONE);
     document.querySelector('main').classList.add('darker-bg');
     session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
+    downloadingLoader.classList.add(settings.D_NONE);
+    initLoader.classList.remove(settings.D_NONE);
     session.loadingInitialized.classList.remove(settings.D_NONE_FADEOUT); // display loading until initialization is done
+    session.livenessHeader.classList.add(settings.D_NONE); // Hide header during init
 }
 
 /**
@@ -345,25 +352,37 @@ function resetLivenessDesign() {
 }
 
 /**
- * display messages to user during capture (eg: move closer, center your face ...)
- * @param trackingInfo face tracking info
- * @param challengeInProgress challenge has started?
+ * Display messages to user during capture (eg: move closer, center your face ...)
+ * @param {object} trackingInfo face tracking info
+ * @param {boolean} challengeInProgress challenge has started?
  * @param trainingMode training mode enabled ?
  */
-let userInstructionMsgDisplayed;
 let userInstructionMsgToDisplay;
 
 function displayInstructionsToUser(trackingInfo, challengeInProgress) {
-    if (challengeInProgress || userInstructionMsgDisplayed) {
+    if (challengeInProgress) {
         return;
     }
+    const downloadProgress = trackingInfo.downloadProgress;
+    if (downloadProgress) {
+        setDownloadProgress(downloadProgress);
+        // Hide infinite loader, display the download progress bar
+        initLoader.classList.add(D_NONE);
+        downloadingLoader.classList.remove(D_NONE);
+        // When progress has reached 100%, display again the infinite loader
+        if (downloadProgress === 1) {
+            initLoader.classList.remove(D_NONE);
+            downloadingLoader.classList.add(D_NONE);
+        }
+        return;
+    }
+
     const uploadProgress = trackingInfo.uploadProgress;
     if (uploadProgress) {
-        setProgress(Number(uploadProgress * 100).toFixed(0));
-        // Hide infinite loader, display progress bar
+        setUploadProgress(uploadProgress);
+        // Hide infinite loader, display the upload progress bar
         uploadingInfinite.classList.add(D_NONE);
         uploadingProgress.classList.remove(D_NONE);
-
         // When progress has reached 100%, we can switch to next screen
         if (uploadProgress === 1) {
             resetLivenessDesign();
@@ -396,9 +415,32 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
         }
     }
 }
-function setProgress(progress) {
-    document.querySelector('#progress-spinner').style.background = `conic-gradient(#101010 ${progress}%,#cccccc ${progress}%)`;
-    document.querySelector('#middle-circle').innerHTML = progress.toString() + '%';
+// TODO read these values from css file
+const progressBarColor = '#101010';
+const progressBarBackgroundColor = '#cccccc';
+
+/**
+ * @param {string|number} progress
+ */
+function setDownloadProgress(progress) {
+    setProgress(downloadingProgress, progress);
+}
+
+/**
+ * @param {string|number} progress
+ */
+function setUploadProgress(progress) {
+    setProgress(uploadingProgress, progress);
+}
+
+/**
+ * @param {Element} element Parent HTML element of the progress bar
+ * @param {string|number} progress the value of the progress to display
+ */
+function setProgress(element, progress) {
+    progress = Number(progress * 100).toFixed(0);
+    element.querySelector('.progress-spinner').style.background = `conic-gradient(${progressBarColor} ${progress}%,${progressBarBackgroundColor} ${progress}%)`;
+    element.querySelector('.middle-circle').innerHTML = `${progress}%`;
 }
 
 commonutils.initLivenessAnimationsPart3();

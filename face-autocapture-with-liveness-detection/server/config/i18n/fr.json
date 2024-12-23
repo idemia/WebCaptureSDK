@@ -17,6 +17,8 @@
   "Next":"Suivant",
   "Please watch this quick video.":"Veuillez regarder cette vidéo svp.",
   "It will help you understand the next task.":"Cela vous aidera à comprendre la prochaine tâche.",
+  "Bring your phone up to eye level.":"Amenez votre téléphone à hauteur des yeux.",
+  "Hold your device still and make sure the light source is in front of you.":"Amenez votre téléphone à hauteur des yeux.",
   "For the next task, make sure your computer is flat on a table or other surface.":"Pour la tâche suivante, assurez-vous que votre ordinateur est à plat sur une table ou une autre surface.",
   "For this task, you'll need to center your face.":"Pour cette tâche, vous devrez centrer votre visage.",
   "For this task, center your face and stay still while the timer counts down.":"Pour cette tâche, vous devrez centrer votre visage et rester immobile pendant le compte à rebours.",
@@ -37,7 +39,7 @@
   "Center your face":"Centrez votre visage",
   "Move closer":"Approchez vous",
   "Move further":"Eloignez vous",
-  "Please wait a moment.": "Merci de patienter",
+  "Please wait a moment.": "Veuillez patienter un instant",
   "Authentication in progress": "Authentification en cours",
   "Please hold your phone vertically.":"Veuillez tenir votre téléphone verticalement.",
   "Rotate your head to move the line.":"Tournez la tête pour déplacer la ligne.",
@@ -153,7 +155,7 @@
   "Take a selfie": "Prenez une photo",
   "Matching succeeded": "Le matching a réussi",
   "Oops !" : "Oops !",
-  "initialization in progress, please wait..." : "Initialisation en cours, veuillez patienter...",
+  "Initialization in progress..." : "Initialisation en cours...",
   "Camera Access" : "Accès à la camera",
   "I accept" : "J'accepte",
   "In order to authenticate you, we need access to your phone's camera. Sounds good ?" : "Afin de vous authentifier, nous avons besoin d'accéder à l'appareil photo de votre téléphone. Cela vous convient-il ?",
@@ -173,5 +175,6 @@
   "Refresh the page": "Actualiser la page",
   "Uploading": "Chargement",
   "We are uploading your results": "Nous téléchargeons vos résultats",
-  "This might take a few moments": "Cela peut prendre quelques instants"
+  "This might take a few moments": "Cela peut prendre quelques instants",
+  "Downloading resources...": "Téléchargement des ressources..."
 }
