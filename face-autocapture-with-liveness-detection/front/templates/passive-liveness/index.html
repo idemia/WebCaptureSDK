@@ -81,7 +81,6 @@ limitations under the License.
                         <span class="upload"><%= __("This process only works with an upload connection speed of at least") %></span>
                         <span class="signal-min-value"></span>.
                         <%= __("It appears your network signal is too weak.") %>
-
                     </small>
                 </div>
                 <div class="btn-footer w-100">
@@ -105,7 +104,6 @@ limitations under the License.
             <header class="row header">
                 <div class="col logo">
                     <img alt="Logo" src="./img/logo.png">
-
                 </div>
             </header>
             <div class="check-phone">
@@ -131,14 +129,12 @@ limitations under the License.
             <header class="row header">
                 <div class="col logo">
                     <img alt="Logo" src="./img/logo.png">
-
                      <span class="skip" data-target="#application-version">?</span>
                     <div id="application-version" class="d-none version-overlay no-header-h-100 flex-column">
                         <div class="loader-wrapper d-flex flex-column">
                             <span class="monitoring loader-text text-center ">Version?</span>
                         </div>
                     </div>
-
                     <span class="skip" data-target="#step-end-tutorial"><%= __("SKIP") %></span>
                 </div>
             </header>
@@ -165,9 +161,7 @@ limitations under the License.
             <header class="row header">
                 <div class="col logo">
                     <img alt="Logo" src="./img/logo.png">
-
                 </div>
-
             </header>
             <div class="col-12 description">
                 <span><%= __("For this task, center your face and stay still while the timer counts down.") %></span>
@@ -238,7 +232,6 @@ limitations under the License.
                         <button  id="stop-capture" type="button" data-target="#step-end-tutorial"
                                  class="btn btn-outline-primary reset-animations"><%= __("go back") %>
                         </button>
-                        <div id="switch-camera" class="d-none"><img src="img/switch_camera_2x.png"></div>
                         <button type="button" data-target="#step-help" class="btn btn-outline-primary tutorial">
                             <img src="./img/question-mark_2x.png" alt="play"><%= __("help") %>
                         </button>
@@ -263,14 +256,27 @@ limitations under the License.
                 </div>
                 <div id="loading-challenge" class="d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
                     <div class="loader-wrapper d-flex flex-column">
-                        <div class="loader-animation  align-self-center"><div></div></div>
+                        <div class="loader-animation align-self-center"><div></div></div>
                         <span class="loader-text text-center"><%= __("Authentication in progress") %> </span>
                     </div>
                 </div>
                 <div id="loading-initialized" class="d-none-fadeout video-overlay w-100 no-header-h-100 flex-column">
-                    <div class="loader-wrapper d-flex flex-column">
-                        <div class="loader-animation  align-self-center"><div></div></div>
-                        <span class="loader-text text-center"><%= __("Please wait a moment.") %> </span>
+                    <div id="init-loader">
+                        <div class="loader-wrapper d-flex flex-column">
+                            <div class="loader-animation align-self-center"><div></div></div>
+                            <span class="loader-text text-center"><%= __("Please wait a moment.") %> </span>
+                        </div>
+                    </div>
+                    <div id="downloading-loader" class="d-none">
+                        <div class="loader-wrapper d-flex flex-column">
+                            <div id="downloading-progress" class="loader-progress align-self-center">
+                                <div class="middle-circle"></div>
+                                <div class="progress-spinner"></div>
+                            </div>
+                            <div class="loader-text text-center">
+                                <span><%= __("Downloading resources...") %></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div id="center-head-animation" class="d-none-fadeout video-overlay w-100 no-header-h-100">
@@ -464,7 +470,6 @@ limitations under the License.
             </div>
         </div>
 
-
         <!-- Selfie upload -->
         <div id="step-selfie" class="row step d-none">
             <header class="row header">
@@ -509,7 +514,7 @@ limitations under the License.
         <div id="step-selfie-ko" class="row step d-none results">
             <header class="row header">
                 <div class="col logo">
-                    <img alt="Logo" src="">
+                    <img alt="Logo" src="./img/logo.png">
                 </div>
             </header>
             <div class="col-12 animation">
@@ -550,13 +555,13 @@ limitations under the License.
                     <div></div>
                 </div>
                 <div id="uploading-progress" class="loader-progress">
-                    <div id="middle-circle"></div>
-                    <div id="progress-spinner"></div>
+                    <div class="middle-circle"></div>
+                    <div class="progress-spinner"></div>
                 </div>
                 <span class="description text-center"><%= __("Uploading") %>
-                        <small class="text-center"><%= __("We are uploading your results") %></small>
-                        <small class="text-center"><%= __("This might take a few moments") %></small>
-                    </span>
+                    <small class="text-center"><%= __("We are uploading your results") %></small>
+                    <small class="text-center"><%= __("This might take a few moments") %></small>
+                </span>
             </div>
         </div>
     </main>

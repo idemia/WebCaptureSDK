@@ -100,7 +100,7 @@ function getFaceCaptureOptions() {
         },
         trackingFn: (trackingInfo) => {
             if (!challengePending) { // tracking info can be received  after challengeInstruction === 'TRACKER_CHALLENGE_PENDING'
-            // In this case , skip received tracking message
+                // In this case , skip received tracking message
                 displayInstructionsToUser(trackingInfo, challengeInProgress);
                 BioserverVideoUI.updateLivenessActiveGraphics('user-video', trackingInfo);
             }
@@ -113,6 +113,8 @@ function getFaceCaptureOptions() {
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
+
+                document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
                 commonutils.userBlockInterval(new Date(error.unlockDateTime).getTime());
                 document.querySelector('#step-liveness-fp-block').classList.remove(settings.D_NONE);
             } else if (error.code && error.code === 503) { //  server overloaded
@@ -125,8 +127,8 @@ function getFaceCaptureOptions() {
                 document.querySelector('#step-server-overloaded').classList.remove(settings.D_NONE);
             } else {
                 await stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
+                await commonutils.abortCapture(session);
             }
-            await commonutils.abortCapture(session);
         }
     };
 }
@@ -139,9 +141,11 @@ function getFaceCaptureOptions() {
  * 5- [Optional] get the matching result between the best image from liveness capture and the reference image
  */
 async function init(options = {}) {
-    session.client = null;
     initLivenessDesign();
-
+    // Abort any previous client
+    if (session.client) {
+        await commonutils.abortCapture(session);
+    }
     // request a sessionId from backend (if we are switching camera we use the same session)
     if (!session.sessionId || !options.switchCamera) {
         try {
@@ -151,10 +155,8 @@ async function init(options = {}) {
         } catch (err) {
             session.sessionId = false;
             await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
+            return;
         }
-    }
-    if (!session.sessionId) {
-        return;
     }
     // initialize the face capture client with callbacks
     const faceCaptureOptions = getFaceCaptureOptions();
@@ -162,32 +164,24 @@ async function init(options = {}) {
     faceCaptureOptions.bioserverVideoUrl = settings.videoUrl;
     
     session.client = await BioserverVideo.initFaceCaptureClient(faceCaptureOptions);
-    // if user stops capture and client is not yet initialized, then abort capture
-    if (session.toAbort) {
+    // get user camera video (front camera is default)
+    try {
+        session.videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video' });
+    } catch (err) {
+        let msg = __('Failed to get camera device stream');
+        let extendedMsg;
+        if (err.name && err.name.indexOf('NotAllowed') > -1) {
+            msg = __('You denied camera permissions, either by accident or on purpose.');
+            extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
+        }
+        await stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
         await commonutils.abortCapture(session);
         return;
     }
-    if (session.client) {
-        // get user camera video (front camera is default)
-        session.videoStream = await BioserverVideo.getMediaStream({ videoId: 'user-video' })
-            .catch(async (e) => {
-                let msg = __('Failed to get camera device stream');
-                let extendedMsg;
-                if (e.name && e.name.indexOf('NotAllowed') > -1) {
-                    msg = __('You denied camera permissions, either by accident or on purpose.');
-                    extendedMsg = __('In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.');
-                }
-                await stopVideoCaptureAndProcessResult(false, msg, '', extendedMsg);
-            });
-        if (!session.videoStream) {
-            await commonutils.abortCapture(session);
-            return;
-        }
-        // display the video stream
-        session.videoOutput.srcObject = session.videoStream;
-        session.loadingInitialized.classList.add(settings.D_NONE_FADEOUT); // initialization successfully, remove loading for video
-        session.headStartPositionOutline.classList.remove(settings.D_NONE_FADEOUT);
-    }
+    // display the video stream
+    session.videoOutput.srcObject = session.videoStream;
+    session.loadingInitialized.classList.add(settings.D_NONE_FADEOUT); // initialization successfully, remove loading for video
+    session.headStartPositionOutline.classList.remove(settings.D_NONE_FADEOUT);
 }
 
 /**
@@ -207,8 +201,12 @@ document.querySelectorAll('*[data-target]')
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
             .catch(async () => {
+                // Too many attempts or server overloaded error have been caught by errorFn, so no need to call further method in that case, just reset variables
                 if (!tooManyAttempts && !serverOverloaded) {
                     await stopVideoCaptureAndProcessResult(false);
+                } else {
+                    tooManyAttempts = false;
+                    serverOverloaded = false;
                 }
             });
     }));
@@ -248,8 +246,8 @@ async function processStep(targetStepId, displayWithDelay) {
             document.querySelector(`${targetStepId} button`).classList.add('start-capture');
         } else {
             document.querySelector(settings.ID_STEP_LIVENESS).classList.remove(settings.D_NONE);
-            session.livenessHeader.classList.remove(settings.D_NONE);
             await init();
+            session.livenessHeader.classList.remove(settings.D_NONE); // Restore header during capture
             if (session.client && session.videoStream) {
                 session.client.startCapture({ stream: session.videoStream });
             } else {
@@ -319,6 +317,7 @@ function initLivenessDesign() {
     document.querySelector('main').classList.add('darker-bg');
     session.videoMsgOverlays.forEach((overlay) => overlay.classList.add(settings.D_NONE_FADEOUT));
     session.loadingInitialized.classList.remove(settings.D_NONE_FADEOUT); // display loading until initialization is done
+    session.livenessHeader.classList.add(settings.D_NONE); // Hide header during init
 }
 
 /**
@@ -337,9 +336,9 @@ function resetLivenessDesign() {
 }
 
 /**
- * display messages to user during capture (eg: move closer, center your face ...)
- * @param trackingInfo face tracking info
- * @param challengeInProgress challenge has started?
+ * Display messages to user during capture (eg: move closer, center your face ...)
+ * @param {object} trackingInfo face tracking info
+ * @param {boolean} challengeInProgress challenge has started?
  * @param trainingMode training mode enabled ?
  */
 let lastChallengeIndex = -1;

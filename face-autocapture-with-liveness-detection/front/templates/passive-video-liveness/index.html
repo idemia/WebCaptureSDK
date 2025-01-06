@@ -717,8 +717,8 @@ limitations under the License.
                         <div></div>
                     </div>
                     <div id="uploading-progress" class="loader-progress">
-                        <div id="middle-circle"></div>
-                        <div id="progress-spinner"></div>
+                        <div class="middle-circle"></div>
+                        <div class="progress-spinner"></div>
                     </div>
                     <span class="description text-center"><%= __("Uploading") %>
                         <small class="text-center"><%= __("We are uploading your results") %></small>
@@ -726,18 +726,27 @@ limitations under the License.
                     </span>
                 </div>
             </div>
-            <div id="socket-init" class="row step d-none">
+            <div id="socket-init" class="loading row step d-none">
                 <header class="row header">
                     <div class="col logo">
                         <img alt="Logo" src="./img/logo-passive-video.png">
                     </div>
                 </header>
-                <div class="animation">
+                <div id="init-loader" class="animation">
                     <div class="animation-content loader-wrapper d-flex flex-column">
                         <div class="loader-animation align-self-center">
                             <div></div>
                         </div>
-                        <span class="animation-title-text text-center"><%= __("initialization in progress, please wait...") %></span>
+                        <span class="animation-title-text text-center"><%= __("Initialization in progress...") %></span>
+                    </div>
+                </div>
+                <div id="downloading-loader" class="col-12 animation d-none">
+                    <div id="downloading-progress" class="loader-progress">
+                        <div class="middle-circle"></div>
+                        <div class="progress-spinner"></div>
+                    </div>
+                    <div class="animation-title-text text-center">
+                        <span><%= __("Downloading resources...") %></span>
                     </div>
                 </div>
             </div>

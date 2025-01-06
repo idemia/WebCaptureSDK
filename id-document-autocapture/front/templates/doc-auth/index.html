@@ -210,10 +210,6 @@ limitations under the License.
                     <div class="document-img"><img src="./img/unknown_x2.png" alt="Document Only"></div>
                     <div class="document-type-name"><%= __("Document Only") %></div>
                 </div>
-                <div class="document-type row-center d-none" data-doc-type="DOCUMENT_WITH_OCR">
-                    <div class="document-img"><img src="./img/unknown_x2.png" alt="OCR Only"></div>
-                    <div class="document-type-name"><%= __("OCR Only") %></div>
-                </div>
                 <div class="document-type row-center d-none" data-doc-type="DOCUMENT_WITH_MRZ">
                     <div class="document-img"><img src="./img/unknown_x2.png" alt="MRZ Only"></div>
                     <div class="document-type-name"><%= __("MRZ Only") %></div>
@@ -222,9 +218,9 @@ limitations under the License.
                     <div class="document-img"><img src="./img/unknown_x2.png" alt="Barcode Only"></div>
                     <div class="document-type-name"><%= __("Barcode Only") %></div>
                 </div>
-                <div class="document-type row-center d-none" data-doc-type="DOCUMENT_WITH_OCR_ON_SIDE1_PDF417_ON_SIDE2">
-                    <div class="document-img"><img src="./img/unknown_x2.png" alt="OCR on first side & Barcode on second side"></div>
-                    <div class="document-type-name"><%= __("OCR on first side & Barcode on second side") %></div>
+                <div class="document-type row-center d-none" data-doc-type="DOCUMENT_WITH_MRZ_ON_SIDE1_PDF417_ON_SIDE2">
+                    <div class="document-img"><img src="./img/unknown_x2.png" alt="MRZ on first side & Barcode on second side"></div>
+                    <div class="document-type-name"><%= __("MRZ on first side & Barcode on second side") %></div>
                 </div>
             </div>
         </div>
@@ -321,8 +317,7 @@ limitations under the License.
             <div class="col-12 description">
                 <span><%= __("Scan the front of your") %> <span class="document-name"></span>.</span>
                 <small>
-                    <%= __("Ensure your ID is centered in the frame") %>
-                    <span class="doc-rule"> <%= __("and that") %> <span class="doc-rule-value"></span> <%= __("clearly visible.") %></span> <br>
+                    <%= __("Ensure your ID is centered in the frame and the info are clearly visible.") %><br>
                     <%= __("Clean your device’s camera if it’s dirty.") %>
                 </small>
             </div>
@@ -519,8 +514,7 @@ limitations under the License.
             <div class="col-12 description">
                 <span><%= __("Scan the back of your") %> <span class="document-name"></span>.</span>
                 <small>
-                    <%= __("Ensure your ID is centered in the frame") %>
-                    <span class="doc-rule"> <%= __("and that") %> <span class="doc-rule-value"></span> <%= __("clearly visible.") %></span> <br>
+                    <%= __("Ensure your ID is centered in the frame and the info are clearly visible.") %><br>
                     <%= __("Clean your device’s camera if it’s dirty.") %>
                 </small>
             </div>

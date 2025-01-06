@@ -1316,7 +1316,7 @@ $$('.restart-demo button').forEach(btn => {
 });
 async function restartDemoListener() {
     if (client) {
-        console.log('Finishing document capture session ...');
+        console.log('Finishing document capture session...');
         await client.finishSession();
         // switch to original mode "auto-capture" for a new attempt only if manualCapture is not forced in url and connectivity is OK
         window.manualCapture =  !connectivityOK;

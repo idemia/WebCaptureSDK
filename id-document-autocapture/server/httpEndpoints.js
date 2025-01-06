@@ -38,11 +38,9 @@ module.exports.initHttpEndpoints = (app) => {
         try {
             const session = req.body;
             logger.info('Document session initialization:', session);
-
-            if (session.countryCode === '') {
+            if (session.countryCode === '' && session.docType !== 'PASSPORT' && !session.rules) {
                 session.rules = findRulesByCountryAndType(session.countryCode, session.docType);
             }
-
             let docCaptureSession;
             let response;
             if (config.IDPROOFING) {

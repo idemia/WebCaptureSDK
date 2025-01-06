@@ -35,7 +35,7 @@ const BEST_IMG_IPV_ID = 'best-image-ipv';
 const bestImageIPV = document.querySelector('#' + BEST_IMG_IPV_ID);
 const getIPVStatus = document.querySelector('#get-ipv-status-result');
 const connectivityCheck = document.querySelector(ID_CONNECTIVITY_CHECK);
-const socketInitDocument = document.querySelector(ID_SOCKET_INIT);
+const socketInit = document.querySelector(ID_SOCKET_INIT);
 const stepLiveness = document.querySelector(ID_STEP_LIVENESS);
 
 const videoOutput = document.querySelector('#' + VIDEO_ID);
@@ -67,6 +67,11 @@ const videoInstructionMsgOverlays = document.querySelectorAll('#step-liveness .m
 const uploadingLoader = document.querySelector('#uploading-results');
 const uploadingInfinite = uploadingLoader.querySelector('#uploading-infinite');
 const uploadingProgress = uploadingLoader.querySelector('#uploading-progress');
+
+const initLoader = document.querySelector('#init-loader');
+const donwloadingLoader = document.querySelector('#downloading-loader');
+const downloadingProgress = document.querySelector('#downloading-progress');
+
 const { hideAllStepsAndDisplay, hideAllSteps } = commonutils;
 
 let timeoutCheckConnectivity; // settimeout used to stop if network event received
@@ -129,7 +134,7 @@ stopCapture.addEventListener('click', async () => {
 const D_NONE = 'd-none';
 const D_NONE_VISIBLE = 'invisible';
 
-async function init(options = {}) {
+async function init() {
     // Disconnect any existing client
     if (client) {
         client.disconnect();
@@ -137,17 +142,15 @@ async function init(options = {}) {
     client = undefined;
     videoOutput.disablePictureInPicture = true;
 
-    // request a sessionId from backend (if we are switching camera we use the same session)
-    if (!sessionId || !options.switchCamera) {
-        try {
-            const session = await commonutils.initLivenessSession(basePath, sessionIdParam || '', identityIdParam || '');
-            sessionId = session.sessionId;
-            identityId = session.identityId;
-        } catch (err) {
-            clearTimeout(timeoutCheckConnectivity);
-            sessionId = false;
-            await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
-        }
+    // Request a sessionId from backend
+    try {
+        const session = await commonutils.initLivenessSession(basePath, sessionIdParam || '', identityIdParam || '');
+        sessionId = session.sessionId;
+        identityId = session.identityId;
+    } catch (err) {
+        clearTimeout(timeoutCheckConnectivity);
+        sessionId = false;
+        await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
     }
     if (!sessionId) {
         return;
@@ -331,9 +334,12 @@ async function processStep(targetStepId, displayWithDelay) {
         }
     }
     if (targetStepId === ID_SOCKET_INIT) { // << if client clicks on start capture or retry
-        socketInitDocument.classList.remove(D_NONE);
+        socketInit.classList.remove(D_NONE);
+        // Show infinite loader & hide downloading loader
+        initLoader.classList.remove(D_NONE);
+        donwloadingLoader.classList.add(D_NONE);
         await init();
-        socketInitDocument.classList.add(D_NONE);
+        socketInit.classList.add(D_NONE);
         targetStepId = ID_STEP_LIVENESS; // init socket done, move to the next step
     }
     // Liveness page
@@ -539,18 +545,32 @@ function resetLivenessDesign() {
 }
 
 /**
- * display messages to user during capture (eg: move closer, center your face ...)
- * @param trackingInfo face tracking info
- * @param challengeInProgress challenge has started?
+ * Display messages to user during capture (eg: move closer, center your face ...)
+ * @param {object} trackingInfo face tracking info
+ * @param {boolean} challengeInProgress challenge has started?
  */
 function displayInstructionsToUser(trackingInfo, challengeInProgress) {
     if (challengeInProgress) {
         return;
     }
+    const downloadProgress = trackingInfo.downloadProgress;
+    if (downloadProgress) {
+        setDownloadProgress(downloadProgress);
+        if (downloadProgress === 1 && donwloadingLoader.classList.contains(D_NONE)) {
+            // Avoid displaying 100% if it is the first value to be displayed (to avoid flickering)
+            return;
+        }
+        // Hide infinite loader, display the download progress bar
+        initLoader.classList.add(D_NONE);
+        donwloadingLoader.classList.remove(D_NONE);
+        // Do not reset anything when reaching 100% to avoid screen flickering between the infinite loader and next screen
+        return;
+    }
+
     const uploadProgress = trackingInfo.uploadProgress;
     if (uploadProgress) {
-        setProgress(Number(uploadProgress * 100).toFixed(0));
-        // Hide infinite loader, display progress bar
+        setUploadProgress(uploadProgress);
+        // Hide infinite loader, display the upload progress bar
         uploadingInfinite.classList.add(D_NONE);
         uploadingProgress.classList.remove(D_NONE);
 
@@ -724,10 +744,10 @@ function hideCaptureInstructions() {
  TRACKER_POSITION_INFO_UNKNOWN
  */
 function handlePositionInfo(trackingInfo) {
-    let logText = 'Tracking info : ';
+    let logText = 'Tracking info: ';
     // Text instruction management
     if (trackingInfo.positionInfo) {
-        logText = logText + 'Position info is ... ' + trackingInfo.positionInfo + '. ';
+        logText = logText + 'Position info is: ' + trackingInfo.positionInfo + '. ';
         switch (trackingInfo.positionInfo) {
             case 'TRACKER_POSITION_INFO_CENTER_MOVE_BACKWARDS': // Move away from the camera
                 displayMsgAndCircle(moveFurtherMsg, trackingInfo);
@@ -750,21 +770,45 @@ function handlePositionInfo(trackingInfo) {
                 break;
         }
     } else {
-        logText = logText + 'No position info. ';
+        logText = logText + 'No position info.';
         displayMsgAndCircle(headStartPositionOutline, trackingInfo);
     }
     if (trackingInfo.targetInfo) {
         if (trackingInfo.targetInfo.targetR) {
-            logText = logText + 'Radius ... ' + trackingInfo.targetInfo.targetR + '. ';
+            logText = logText + 'Radius: ' + trackingInfo.targetInfo.targetR + '. ';
         }
         // Circle Animation management
         if (trackingInfo.targetInfo.stability && trackingInfo.targetInfo.stability > 0) {
-            logText = logText + 'Stability ... ' + trackingInfo.targetInfo.stability;
+            logText = logText + 'Stability: ' + trackingInfo.targetInfo.stability;
         }
     }
     console.log(logText);
 }
-function setProgress(progress) {
-    document.querySelector('#progress-spinner').style.background = `conic-gradient(#430099 ${progress}%,#D1C4E3 ${progress}%)`;
-    document.querySelector('#middle-circle').innerHTML = progress.toString() + '%';
+
+// TODO read these values from css file
+const progressBarColor = '#430099';
+const progressBarBackgroundColor = '#D1C4E3';
+
+/**
+ * @param {string|number} progress
+ */
+function setDownloadProgress(progress) {
+    setProgress(downloadingProgress, progress);
+}
+
+/**
+ * @param {string|number} progress
+ */
+function setUploadProgress(progress) {
+    setProgress(uploadingProgress, progress);
+}
+
+/**
+ * @param {Element} element Parent HTML element of the progress bar
+ * @param {string|number} progress the value of the progress to display
+ */
+function setProgress(element, progress) {
+    progress = Number(progress * 100).toFixed(0);
+    element.querySelector('.progress-spinner').style.background = `conic-gradient(${progressBarColor} ${progress}%,${progressBarBackgroundColor} ${progress}%)`;
+    element.querySelector('.middle-circle').innerHTML = `${progress}%`;
 }
