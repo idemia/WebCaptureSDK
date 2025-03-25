@@ -1,5 +1,6 @@
 <!--
-Copyright 2020 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -150,11 +151,8 @@ limitations under the License.
                             <span><%= __("Let’s scan your face now") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("Make sure your face is well-lit and try not to move your device while scanning.") %></span><br/>
-                            <span><%= __("Follow the instructions on the next screen.") %></span>
-                        </div>
-                        <div class="animation-text">
-                            <span><%= __("It's ok if you’re wearing eyeglasses.") %></span>
+                            <span><%= __("Make sure you are in a well-lit environment and don’t move while your face is being scanned.") %></span><br/>
+                            <span><%= __("It’s okay to wear eyeglasses, but remove accessories that are covering your face.") %></span>
                         </div>
                     </div>
                     <div class="footer">
@@ -358,6 +356,7 @@ limitations under the License.
                             <img src="./img/success_tick.svg" alt="success">
                         </div>
                         <span class="animation-title-text"><%= __("Good Job !")%></span>
+                        <span class="animation-text next-step"><%= __("Now, we will ask you to upload a photo of your face, so that we can match it with your selfies.")%></span>
                     </div>
                     <div class="footer">
                         <div class="row">
@@ -600,22 +599,23 @@ limitations under the License.
                 <div class="animation">
                     <div class="animation-content">
                         <div class="animation-tutorial">
-                            <img src="./img/letscan3.svg" alt="Lets scan">
+                            <img src="./img/take_a_selfie.svg" alt="Lets scan">
                         </div>
                         <div class="animation-title-text">
-                            <span><%= __("Take a selfie") %></span>
+                            <span class="mobile-item"><%= __("Now, take a selfie") %></span>
+                            <span class="pc-item"><%= __("Upload your selfie") %></span>
                         </div>
                         <div class="animation-text">
-                            <span class="mobile-item"><%= __("Now, put your phone in front of your face, and take a selfie.") %></span>
-                            <span class="pc-item"><%= __("Now, upload a selfie of yourself.") %></span>
+                            <span class="mobile-item"><%= __("Please take a moment to take a selfie and then upload your picture here.") %></span>
+                            <span class="pc-item"><%= __("Please take a moment to take a selfie and then upload your picture here.") %></span>
                         </div>
                     </div>
                     <div class="footer">
                         <div class="row">
                             <div class="col">
                                 <button id="takeMyPickture" class="btn btn-primary btn-block btn-block">
-                                    <span class="mobile-item"><%= __("take my picture") %></span>
-                                    <span class="pc-item"><%= __("upload my picture") %></span>
+                                    <span class="mobile-item"><%= __("Take a selfie") %></span>
+                                    <span class="pc-item"><%= __("Upload my picture") %></span>
                                 </button>
                                 <input hidden accept="image/*" capture="user" class="file-upload" id="selfieInput" name="image" type="file" />
                             </div>
@@ -633,7 +633,7 @@ limitations under the License.
                 <div class="animation">
                     <div class="animation-content">
                         <div class="row justify-content-center">
-                            <img src="./img/success_tick.svg" alt="success">
+                            <img src="./img/matching_successful.svg" alt="success">
                         </div>
                         <span class="animation-title-text"><%= __("Good Job !")%></span><br>
                         <span class="animation-text"><%= __("Matching succeeded") %></span>
@@ -665,8 +665,8 @@ limitations under the License.
                         <div class="animation-tutorial">
                             <img src="./img/somethingWentWrong.svg" alt="Something went wrong">
                         </div>
-                        <span class="animation-title-text"><%= __("Oops !") %></span><br>
-                        <span class="animation-text"><%= __("Matching failed. Please try again...") %></span>
+                        <span class="animation-title-text"><%= __("Oops! Matching failed") %></span><br>
+                        <span class="animation-text"><%= __("Your selfies do not match. please try again.") %></span>
                     </div>
                     <div class="footer">
                         <div class="row">
@@ -750,6 +750,43 @@ limitations under the License.
                     </div>
                 </div>
             </div>
+            <!-- Age Estimation -->
+            <div class="row step d-none" id="step-age-estimation">
+                <header class="row header">
+                    <div class="col logo">
+                        <img alt="Logo" src="./img/logo-passive-video.png">
+                    </div>
+                </header>
+                <div class="animation">
+                    <div class="animation-content">
+                        <div id="best-image-age">
+                            <img id="best-image-age-result" src="./img/success_tick.svg" alt="success">
+                        </div>
+                        <span class="animation-title-text text-center age-success d-none"><%= __("Good Job ! You meet the age criteria.")%></span>
+                        <span class="animation-title-text text-center age-failure d-none"><%= __("Oops! You are too young.")%></span>
+                        <div class="age-estimation-top-block">
+                            <span class="animation-age-estimation-text-left"><%= __("Age estimation:")%></span>
+                            <span class="animation-age-estimation-text-right">&nbsp;<%= __("years old")%></span>
+                            <span id="age-estimation-value" class="animation-age-estimation-text-right"></span>
+                        </div>
+                        <div class="age-estimation-bottom-block">
+                            <span class="animation-age-estimation-text-left"><%= __("Threshold:")%></span>
+                            <span class="animation-age-estimation-text-right">&nbsp;<%= __("years old")%></span>
+                            <span id="age-threshold-value" class="animation-age-estimation-text-right"></span>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-primary btn-block" data-target="#step-1">
+                                    <%= __("Finish") %>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
 
         <script src="<%=JAVASCRIPT_PATH%>/bioserver-environment-api.js"></script>

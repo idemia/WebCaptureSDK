@@ -1,5 +1,6 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,12 +34,13 @@ module.exports = {
     doMatch
 };
 
-async function getSession() {
+async function getSession(ageThreshold) {
     const bodyContent = {
         livenessMode: config.LIVENESS_MODE,
         numberOfChallenge: config.LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE,
         correlationId: 'wbs-demo-correlation-id',
-        evidenceId: 'wbs-demo-evidence-id'
+        evidenceId: 'wbs-demo-evidence-id',
+        ageThreshold: ageThreshold
     };
     if (config.LIVENESS_SECURITY_LEVEL) {
         bodyContent.securityLevel = config.LIVENESS_SECURITY_LEVEL;

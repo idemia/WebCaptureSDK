@@ -1,5 +1,6 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,6 +56,7 @@ exports.initHttpEndpoints = (app) => {
             let sessionId = req.params.sessionId;
             logger.updateContext({ sessionId });
             const identityId = req.query.identityId;
+            const ageThreshold = req.query.ageThreshold;
 
             if (config.IDPROOFING && (!sessionId || sessionId === 'null')) {
                 logger.info('<< sessionId not present, calling getSession..from gips api.');
@@ -69,7 +71,7 @@ exports.initHttpEndpoints = (app) => {
             } else {
                 if (!sessionId || sessionId === 'null') {
                     logger.info('<< sessionId not present, calling getSession...');
-                    sessionId = await wbsApi.getSession();
+                    sessionId = await wbsApi.getSession(ageThreshold);
                     logger.updateContext({ sessionId });
                 } else {
                     logger.info('<< sessionId present, avoid calling getSession');
@@ -177,6 +179,7 @@ exports.initHttpEndpoints = (app) => {
                         result.message = 'Liveness succeeded';
                         result.isLivenessSucceeded = true;
                         result.bestImageId = currentLivenessResult.bestImageId;
+                        result.age = currentLivenessResult.age;
                         break;
                     case 'SPOOF' :
                         result.message = 'Liveness failed';

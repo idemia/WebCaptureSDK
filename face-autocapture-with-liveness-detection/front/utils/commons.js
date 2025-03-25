@@ -1,5 +1,6 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -89,13 +90,16 @@ exports.getCapabilities = async function (basePath, healthPath) {
  * init a liveness session
  * @return sessionId
  */
-exports.initLivenessSession = async function (basePath, sessionId = '', identityId = '') {
+exports.initLivenessSession = async function (basePath, sessionId = '', identityId = '', ageThreshold = '') {
     console.log('init liveness session');
     return new Promise((resolve, reject) => {
         const xhttp = new window.XMLHttpRequest();
         let path = `${basePath}/init-liveness-session/${sessionId}`;
         if (identityId && identityId !== '') {
             path = `${path}?identityId=${identityId}`;
+        }
+        if (ageThreshold) {
+            path = `${path}?ageThreshold=${ageThreshold}`;
         }
         xhttp.open('GET', path, true);
         xhttp.responseType = 'json';

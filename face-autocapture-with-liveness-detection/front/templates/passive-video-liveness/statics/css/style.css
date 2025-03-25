@@ -1,5 +1,6 @@
 /*
-Copyright 2020 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -909,14 +910,16 @@ video {background-color: black}
 }
 #best-image img {
     position: absolute;
-    top: -5px;
-    left: -20px;
+    top: 10px;
+    left: 5px;
 }
 
 .button-animation-success {
   justify-content: center!important;
   text-align: center!important;
 }
+
+
 
 .take-new-capture-text{
 	padding-top: 10px;
@@ -948,5 +951,46 @@ video {background-color: black}
     flex: 0 0 auto;
 }
 
+/** Age estimation **/
+#best-image-age .pc {
+    align-self: flex-start;
+}
+#best-image-age img {
+    position: absolute;
+    top: 10px;
+    left: 5px;
+}
 
+.age-estimation-top-block{
+    width:100%;
+    padding-bottom: 10px;
+    padding-top: 20px;
+}
 
+.age-estimation-bottom-block{
+    width:100%;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    border-top: 1px solid #bbb;
+}
+
+.animation-age-estimation-text{
+    padding-top: 15px;
+    padding-bottom: 15px;
+    font-style: normal;
+    font-size: 16px;
+    line-height: 23px;
+    color: #4C4C4C;
+}
+
+.animation-age-estimation-text-left {
+    .animation-age-estimation-text;
+    font-weight: normal;
+    float:left;
+}
+
+.animation-age-estimation-text-right{
+    .animation-age-estimation-text;
+    font-weight: bold;
+    float:right;
+}

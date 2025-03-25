@@ -1,14 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="75px" height="75px" viewBox="0 0 75 75" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 53.2 (72643) - https://sketchapp.com -->
-    <title>SUCCESS</title>
-    <desc>Created with Sketch.</desc>
-    <g id="mWeb" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="mobileWeb_Front-and-Back-Selfie_Auth_26" transform="translate(-150.000000, -296.000000)">
-            <g id="SUCCESS" transform="translate(150.000000, 296.000000)">
-                <circle id="Oval" fill="#429400" cx="37.1057143" cy="37.1057143" r="37.1057143"></circle>
-                <path d="M22.8342857,37.9971696 L29.0825421,48.252719 C29.8855188,49.5706815 31.6048798,49.98816 32.9228424,49.1851833 C33.255457,48.9825357 33.5420359,48.7125943 33.7641911,48.3926794 L51.5124419,22.8342857" id="Path" stroke="#FFFFFF" stroke-width="5.3226757" stroke-linecap="round"></path>
-            </g>
-        </g>
-    </g>
+<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="26.0473" cy="25.7492" rx="22.9526" ry="23.2507" fill="black" stroke="black" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="23.9526" cy="24.2507" rx="22.9526" ry="23.2507" fill="#9BCD91" stroke="black" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M33.9297 18.4775C33.6934 18.2741 32.7481 17.2807 32.4764 17.0054C32.0413 16.6298 31.4764 16.4452 30.9066 16.4923C30.3368 16.5395 29.809 16.8146 29.4398 17.2567L21.0509 27.2866L16.5138 22.7145C15.9714 22.1672 15.1819 21.9546 14.4428 22.1568C13.7036 22.3589 13.1271 22.9452 12.9304 23.6947C12.7337 24.4443 12.9466 25.2432 13.4891 25.7905L14.9069 27.2268L21.0864 33.4745C21.4933 33.8793 22.0403 34.1069 22.6105 34.1088H22.6933C23.2935 34.0891 23.8568 33.8103 24.2411 33.3428L34.1424 21.5176C34.8996 20.6144 34.8051 19.2636 33.9297 18.4775Z" fill="black" stroke="black" stroke-width="0.72" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M21.1927 32.6604C20.6111 32.6752 20.0484 32.4507 19.6331 32.038L13.4891 25.7903C12.9466 25.243 12.7337 24.4441 12.9304 23.6945C13.1271 22.945 13.7036 22.3587 14.4428 22.1565C15.1819 21.9544 15.9714 22.167 16.5138 22.7143L21.0509 27.2864L29.4398 17.2565C30.2066 16.3377 31.5634 16.2225 32.4705 16.9992C33.3775 17.7759 33.4913 19.1504 32.7245 20.0692L22.8232 31.8944C22.437 32.3594 21.8749 32.6376 21.2754 32.6604H21.1927Z" fill="white" stroke="black" stroke-width="0.72" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
