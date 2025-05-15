@@ -14,8 +14,8 @@
   "author": "IDEMIA",
   "license": "Apache-2.0",
   "dependencies": {
-    "@babel/core": "^7.23.3",
-    "@babel/preset-env": "^7.23.3",
+    "@babel/core": "^7.27.1",
+    "@babel/preset-env": "^7.27.1",
     "@zainulbr/i18n-webpack-plugin": "^2.0.3",
     "asn1-ber": "^1.1.1",
     "babel-loader": "^9.1.2",

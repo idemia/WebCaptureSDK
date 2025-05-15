@@ -11,7 +11,6 @@
   "You seem to be using an unsupported operating system.": "Vous semblez utiliser un système d'exploitation non supporté.",
   "Please use one of following browsers for a better experience":"Veuillez utiliser l'un des navigateurs suivants pour une meilleure expérience",
   "Please use one of following operating systems for a better experience": "Veuillez utiliser l'un des systèmes d'exploitation suivants pour une meilleure expérience.",
-
   "SKIP":"PASSER",
   "next":"suivant",
   "Next":"Suivant",
@@ -60,7 +59,6 @@
   "Success":"Succès",
   "Matching failed.":"Le Matching a échoué.",
   "Uploading image":"Chargement d'image",
-
   "Failed to get camera device stream":"Impossible de récuperer le flux video de la caméra",
   "You denied camera permissions, either by accident or on purpose.":"Vous avez refusé l'acces à votre caméra intentionnellement ou par accident.",
   "In order to use this demo, you need to enable camera permissions in your browser settings or in your operating system settings. Please refresh the page to restart the demo.":"Pour utiliser cette démo, vous devez activer l'accès à votre appareil photo dans les paramètres de votre navigateur ou de votre système d'exploitation. Veuillez actualiser la page pour redémarrer la démo.",
