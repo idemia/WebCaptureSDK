@@ -818,22 +818,24 @@ function displayMsg(elementToDisplay, ttl = 2000) {
 /**
  *
  * @param position
- * @param {boolean} position.blur is frame blurry
- * @param {boolean} position.holdStraight
- * @param {boolean} position.badFraming
- * @param {boolean} position.movement
- * @param {boolean} position.reflection
- * @param {boolean} position.tooClose
- * @param {boolean} position.tooFar
- * @param {boolean} position.goodPosition
- * @param {boolean} position.noDocument
- * @param {boolean} position.bestImage
- * @param {Object} corners {w,h,x0,y0,x1,y1,x2,y2,x3,y3}
- * @param {boolean} pending
- * @param {number} uploadProgress
+ * @param {boolean?} position.badFraming The document is misaligned within the frame.
+ * @param {boolean?} position.blur The document within the frame appears blurry.
+ * @param {boolean?} position.glare Frame shows some glare/reflection.
+ * @param {boolean?} position.tooClose Camera is too close to the document.
+ * @param {boolean?} position.tooFar  Camera is too far from the document.
+ * @param {boolean?} position.holdStraight The document isn�t positioned straight in the frame.
+ * @param {boolean?} position.lowlight Frame has low light.
+ * @param {boolean?} position.noDocument No document detected during the capture of the side
+ * @param {boolean?} position.pdf417 Unable to decode the barcode pdf417
+ * @param {boolean?} position.mrzDecoding Unable to decode the mrz
+ * @param {boolean?} position.wrongOrientation document is not in the same orientation as the frame (portrait vs landscape)
+ * @param {Object} corners Document corners {w,h,x0,y0,x1,y1,x2,y2,x3,y3}
+ * @param {boolean} pending pending Waiting for results
+ * @param {number} uploadProgress  The ratio of data received by the server to the total data to be sent is optional when uploading images or videos.
+ *                                 It is a floating-point number with three decimal places, between 0 and 1.
  */
 function displayInstructionsToUser({ position, corners, pending, uploadProgress }) {
-    // Event list: badFraming, glare, blur, tooClose, tooFar, holdStraight, lowlight, noDocument
+    // Event list: badFraming, glare, blur, tooClose, tooFar, holdStraight, lowlight, noDocument, pdf417, mrzDecoding, wrongOrientation
     if (position) { // << got some message related to document position
         if (position.noDocument) {
             displayMsg(alignDocMsg);
@@ -849,7 +851,7 @@ function displayInstructionsToUser({ position, corners, pending, uploadProgress 
             displayMsg(holdStraightDocMsg);
         } else if (position.badFraming) {
             displayMsg(alignDocMsg);
-        } else if (position.reflection) {
+        } else if (position.glare) {
             displayMsg(reflectionDocMsg);
         } else if (position.pdf417) {
             displayMsg(pdfNotDetectedMsg);
