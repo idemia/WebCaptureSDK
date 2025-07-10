@@ -1,5 +1,6 @@
 /*
-Copyright 2021 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -63,7 +64,8 @@ function createLogger() {
             format(info => {
                 return !LOG_FILE_NAME_REGEX || LOG_FILE_NAME_REGEX.test(getFileName()) ? info : null;
             })(),
-            format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+            // In raw, use local time to display technical logs, in json use ISO8601 with timezone offset
+            format.timestamp({ format: config.LOG_FORMAT === 'raw' ? 'YYYY-MM-DD HH:mm:ss.SSS' : 'YYYY-MM-DDTHH:mm:ss.SSSZ' }),
             format.printf(info => {
                 const fileName = getFileName();
                 // Extract contextual tenantId / sessionId

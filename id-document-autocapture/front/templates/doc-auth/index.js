@@ -1,5 +1,6 @@
 /*
-Copyright 2021 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -45,7 +46,7 @@ const loadingResults = $('#loading-doc-results');
 const loadingInitialization = $('#loading-initialization');
 const videoScanOverlays = $$('#step-doc-auth .video-overlay');
 const stopCaptureButton = $('#stop-capture-button');
-
+const startManualCaptureButton = $('#continueStartManual');
 const manualCaptureInput = $('#upload-document-photo');
 
 const gipsImageBlock = $('#gips-image-block');
@@ -70,6 +71,7 @@ let changeSideRequired;
 let cameraPermissionAlreadyAsked;
 let imagesDocCorners;
 let countDownTimer; // flip timer
+let clientReady;
 const urlParams = new URLSearchParams(window.location.search); // let you extract params from url
 
 const showLiveCorners = urlParams.get('showLiveCorners') === 'true';
@@ -200,7 +202,26 @@ async function initDocCaptureClient(options = {}) {
     };
     console.log('Init document capture client. Side is : ' + currentDocSide);
     try {
-        client = await DocserverVideo.initDocCaptureClient(docCaptureOptions);
+        if (window.manualCapture) {
+            // Disable the button to prevent multiple clicks
+            startManualCaptureButton.disabled = true;
+            // update the style to indicate the button is disabled (greyed out)
+            startManualCaptureButton.classList.add('disabled');
+        }
+
+        // Store the Promise returned by initDocCaptureClient
+        // await its resolution to obtain the client instance used to start capture.
+        console.log('call initDocCaptureClient');
+        client = undefined;
+        clientReady = DocserverVideo.initDocCaptureClient(docCaptureOptions);
+        client = await clientReady;
+        console.log('initDocCaptureClient finished');
+
+        if (window.manualCapture) {
+            // Re-enable the button and remove the disabled styling to allow user interaction again
+            startManualCaptureButton.disabled = false;
+            startManualCaptureButton.classList.remove('disabled');
+        }
     } catch (err) {
         console.log('Init document capture client failed:', err);
         displayTechnicalError();
@@ -231,29 +252,29 @@ async function retrieveUserCamera() {
 }
 /**
  * Get GIPS continue Button activated
- **/
+ */
 gipsContinueButton.addEventListener('click', async () => {
-    console.log('User clicked on getGipsContine button');
-    gipsTransactionContent.innerHTML = '';
+    console.log('User clicked on gipsContinueButton button');
+    gipsTransactionContent.textContent = '';
     gipsImageBlock.querySelectorAll('img')
         .forEach(img => { img.src = ''; });
 });
 
 /**
  * Get GIPS Transaction Button activated
- **/
+ */
 gipsTransactionButton.addEventListener('click', async () => {
     console.log('User clicked on getGipsStatus button with identityId=' + identityId);
-    gipsTransactionContent.innerHTML = '';
-    const transaction = await getGipsTransaction();
+    gipsTransactionContent.textContent = '';
+    const transaction = await getGipsTransaction(); // TODO handle possible exception
     console.log('IPV response', transaction);
-    gipsTransactionContent.innerHTML = JSON.stringify(transaction, null, 2);
+    gipsTransactionContent.textContent = JSON.stringify(transaction, null, 2);
     gipsTransactionContent.classList.remove('d-none');
 });
 
 /**
  * Get GIPS Image Button activated
- **/
+ */
 gipsImageButton.addEventListener('click', async () => {
     gipsImageBlock.querySelectorAll('img').forEach(img => { img.src = ''; });
     gipsLoadingProcessing.classList.remove('d-none');
@@ -261,16 +282,16 @@ gipsImageButton.addEventListener('click', async () => {
     let i = 0;
     // here we try each 4 seconds to recover gips best image
     const intervalId = window.setInterval(async () => {
-        transaction = await getGipsTransaction();
+        transaction = await getGipsTransaction(); // TODO handle possible exception
         if (transaction && transaction.globalStatus && transaction.globalStatus.status === 'EXPECTING_INPUT') {
-            // status is EXCPECTING_INPUT so we can display gips best image
+            // status is EXPECTING_INPUT so we can display gips best image
             clearInterval(intervalId);
             gipsLoadingProcessing.classList.add('d-none');
             if (transaction.idDocuments && transaction.idDocuments.length) {
                 const lastDocument = transaction.idDocuments[transaction.idDocuments.length - 1];
                 evidenceId = lastDocument.evidenceId;
             }
-            const docImages = await getGipsBestImage(identityId, evidenceId);
+            const docImages = await getGipsBestImage(identityId, evidenceId); // TODO handle possible exception
             if (docImages && docImages.length) {
                 for (const item of docImages) {
                     const elem = document.createElement('img');
@@ -359,9 +380,15 @@ async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide
     if (targetStepId.startsWith('#start-manual-capture')) {
         const retry = targetStepId.endsWith('retry');
         console.log('start manual capture', { retry });
+        manualCaptureInput.click(); // Important: no wait for init Promise and onInitEnd to not lose user interaction and avoid iOS blocking camera popup to be displayed
         waitingForManualCapturePhoto = true;
-        client?.startManualCapture({ isRetry: retry });
-        manualCaptureInput.click(); // no wait for onInitEnd to not lose user interaction and avoid iOS blocking camera popup to be displayed
+        if (!client) {
+            console.log('Client not initialized yet. Waiting for initialization...');
+            await clientReady;
+        }
+        await client?.startManualCapture({ isRetry: retry });
+        console.log('startManualCapture complete');
+
         return;
     }
     // d-none all steps
@@ -399,14 +426,13 @@ async function processStep(sourceStepId, targetStepId, displayWithDelay, docSide
                 displayChangeSideUI(startDelay);
             }
             const { selectedDocRule } = getCurrentDocumentRule();
-
-            clientStartTimeout = setTimeout(() => {
+            clientStartTimeout = setTimeout(async () => {
                 const docTypeSide = selectedDocRule.find(docTypeSide => docTypeSide.side.name.toUpperCase() === docSide);
                 if (docTypeSide) {
                     docTypeSide.status = 'processing';
                     if (!changeSideRequired) { // Start only on first side (fullDocCapture)
                         const startCaptureRequest = { stream: videoStream  };
-                        client.start(startCaptureRequest);
+                        await client.start(startCaptureRequest);
                     }
                     changeSideRequired = false;
                     captureInProgress = true;
@@ -816,14 +842,13 @@ function displayMsg(elementToDisplay, ttl = 2000) {
 }
 
 /**
- *
  * @param position
  * @param {boolean?} position.badFraming The document is misaligned within the frame.
  * @param {boolean?} position.blur The document within the frame appears blurry.
  * @param {boolean?} position.glare Frame shows some glare/reflection.
  * @param {boolean?} position.tooClose Camera is too close to the document.
  * @param {boolean?} position.tooFar  Camera is too far from the document.
- * @param {boolean?} position.holdStraight The document isn�t positioned straight in the frame.
+ * @param {boolean?} position.holdStraight The document isn’t positioned straight in the frame.
  * @param {boolean?} position.lowlight Frame has low light.
  * @param {boolean?} position.noDocument No document detected during the capture of the side
  * @param {boolean?} position.pdf417 Unable to decode the barcode pdf417
@@ -1136,53 +1161,29 @@ function base64ToArrayBuffer(base64) {
 }
 
 async function getGipsBestImage() {
-    return new Promise(function (resolve, reject) {
-        const xhttp = new window.XMLHttpRequest();
-        const path = BASE_PATH + '/gips-best-image/' + identityId + '/' + evidenceId;
-
-        xhttp.open('GET', path, true);
-        xhttp.responseType = 'json';
-        xhttp.setRequestHeader('Content-type', 'application/json');
-        xhttp.onload = function () {
-            console.log('Calling ' + BASE_PATH + '/gips-best-image/' + identityId + '/' + evidenceId);
-
-            if (xhttp.status && xhttp.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error('getGipsBestImage failed, max retries reached');
-                reject(new Error('getGipsBestImage failed, max retries reached'));
-            }
-        };
-        xhttp.onerror = function () {
-            reject(JSON.parse(xhttp.response));
-        };
-        xhttp.send();
-    });
+    const url = `${BASE_PATH}/gips-best-image/${identityId}/${evidenceId}`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('getGipsBestImage failed');
+        error.status = response.status;
+        throw error;
+    }
 }
 
 async function getGipsTransaction() {
-    return new Promise(function (resolve, reject) {
-        const xhttp = new window.XMLHttpRequest();
-        const path = BASE_PATH + '/gips-transaction/' + identityId;
-
-        xhttp.open('GET', path, true);
-        xhttp.responseType = 'json';
-        xhttp.setRequestHeader('Content-type', 'application/json');
-        xhttp.onload = function () {
-            console.log('Calling ' + BASE_PATH + '/gips-transaction/' + identityId);
-
-            if (xhttp.status && xhttp.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error('getGipsTransaction failed, max retries reached');
-                reject(new Error('getGipsTransaction failed, max retries reached'));
-            }
-        };
-        xhttp.onerror = function () {
-            reject(JSON.parse(xhttp.response));
-        };
-        xhttp.send();
-    });
+    const url = `${BASE_PATH}/gips-transaction/${identityId}`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('getGipsTransaction failed');
+        error.status = response.status;
+        throw error;
+    }
 }
 
 window.addEventListener('resize', () => {
@@ -1243,18 +1244,36 @@ function adjustDocumentCaptureOverlay() {
     if (!documentBorders) {
         return;
     }
-    let rootWidth = documentBorders.clientWidth; // window.innerWidth;
-    let rootHeight = documentBorders.clientHeight; // window.innerHeight;
+    let rootWidth = documentBorders.clientWidth;
+    let rootHeight = documentBorders.clientHeight;
+
+    // Check if we are running a wide screen device (like Galaxy Z Fold) in portrait
+    // We do not use 'orientation: portrait' for the query as the device can report it as landscape due to the wide screen
+    const mediaQueryWideScreen = window.matchMedia(
+        '(min-height: 600px) and (max-height: 700px) and (min-width: 650px) and (max-width: 720px)'
+    );
+    if (mediaQueryWideScreen.matches) {
+        console.log('Using wide screen properties');
+        // Adjust margins and width so that overlay is rotated properly and has correct dimensions
+        documentBorders.style.setProperty('--mask-margin', 0.7);
+        rootWidth = rootWidth * 2 / 3;
+    } else {
+        console.log('Using standard screen properties');
+        documentBorders.style.setProperty('--mask-margin', 0.85);
+    }
+
     if (rootWidth < rootHeight) { // << if portrait mode then swap the width & height
         [rootWidth, rootHeight] = [rootHeight, rootWidth];
         $$('.rotatable-wh').forEach(r => {
             r.classList.remove('w-100', 'h-100');
+            r.classList.add('vertical');
             r.style.width = window.innerHeight + 'px';
             r.style.height = window.innerWidth + 'px';
         });
     } else {
         $$('.rotatable-wh').forEach(r => {
             r.classList.add('w-100', 'h-100');
+            r.classList.remove('vertical');
         });
     }
     documentBorders.style.setProperty('--mask-h-ratio', (rootWidth * maskHeightRatio / 100) + 'px');
@@ -1358,7 +1377,8 @@ manualCaptureInput.onchange = async (event) => {
     uploadingInfinite.classList.remove('d-none');
     uploadingProgress.classList.add('d-none');
     console.log('Uploading document photo:', file);
-    client?.pushImage(file);
+    await client?.pushImage(file);
+    console.log('Push image complete');
 };
 
 function updateButtonDataTarget(button, targetStepId, restartDemo) {

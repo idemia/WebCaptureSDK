@@ -2,6 +2,12 @@
 This demo app showcases the integration of the IDEMIA WebCapture SDK, including both Face Autocapture & Liveness and Identity Document Autocapture features.
 
 ---
+## July 11, 2025 : Identity Document Autocapture
+
+### What's New
+* Fix capture overlay not well displayed in wide screen devices.
+* Fix retry manual capture on low connectivity.
+
 ## June 2, 2025 : Identity Document Autocapture
 
 ### Recommendation

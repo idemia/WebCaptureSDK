@@ -1,5 +1,6 @@
 /*
-Copyright 2021 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,6 +31,11 @@ const allCountries = Allcountries // reorder the list of countries alphabeticall
         return getNormalizedString(a.name).localeCompare(getNormalizedString(b.name));
     });
 
+// The list of deprecated country codes (the codes we don't need to support because there is a replacement or other reason).
+const deprecatedCountryCodes = [
+    'XKX' // Temporary code for Kosovo, new official variant exist
+];
+
 let currentDocumentRule; // store current document rule as global variable - link with current session
 let currentSession; // store current session
 let identityId; // store identity of the GIPS transaction (if GIPS workflow)
@@ -47,7 +53,9 @@ if (!sessionIdParam) {
         const acceptedCountries = res
             .map(c => {
                 const country = allCountries.find(country => country.code === c.code);
-                if (!country) console.log('Unsupported country details', c.code);
+                if (!country && !deprecatedCountryCodes.includes(c.code)) {
+                    console.log('Unsupported country details', c.code);
+                }
                 return country;
             })
             .filter(c => c)
@@ -114,15 +122,13 @@ if (!sessionIdParam) {
 
             const docTypesForSelectedCountry = supportedCountriesDoctypes.find(country => country.code === selectedCountryCode).docTypes;
 
-            // looking for accepted doc types for this country code
-
+            // Looking for accepted doc types for this country code
             console.log(`Accepted doc types for ${selectedCountryCode}: ${docTypesForSelectedCountry}`);
             displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCountry);
         });
     })
         .catch(function (error) {
-            const extendedMsg = 'No supported country or docserver is down';
-            displayCountryManagementError(extendedMsg, error);
+            displayCountryManagementError('No supported country or docserver is down', error);
         });
 } else {
     retrieveDocumentSession({ sessionId: sessionIdParam })
@@ -131,35 +137,40 @@ if (!sessionIdParam) {
             processDocType(countryCode, rules, docType, format);
         })
         .catch(function (error) {
-            const extendedMsg = 'No supported country or docserver is down';
-            displayCountryManagementError(extendedMsg, error);
+            displayCountryManagementError('No supported country or docserver is down', error);
         });
 }
 /**
  * Handle supported country retrieval or processing error
- * @param extendedMsg
- * @param error
+ * @param {string} extendedMsg
+ * @param {Error & {status?: number}} error
  */
 function displayCountryManagementError(extendedMsg, error) {
     console.log(extendedMsg, error);
+    // Clear all UI screens
+    $$('.step').forEach(row => row.classList.add('d-none'));
     $('#step-doc-auth-technical-ko').classList.remove('d-none');
-    $('#step-country-selection').classList.add('d-none');
-
     const small = $('#step-doc-auth-technical-ko small');
     small.textContent = extendedMsg || '';
 }
 
 /**
  * Handle document type processing error
- * @param extendedMsg
- * @param error
+ * @param {string} extendedMsg
+ * @param {Error & {status?: number}} error
  */
 function displayDoctypeOrSessionError(extendedMsg, error) {
     console.log(extendedMsg, error);
-    $('#step-doc-auth-ko').classList.remove('d-none');
-    $('#step-doctype-selection').classList.add('d-none');
-    const small = $('#step-doc-auth-technical-ko small');
-    small.textContent = extendedMsg || '';
+    // Clear all UI screens
+    $$('.step').forEach(row => row.classList.add('d-none'));
+    // And display error depending on status
+    if (error.status === 429) {
+        $('#step-server-overloaded').classList.remove('d-none');
+    } else {
+        $('#step-doc-auth-ko').classList.remove('d-none');
+        const small = $('#step-doc-auth-ko small');
+        small.textContent = extendedMsg || '';
+    }
 }
 
 /**
@@ -193,8 +204,7 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
                 $('#init-session-loader').classList.remove('d-none');
                 const docCaptureSession = await initSessionAndRetrieveDocRules(selectedCountryCode, selectedDocType)
                     .catch(function (error) {
-                        const extendedMsg = 'Create document capture session failed';
-                        displayDoctypeOrSessionError(extendedMsg, error);
+                        displayDoctypeOrSessionError('Create document capture session failed', error);
                     });
 
                 // keep hold of current document capture session
@@ -225,9 +235,6 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
                     // 1- select country code and related document type
                     // 2- Display document type
                     processDocType(selectedCountryCode, docRules, selectedDocType, format);
-                } else {
-                    const extendedMsg = 'Create document capture session failed';
-                    displayDoctypeOrSessionError(extendedMsg, 'Session not created');
                 }
             };
         });
@@ -236,14 +243,12 @@ function displayListOfDocumentTypes(selectedCountryCode, docTypesForSelectedCoun
         $('#step-country-selection').classList.add('d-none');
         $('#step-doctype-selection').classList.remove('d-none');
     } else {
-        const extendedMsg = 'No specified document types for this country ';
-        console.log(extendedMsg, selectedCountryCode);
-        displayCountryManagementError(extendedMsg, 'Session not created');
+        displayCountryManagementError('No specified document types for this country', new Error('Session not created'));
     }
 }
 
 /**
- * Process document type , side and rules
+ * Process document type, side and rules
  * @param selectedCountryCode
  * @param docRules
  * @param selectedDocType
@@ -297,105 +302,78 @@ function processDocType(selectedCountryCode, docRules, selectedDocType, format) 
 exports.getCurrentDocumentRule = () => { return currentDocumentRule; };
 
 /**
- * Requests SP server for supported countries and their docuemnt types
+ * Requests SP server for supported countries and their document types
  * @param {string?} countryCode
- * @returns {Promise<unknown>}
+ * @returns {Promise<any>}
  */
 async function retrieveCountryDocTypes(countryCode) {
-    return new Promise(function (resolve, reject) {
-        const xhttp = new window.XMLHttpRequest();
-        let path = BASE_PATH + '/countries/doc-types';
-        if (countryCode) {
-            path = path + '?countryCode=' + countryCode;
-        }
-        xhttp.open('GET', path, true);
-
-        xhttp.responseType = 'json';
-        const errorMessage = 'Asking for doc rules failed';
-        xhttp.onload = function () {
-            if (this.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error(errorMessage);
-                reject(new Error(errorMessage));
-            }
-        };
-        xhttp.onerror = function () {
-            reject(new Error(errorMessage));
-        };
-        xhttp.send();
-    });
+    const url = `${BASE_PATH}/countries/doc-types${countryCode ? `?countryCode=${countryCode}` : ''}`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('Asking for doc rules failed');
+        error.status = response.status;
+        throw error;
+    }
 }
-function retrieveDocumentSession({ sessionId }) {
-    return new Promise(function (resolve, reject) {
-        const xhttp = new window.XMLHttpRequest();
-        const path = BASE_PATH + '/document-sessions/' + sessionId;
-        xhttp.open('GET', path, true);
-        xhttp.responseType = 'json';
-        const errorMessage = 'Asking for doc-session failed';
-        xhttp.onload = function () {
-            if (this.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error(errorMessage + ' with status:' + this.status);
-                reject(new Error(errorMessage));
-            }
-        };
-        xhttp.onerror = function () {
-            reject(new Error(errorMessage));
-        };
-        xhttp.send();
-    });
+
+/**
+ * @param {string} sessionId
+ * @return {Promise<any>}
+ */
+async function retrieveDocumentSession({ sessionId }) {
+    const url = `${BASE_PATH}/document-sessions/${sessionId}`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('Asking for doc-session failed');
+        error.status = response.status;
+        throw error;
+    }
 }
 
 /**
  *  Requests SP server for session creation and retrieves capture rules
- *  if (country + document type)  exists , then SP server forwoard request to docserver  that  creates session and returns capture rules.
- *  if (country + document type) selected, then SP server retrieves the related rules and request docserver  for session creation with specific rules.
- * @param countryCode
- * @param docType
- * @returns {Promise<unknown>}
+ *  if (country + document type) exists, then SP server forward request to docserver that creates session and returns capture rules.
+ *  if (country + document type) selected, then SP server retrieves the related rules and request docserver for session creation with specific rules.
+ * @param {string} countryCode
+ * @param {string} docType
+ * @returns {Promise<string>}
  */
 async function initSessionAndRetrieveDocRules(countryCode, docType) {
-    console.log('Retrieve document rules for country ' + countryCode + ' and type ' + docType);
-
+    console.log(`Retrieve document rules for country ${countryCode} and type ${docType}`);
     const session = {
         countryCode: countryCode,
         docType: docType
     };
-
-    console.log('Initialize capture session');
+    console.log('Initializing capture session...');
     return iniDocumenCaptureSession(session);
 }
 
 /**
- * HTTP client for session creation request
- * @param session
- * @returns {Promise<unknown>}
+ * Creates a document capture session
+ * @param {object} session
+ * @returns {Promise<string>}
  */
-function iniDocumenCaptureSession(session) {
-    return new Promise(function (resolve, reject) {
-        const xhttp = new window.XMLHttpRequest();
-        const path = BASE_PATH + '/init-document-session';
-        xhttp.open('POST', path, true);
-        xhttp.setRequestHeader('Content-Type', 'application/json');
-        xhttp.setRequestHeader('Accept', '*/*'); // accept all
-        xhttp.responseType = 'json';
-        const errorMessage = 'Init session and retrieve document type rules failed';
-
-        xhttp.onload = function () {
-            console.log('Calling ' + BASE_PATH + '/init-document-session');
-            if (this.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error(errorMessage);
-                reject(new Error(errorMessage));
-            }
-        };
-        xhttp.onerror = function () {
-            console.error(errorMessage);
-            reject(new Error(errorMessage));
-        };
-        xhttp.send(JSON.stringify(session));
+async function iniDocumenCaptureSession(session) {
+    const url = `${BASE_PATH}/init-document-session`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(session)
     });
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('Init session failed');
+        error.status = response.status;
+        throw error;
+    }
 }

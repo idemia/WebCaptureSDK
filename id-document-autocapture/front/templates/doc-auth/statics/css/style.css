@@ -486,23 +486,8 @@ video {background-color: black}
 
 :root{
     --mask-margin: 0.85; /* take 85% of screen */
-}
-/* display document borders (refer to official dimensions
-    https://fr.wikipedia.org/wiki/ISO/CEI_7810) */
-.id1 {
-    /* ID1 */
-    --mask-w-ratio: 158.577251vh; /* 85.6/53.98 = 1.58577251 */
-    --mask-h-ratio: 63.0607476vw; /* 100/63.0607476 = 1.58577251 */
-}
-.id2 {
-    /* ID2 */
-    --mask-w-ratio: 141.891892vh; /* 105/74 = 1.41891892 */
-    --mask-h-ratio: 70.4761904vw; /* 100/70.4761904 = 1.41891892 */
-}
-.id3 {
-    /* ID3 */
-    --mask-w-ratio: 142.045455vh; /* 125/88 = 1.42045455 */
-    --mask-h-ratio: 70.3999998vw; /* 100/70.3999998 = 1.42045455 */
+    --mask-w-ratio: 100px; /* Will be overridden in js */
+    --mask-h-ratio: 100px; /* Will be overridden in js */
 }
 
 #step-doc-auth .doc-auth-mask-border {
@@ -536,34 +521,20 @@ video {background-color: black}
     padding: 10px;
 }
 
-@media (orientation: portrait) {
-    .id1 {
-        /* ID1 */
-        --mask-w-ratio: 158.577251vw; /* 85.6/53.98 = 1.58577251 */
-        --mask-h-ratio: 63.0607476vh; /* 100/63.0607476 = 1.58577251 */
-    }
-    .id2 {
-        /* ID2 */
-        --mask-w-ratio: 141.891892vw; /* 105/74 = 1.41891892 */
-        --mask-h-ratio: 70.4761904vh; /* 100/70.4761904 = 1.41891892 */
-    }
-    .id3 {
-        /* ID3 */
-        --mask-w-ratio: 142.045455vw; /* 125/88 = 1.42045455 */
-        --mask-h-ratio: 70.3999998vh; /* 100/70.3999998 = 1.42045455 */
-    }
-    #step-doc-auth .rotatable {
-        transform: rotate(90deg);
-    }
-    main #step-doc-auth .rotatable-wh{
-        transform: rotate(90deg);
-        transform-origin: right top;
-        position: absolute;
-        top: 100%;
-        right: 0;
-        margin: 0!important;
-    }
+
+#step-doc-auth .rotatable-wh {
+    /* Empty, just used as element identifier */
 }
+
+main #step-doc-auth .vertical {
+    transform: rotate(90deg);
+    transform-origin: right top;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin: 0!important;
+}
+
 #step-doc-auth .animation {
     align-items: center;
     background-color: black

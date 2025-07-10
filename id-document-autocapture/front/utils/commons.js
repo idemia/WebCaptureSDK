@@ -1,5 +1,6 @@
 /*
-Copyright 2021 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -128,31 +129,4 @@ exports.camelCaseToTitleCase = (camelCaseTxt) => {
         .trim();
     // capitalize the first letter
     return result && result.charAt(0).toUpperCase() + result.slice(1);
-};
-
-exports.getMonitoring = async function (basePath, healthPath) {
-    return new Promise(function (resolve, reject) {
-        console.log(' >> get monitoring', healthPath);
-        const errorMessage = 'getMonitoring failed';
-
-        const xhttp = new window.XMLHttpRequest();
-        xhttp.open('GET', basePath + healthPath, true);
-        xhttp.setRequestHeader('Content-type', 'application/json');
-
-        xhttp.responseType = 'json';
-        xhttp.onload = function () {
-            if (this.status >= 200 && this.status < 300) {
-                console.log('getMonitoring ok', xhttp.response);
-                resolve(xhttp.response);
-            } else {
-                console.error(errorMessage);
-                reject(new Error(errorMessage));
-            }
-        };
-        xhttp.onerror = function () {
-            console.log(errorMessage);
-            reject(new Error(errorMessage));
-        };
-        xhttp.send();
-    });
 };

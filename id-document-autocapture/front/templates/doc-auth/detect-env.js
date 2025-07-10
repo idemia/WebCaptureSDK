@@ -1,5 +1,6 @@
 /*
-Copyright 2021 Idemia Identity & Security
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +23,7 @@ limitations under the License.
 /**
  * Check user environment support
  * must be ES5 compatible
- **/
+ */
 function displayEnvironement(env) {
     var envDetectionPage = document.querySelector('#step-compatibility');
     var descriptionClass = '.description';
@@ -98,7 +99,7 @@ function displayEnvironement(env) {
 /**
  * Check user env support
  * must be ES5 compatible
- **/
+ */
 if (typeof DocserverEnvironment !== 'undefined') {
     DocserverEnvironment.detection(true, displayEnvironement);
 }
