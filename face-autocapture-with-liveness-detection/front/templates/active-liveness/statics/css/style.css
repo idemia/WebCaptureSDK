@@ -571,7 +571,7 @@ video {background-color: black}
 
 #step-liveness .bg-green {background-color: #1e7e34}
 
-#step-liveness #illumination-overlay, #loading {
+#step-liveness #illumination-overlay {
     position: fixed;
     top: 0; bottom: 0;
     left: 0; right: 0;

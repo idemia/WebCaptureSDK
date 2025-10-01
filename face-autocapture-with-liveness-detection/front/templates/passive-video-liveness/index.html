@@ -759,8 +759,17 @@ limitations under the License.
                 </header>
                 <div class="animation">
                     <div class="animation-content">
-                        <div id="best-image-age">
-                            <img id="best-image-age-result" src="./img/success_tick.svg" alt="success">
+                        <div class="best-image-row">
+                            <div id="best-image-age-container" class="col">
+                                <div id="best-image-age">
+                                    <img id="best-image-age-result" src="./img/success_tick.svg" alt="success">
+                                </div>
+                                <span id="best-image-age-description" class="animation-content text-center d-none"><%= __("Autocaptured selfie (liveness & age estimation)")%></span>
+                            </div>
+                            <div id="best-image-match-container" class="col d-none">
+                                <div id="best-image-match"></div>
+                                <span id="best-image-match-description" class="animation-content text-center"><%= __("Reference portrait (matching)")%></span>
+                            </div>
                         </div>
                         <span class="animation-title-text text-center age-success d-none"><%= __("Good Job ! You meet the age criteria.")%></span>
                         <span class="animation-title-text text-center age-failure d-none"><%= __("Oops! You are too young.")%></span>

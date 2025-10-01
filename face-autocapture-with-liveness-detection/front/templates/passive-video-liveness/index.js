@@ -38,6 +38,7 @@ const VIDEO_ID = 'user-video';
 const BEST_IMG_ID = 'best-image';
 const BEST_IMG_IPV_ID = 'best-image-ipv';
 const BEST_IMG_AGE_ID = 'best-image-age';
+const BEST_IMG_MATCH_ID = 'best-image-match';
 const bestImageIPV = document.querySelector('#' + BEST_IMG_IPV_ID);
 const getIPVStatus = document.querySelector('#get-ipv-status-result');
 const connectivityCheck = document.querySelector(ID_CONNECTIVITY_CHECK);
@@ -119,13 +120,13 @@ commonutils.initLivenessPassiveVideoTutorial();
  */
 
 // call getCapabilities from demo-server which will call with apikey the endpoint from video-server
-commonutils.getCapabilities(basePath, healthPath).then(
-    (response) => {
-        if (response && response.version) {
-            monitoring.forEach((element) => { element.innerHTML = `${response.version}`; });
-        }
+commonutils.getCapabilities(basePath, healthPath).then(response => {
+    console.log('getMonitoring ok', response);
+    if (response?.version) {
+        monitoring.forEach((element) => { element.innerHTML = `${response.version}`; });
     }
-).catch(async () => {
+}).catch(async (err) => {
+    console.error(err);
     await stopVideoCaptureAndProcessResult(false, 'Service unavailable');
 });
 
@@ -159,9 +160,11 @@ async function init() {
         sessionId = session.sessionId;
         identityId = session.identityId;
     } catch (err) {
+        console.error(err);
         clearTimeout(timeoutCheckConnectivity);
         sessionId = false;
-        await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
+        const msg = err.status === 429 ? 'Server overloaded' : __('Failed to initialize session');
+        await stopVideoCaptureAndProcessResult(false, msg);
     }
     if (!sessionId) {
         return;
@@ -266,7 +269,7 @@ async function initStream() {
     }
 }
 
-function displayAgeEstimationResult() {
+function displayAgeEstimationResult({ referenceImage, referenceImageInfo } = {}) {
     // hide all buttons
     document.querySelectorAll('#step-age-estimation button').forEach((btn) => btn.classList.add(D_NONE));
     // initialize field displaying age estimation result
@@ -289,9 +292,22 @@ function displayAgeEstimationResult() {
         document.querySelectorAll('#step-age-estimation .age-failure').forEach((element) => element.classList.remove(D_NONE));
     }
 
-    // display best image
+    // Display best image
     if (faceImg && bestImageInfo) {
         BioserverVideoUI.displayPassiveVideoBestImage(faceImg, bestImageInfo, BEST_IMG_AGE_ID, graphicOptions);
+    }
+    // Display reference image
+    if (referenceImage && referenceImageInfo) {
+        // Add description of best image if reference is displayed
+        document.querySelector('#best-image-age-description').classList.remove(D_NONE);
+        // Add reference image container if reference is displayed
+        document.querySelector('#best-image-match-container').classList.remove(D_NONE);
+        BioserverVideoUI.displayPassiveVideoBestImage(referenceImage, referenceImageInfo, BEST_IMG_MATCH_ID, graphicOptions);
+    } else {
+        // Remove description of best image if reference is not displayed
+        document.querySelector('#best-image-age-description').classList.add(D_NONE);
+        // Remove reference image container if reference is not displayed
+        document.querySelector('#best-image-match-container').classList.add(D_NONE);
     }
     document.querySelectorAll('#step-age-estimation button').forEach((element) => element.classList.remove(D_NONE));
 }
@@ -325,7 +341,10 @@ document.querySelectorAll('*[data-target]')
     .forEach((btn) => btn.addEventListener('click', async () => {
         const targetStepId = btn.getAttribute('data-target');
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
-            .catch(async () => await stopVideoCaptureAndProcessResult(false));
+            .catch(async (ex) => {
+                console.error(ex);
+                await stopVideoCaptureAndProcessResult(false);
+            });
     }));
 
 function processTargetStep(targetStepId, displayWithDelay) {
@@ -340,7 +359,7 @@ function processTargetStep(targetStepId, displayWithDelay) {
     }
 }
 
-async function processStep(targetStepId, displayWithDelay) {
+async function processStep(targetStepId, displayWithDelay, { referenceImage, referenceImageInfo } = {}) {
     // init debug ipv
     bestImageIPV.classList.add(D_NONE);
     getIPVStatus.classList.add(D_NONE);
@@ -380,6 +399,10 @@ async function processStep(targetStepId, displayWithDelay) {
         initLoader.classList.remove(D_NONE);
         donwloadingLoader.classList.add(D_NONE);
         await init();
+        if (!sessionId) {
+            // Init failed, error has already been handled
+            return;
+        }
         socketInit.classList.add(D_NONE);
         targetStepId = ID_STEP_LIVENESS; // init socket done, move to the next step
     }
@@ -401,7 +424,7 @@ async function processStep(targetStepId, displayWithDelay) {
     }
     // Age estimation step
     if (targetStepId === ID_STEP_AGE_ESTIMATION) {
-        displayAgeEstimationResult();
+        displayAgeEstimationResult({ referenceImage, referenceImageInfo });
     }
 
     processTargetStep(targetStepId, displayWithDelay);
@@ -438,8 +461,9 @@ window.addEventListener('resize', () => {
         displayBestImage();
     }
 });
+
 /**
- * suspend video camera and return result
+ * Suspend video camera and return result
  */
 async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', age, _) {
     console.log('Stop video capture: message=' + msg + ', success=' + success);
@@ -487,6 +511,8 @@ async function stopVideoCaptureAndProcessResult(success, msg, faceId = '', age, 
     } else if (msg === __('You denied camera permissions, either by accident or on purpose.')) {
         // No-camera-access issue
         document.querySelector('#step-No-camera-access').classList.remove(D_NONE);
+    } else if (msg === 'Server overloaded') {
+        document.querySelector('#step-server-overloaded').classList.remove(D_NONE);
     } else {
         // All other fatal errors
         document.querySelector('#step-liveness-failed').classList.remove(D_NONE);
@@ -646,8 +672,11 @@ function displayInstructionsToUser(trackingInfo, challengeInProgress) {
 document.querySelector('#takeMyPickture').addEventListener('click', () => {
     selfieInput.click();
 });
-selfieInput.addEventListener('change', (e) => {
-    pushFaceAndDoMatch(basePath, sessionId, bestImageId, e.target.files[0]);
+selfieInput.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    // Reset value to allow further upload
+    event.target.value = '';
+    await pushFaceAndDoMatch(basePath, sessionId, bestImageId, file);
 });
 
 document.querySelector('#step-1-anim').id = 'step-1';
@@ -866,7 +895,7 @@ function setProgress(element, progress) {
 }
 
 /**
- * send another image to match with video best image
+ * Send another image to match with video best image
  * @param basePath {string}
  * @param sessionId {string}
  * @param bestImageId {string}
@@ -876,12 +905,18 @@ function setProgress(element, progress) {
 async function pushFaceAndDoMatch(basePath, sessionId, bestImageId, selfieImage) {
     try {
         hideAllSteps();
-        const face2 = await commonutils.createFace(basePath, sessionId, selfieImage);
-        const matches = await commonutils.getMatches(basePath, sessionId, bestImageId, face2.faceId);
+        // Show loading screen
+        document.getElementById('loading').classList.remove(D_NONE);
+        const reference = await commonutils.createFace(basePath, sessionId, selfieImage);
+        const matches = await commonutils.getMatches(basePath, sessionId, bestImageId, reference.faceId);
+        // Hide all steps (and loading screen)
         document.querySelectorAll('.step').forEach((step) => step.classList.add(D_NONE));
         if (matches.matching === 'ok') {
             if (ageEstimationEnabled) {
-                processStep(ID_STEP_AGE_ESTIMATION, 0);
+                processStep(ID_STEP_AGE_ESTIMATION, 0, {
+                    referenceImage: selfieImage,
+                    referenceImageInfo: reference.imageInfo
+                });
                 return;
             }
             const matchingOKDescription = document.querySelector('#step-selfie-ok .description');
@@ -902,8 +937,8 @@ async function pushFaceAndDoMatch(basePath, sessionId, bestImageId, selfieImage)
     } catch (ex) {
         // if an error happen during createFace or getMatches
         console.error(ex);
-        document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
-        document.querySelector('#step-selfie-ko').classList.remove('d-none'); // Should be technical issue
+        document.querySelectorAll('.step').forEach((step) => step.classList.add(D_NONE));
+        document.querySelector('#step-selfie-ko').classList.remove(D_NONE); // Should be technical issue
         const matchingNOKDescription = document.querySelector('#step-selfie-ko .description');
         if (matchingNOKDescription) {
             matchingNOKDescription.innerHTML = 'Matching failed';

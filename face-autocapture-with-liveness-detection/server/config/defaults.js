@@ -46,12 +46,12 @@ module.exports = {
     IDPROOFING: true,
 
     // *** CALLBACK
-    // Set this key to true to disable callback functionality between demo-server backend and webBioserver. Default value is false.
+    // Set this key to true to disable callback functionality between demo-server backend and WebBioServer
     // Callback url will be SERVER_PUBLIC_ADDRESS + BASE_PATH + LIVENESS_RESULT_CALLBACK_PATH
     DISABLE_CALLBACK: true,
-    // The ip address of the demo which will be used in callback url by the webioserver to callback the demo server with liveness results
+    // The ip address of the demo which will be used in callback url by the WebBioServer to callback the demo server with liveness results
     SERVER_PUBLIC_ADDRESS: 'https://localhost:9943',
-    // Used in callback URL to receive liveness result from WebioServercallback
+    // Used in callback URL to receive liveness result from WebBioServer
     LIVENESS_RESULT_CALLBACK_PATH: '/liveness-result-callback',
 
     // *** LIVENESS

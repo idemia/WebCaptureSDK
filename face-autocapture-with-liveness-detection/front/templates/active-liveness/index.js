@@ -114,7 +114,6 @@ function getFaceCaptureOptions() {
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
-
                 document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
                 commonutils.userBlockInterval(new Date(error.unlockDateTime).getTime());
                 document.querySelector('#step-liveness-fp-block').classList.remove(settings.D_NONE);
@@ -123,8 +122,6 @@ function getFaceCaptureOptions() {
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
-
-                document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
                 document.querySelector('#step-server-overloaded').classList.remove(settings.D_NONE);
             } else {
                 await stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
@@ -154,8 +151,10 @@ async function init(options = {}) {
             session.sessionId = createdSession.sessionId;
             session.identityId = createdSession.identityId;
         } catch (err) {
+            console.error(err);
             session.sessionId = false;
-            await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
+            const msg = err.status === 429 ? 'Server overloaded' : __('Failed to initialize session');
+            await stopVideoCaptureAndProcessResult(false, msg);
             return;
         }
     }
@@ -248,8 +247,8 @@ async function processStep(targetStepId, displayWithDelay) {
         } else {
             document.querySelector(settings.ID_STEP_LIVENESS).classList.remove(settings.D_NONE);
             await init();
-            session.livenessHeader.classList.remove(settings.D_NONE); // Restore header during capture
             if (session.client && session.videoStream) {
+                session.livenessHeader.classList.remove(settings.D_NONE); // Restore header during capture
                 session.client.startCapture({ stream: session.videoStream });
             } else {
                 console.log('client or videoStream not available, start aborted');

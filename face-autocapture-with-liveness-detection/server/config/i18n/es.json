@@ -140,7 +140,7 @@
   "This will take just a moment." : "Esto sólo tomará un momento.",
   "Preparing..." : "Preparante...",
   "Position your face within the oval" : "Posiciona tu cara dentro del óvalo",
-  "Good Job !" : "Buen trabajo !",
+  "Good Job !" : "¡Buen trabajo!",
   "Now, we will ask you to upload a photo of your face, so that we can match it with your selfies.": "Ahora, te pediremos que subas una foto de tu cara, para que podamos compararla con tus selfies.",
   "Submit" : "Entregar",
   "Or repeat if you see it’s needed." : "O repítelo si ves que es necesario.",
@@ -186,5 +186,7 @@
   "Threshold:": "Umbral de edad:",
   "years old": "años",
   "Cancel": "Cancelar",
-  "Finish": "Terminar"
+  "Finish": "Terminar",
+  "Autocaptured selfie (liveness & age estimation)": "Captura automática de selfie (prueba y estimación de edad)",
+  "Reference portrait (matching)": "Retrato de referencia (coincidencia)"
 }

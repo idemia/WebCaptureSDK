@@ -539,7 +539,7 @@ video {background-color: black}
 
 #step-liveness .bg-green {background-color: #1e7e34}
 
-#step-liveness #illumination-overlay, #loading {
+#step-liveness #illumination-overlay {
     position: fixed;
     top: 0; bottom: 0;
     left: 0; right: 0;
@@ -952,6 +952,9 @@ video {background-color: black}
 }
 
 /** Age estimation **/
+#best-image-age {
+    margin: auto;
+}
 #best-image-age .pc {
     align-self: flex-start;
 }
@@ -993,4 +996,22 @@ video {background-color: black}
     .animation-age-estimation-text;
     font-weight: bold;
     float:right;
+}
+
+#best-image-match {
+    margin: auto;
+}
+
+.pc .best-image-row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.best-image-row .col {
+    flex-grow: 0!important;
+}
+
+.best-image-row span {
+    padding-top: 3%;
+    padding-bottom: 3%;
 }

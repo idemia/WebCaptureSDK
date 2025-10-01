@@ -21,7 +21,6 @@ const lottie = require('lottie-web/build/player/lottie_light.js');
 
 const CONTENT_TYPE = 'Content-type';
 const APPLICATION_JSON = 'application/json';
-const ERROR_CREATE_FACE = 'createFace failed';
 const CLASS_SIGNAL_VALUE = '.signal-value';
 const CLASS_SIGNAL_MIN_VALUE = '.signal-min-value';
 const ID_CONNECTIVITY_CHECK = '#connectivity-check';
@@ -57,149 +56,105 @@ exports.getNormalizedString = (str) => {
     return str && str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 
+/**
+ * @param basePath
+ * @param healthPath
+ * @return {Promise<any>}
+ */
 exports.getCapabilities = async function (basePath, healthPath) {
-    return new Promise(function (resolve, reject) {
-        console.log(' >> get monitoring', healthPath);
-
-        const xhttp = new window.XMLHttpRequest();
-        xhttp.open('GET', basePath + healthPath, true);
-        xhttp.setRequestHeader(CONTENT_TYPE, APPLICATION_JSON);
-
-        xhttp.responseType = 'json';
-        xhttp.onload = function () {
-            if (this.status >= 200 && this.status < 300) {
-                console.log('getMonitoring ok', xhttp.response);
-                resolve(xhttp.response);
-            } else {
-                console.error('getMonitoring failed');
-                // eslint-disable-next-line prefer-promise-reject-errors
-                reject('getMonitoring failed');
-            }
-        };
-        xhttp.onerror = function () {
-            // eslint-disable-next-line no-undef
-            console.log('Error ' + httpError.status + '  ' + httpError.code);
-            // eslint-disable-next-line no-undef
-            reject(httpError);
-        };
-        xhttp.send();
-    });
+    const url = basePath + healthPath;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('getCapabilities failed');
+        error.status = response.status;
+        throw error;
+    }
 };
 
 /**
- * init a liveness session
- * @return sessionId
+ * Init a liveness session
+ * @param basePath
+ * @param sessionId
+ * @param identityId
+ * @param ageThreshold
+ * @return {Promise<{sessionId: string, identityId?: string}>}
  */
 exports.initLivenessSession = async function (basePath, sessionId = '', identityId = '', ageThreshold = '') {
     console.log('init liveness session');
-    return new Promise((resolve, reject) => {
-        const xhttp = new window.XMLHttpRequest();
-        let path = `${basePath}/init-liveness-session/${sessionId}`;
-        if (identityId && identityId !== '') {
-            path = `${path}?identityId=${identityId}`;
-        }
-        if (ageThreshold) {
-            path = `${path}?ageThreshold=${ageThreshold}`;
-        }
-        xhttp.open('GET', path, true);
-        xhttp.responseType = 'json';
-        xhttp.onload = function () {
-            if (this.status >= 200 && this.status < 300) {
-                resolve(xhttp.response);
-            } else {
-                console.error('initLivenessSession failed');
-                // eslint-disable-next-line prefer-promise-reject-errors
-                reject();
-            }
-        };
-        xhttp.onerror = function () {
-            // eslint-disable-next-line prefer-promise-reject-errors
-            reject();
-        };
-        xhttp.send();
-    });
+    const url = new URL(`${window.location.origin}${basePath}/init-liveness-session/${sessionId}`);
+    if (identityId) {
+        url.searchParams.append('identityId', identityId);
+    }
+    if (ageThreshold) {
+        url.searchParams.append('ageThreshold', ageThreshold);
+    }
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('initLivenessSession failed');
+        error.status = response.status;
+        throw error;
+    }
 };
 
 /**
- * retrieve the complete GIPS/IPV status
+ * Retrieve the complete GIPS/IPV status
  * @param basePath
  * @param identityId
- * @return {isLivenessSucceeded, message}
+ * @return {Promise<*>}
  */
 exports.getGipsStatus = async function (basePath, identityId) {
-    return new Promise((resolve, reject) => {
-        const xhttp = new window.XMLHttpRequest();
-        xhttp.open('GET', `${basePath}/gips-status/${identityId}`, true);
-        xhttp.setRequestHeader(CONTENT_TYPE, APPLICATION_JSON);
-        xhttp.responseType = 'json';
-        xhttp.onload = () => {
-            if (xhttp.status) {
-                if (xhttp.status === 200) {
-                    resolve(xhttp.response);
-                } else {
-                    console.error('getGipsStatus failed...');
-                    // eslint-disable-next-line prefer-promise-reject-errors
-                    reject();
-                }
-            }
-        };
-
-        // eslint-disable-next-line no-unused-vars
-        xhttp.onerror = function (e) {
-            // eslint-disable-next-line prefer-promise-reject-errors
-            reject();
-        };
-        xhttp.send();
-    });
+    const url = `${basePath}/gips-status/${identityId}`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('getGipsStatus failed');
+        error.status = response.status;
+        throw error;
+    }
 };
 
 /**
- * retrieve the liveness challenge result from backend (via polling)
+ * Retrieve the liveness challenge result from backend (via polling)
  * @param basePath
  * @param enablePolling
  * @param sessionId
  * @param maxAttempts
  * @param interval
- * @return {isLivenessSucceeded, message}
+ * @return {Promise<{isLivenessSucceeded: boolean, message: string, bestImageId: string, age?: {aboveThreshold: boolean, ageEstimated: number, threshold: number}}>}
  */
 exports.getLivenessChallengeResult = async function (basePath, enablePolling, sessionId, maxAttempts = 10, interval = 1000) {
-    console.log('getLivenessChallengeResult call : maxAttempts=' + maxAttempts + ', enablePolling=' + enablePolling);
-    return new Promise((resolve, reject) => {
-        const xhttp = new window.XMLHttpRequest();
-        xhttp.open('GET', `${basePath}/liveness-challenge-result/${sessionId}/?polling=${enablePolling}`, true);
-        xhttp.setRequestHeader(CONTENT_TYPE, APPLICATION_JSON);
-        xhttp.responseType = 'json';
-        xhttp.onload = () => {
-            if (xhttp.status) {
-                console.log('getLivenessChallengeResult status', xhttp.status);
-
-                if (xhttp.status === 200) {
-                    resolve(xhttp.response);
-                } else if (maxAttempts) { // >> polling
-                    console.log('getLivenessChallengeResult retry ...', maxAttempts);
-                    // eslint-disable-next-line promise/param-names
-                    return new Promise((r) => setTimeout(r, interval))
-                        .then(() => {
-                            resolve(this.getLivenessChallengeResult(basePath, enablePolling, sessionId, maxAttempts - 1));
-                        });
-                } else {
-                    console.error('getLivenessChallengeResult failed, max retries reached');
-                    // eslint-disable-next-line prefer-promise-reject-errors
-                    reject();
-                }
-            }
-        };
-
-        xhttp.onerror = function (_) {
-            // eslint-disable-next-line prefer-promise-reject-errors
-            reject();
-        };
-        xhttp.send();
-    });
+    console.log('getLivenessChallengeResult call: remainingAttempts=' + maxAttempts + ', enablePolling=' + enablePolling);
+    const url = `${basePath}/liveness-challenge-result/${sessionId}/?polling=${enablePolling}`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        if (response.status === 200) {
+            return response.json();
+        }
+        if (maxAttempts) { // >> polling
+            console.log('Result not available retrying after delay...');
+            await sleep(interval);
+            return this.getLivenessChallengeResult(basePath, enablePolling, sessionId, maxAttempts - 1);
+        } else {
+            throw new Error('getLivenessChallengeResult failed, max retries reached');
+        }
+    } else {
+        const error = new Error('getLivenessChallengeResult failed');
+        error.status = response.status;
+        throw error;
+    }
 };
 
 /**
- * send another image to match with video best image
+ * Send another image to match with video best image
  * @param basePath
  * @param sessionId
  * @param bestImageId
@@ -208,18 +163,23 @@ exports.getLivenessChallengeResult = async function (basePath, enablePolling, se
  */
 exports.pushFaceAndDoMatch = async function (basePath, sessionId, bestImageId, selfieImage) {
     try {
+        // Hide all steps
+        document.querySelectorAll('.step').forEach((step) => step.classList.add(D_NONE));
+        // Show loading screen
+        document.getElementById('loading').classList.remove(D_NONE);
         const face2 = await this.createFace(basePath, sessionId, selfieImage);
         const matches = await this.getMatches(basePath, sessionId, bestImageId, face2.faceId);
-        document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
+        // Hide all steps (and loading screen)
+        document.querySelectorAll('.step').forEach((step) => step.classList.add(D_NONE));
         if (matches.matching === 'ok') {
             const matchingOKDescription = document.querySelector('#step-selfie-ok .description');
             if (matchingOKDescription) {
                 // eslint-disable-next-line no-undef
                 matchingOKDescription.innerHTML = __('Matching succeeded <br> score: ') + matches.score;
             }
-            document.querySelector('#step-selfie-ok').classList.remove('d-none');
+            document.querySelector('#step-selfie-ok').classList.remove(D_NONE);
         } else {
-            document.querySelector('#step-selfie-ko').classList.remove('d-none');
+            document.querySelector('#step-selfie-ko').classList.remove(D_NONE);
             const matchingNOKDescription = document.querySelector('#step-selfie-ko .description');
             if (matches.score && matchingNOKDescription) {
                 // eslint-disable-next-line no-undef
@@ -227,10 +187,10 @@ exports.pushFaceAndDoMatch = async function (basePath, sessionId, bestImageId, s
             }
         }
         console.log(matches);
-    } catch (e) {
-        console.error(e);
-        document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
-        document.querySelector('#step-selfie-ko').classList.remove('d-none'); // Should be technical issue
+    } catch (err) {
+        console.error(err);
+        document.querySelectorAll('.step').forEach((step) => step.classList.add(D_NONE));
+        document.querySelector('#step-selfie-ko').classList.remove(D_NONE); // Should be technical issue
         const matchingNOKDescription = document.querySelector('#step-selfie-ko .description');
         if (matchingNOKDescription) {
             matchingNOKDescription.innerHTML = 'Matching failed';
@@ -239,95 +199,70 @@ exports.pushFaceAndDoMatch = async function (basePath, sessionId, bestImageId, s
 };
 
 /**
- * associate a new face to session
+ * Associate a new face to session
  * @param basePath
  * @param sessionId session id
  * @param imageFile face image
  * @param faceInfo face information
- * @return {Promise<void>}
+ * @return {Promise<*>}
  */
-exports.createFace = async function (basePath, sessionId, imageFile, faceInfo = '{"imageType" : "SELFIE","friendlyName" : "selfie", "imageRotationEnabled":"true"}') {
-    return new Promise((resolve, reject) => {
-        const formData = new window.FormData();
-        const xhttp = new window.XMLHttpRequest();
-        formData.append('image', imageFile);
-        formData.append('face', new window.Blob([faceInfo], { type: APPLICATION_JSON }));
-        xhttp.open('POST', `${basePath}/bio-session/${sessionId}/faces`, true);
-        xhttp.responseType = 'json';
-        xhttp.onload = function () {
-            document.getElementById('loading').classList.add('d-none');
-            if (this.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error(ERROR_CREATE_FACE);
-                // eslint-disable-next-line prefer-promise-reject-errors
-                reject();
-            }
-        };
-        xhttp.onerror = function () {
-            console.error(ERROR_CREATE_FACE);
-            reject(xhttp);
-        };
-        xhttp.send(formData);
-        document.getElementById('loading').classList.remove('d-none');
+exports.createFace = async function (basePath, sessionId, imageFile, faceInfo = '{"imageType":"SELFIE","friendlyName":"selfie","imageRotationEnabled":"true"}') {
+    const formData = new window.FormData();
+    formData.append('image', imageFile);
+    formData.append('face', new window.Blob([faceInfo], { type: APPLICATION_JSON }));
+
+    const url = `${basePath}/bio-session/${sessionId}/faces`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url, {
+        method: 'POST',
+        body: formData
     });
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('createFace failed');
+        error.status = response.status;
+        throw error;
+    }
 };
 
 /**
- * retrieve face for a given session
+ * Retrieve face for a given session
  * @param basePath
  * @param sessionId
  * @param faceId
  */
 exports.getFaceImage = async function (basePath, sessionId, faceId) {
-    return new Promise((resolve, reject) => {
-        const xhttp = new window.XMLHttpRequest();
-        xhttp.open('GET', `${basePath}/bio-session/${sessionId}/faces/${faceId}/image`, true);
-        xhttp.responseType = 'blob';
-        xhttp.onload = function () {
-            if (this.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error(ERROR_CREATE_FACE);
-                // eslint-disable-next-line prefer-promise-reject-errors
-                reject();
-            }
-        };
-        xhttp.onerror = function () {
-            console.error(ERROR_CREATE_FACE);
-            reject(xhttp);
-        };
-        xhttp.send();
-    });
+    const url = `${basePath}/bio-session/${sessionId}/faces/${faceId}/image`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.blob();
+    } else {
+        const error = new Error('getFaceImage failed');
+        error.status = response.status;
+        throw error;
+    }
 };
 
 /**
- * get matches result for a given session and two faces
+ * Get matches result for a given session and two faces
  * @param basePath
  * @param sessionId
  * @param referenceFaceId
  * @param candidateFaceId
  */
 exports.getMatches = async function (basePath, sessionId, referenceFaceId, candidateFaceId) {
-    return new Promise((resolve, reject) => {
-        const xhttp = new window.XMLHttpRequest();
-        xhttp.open('GET', `${basePath}/bio-session/${sessionId}/faces/${referenceFaceId}/matches/${candidateFaceId}`, true);
-        xhttp.responseType = 'json';
-        xhttp.onload = function () {
-            if (this.status === 200) {
-                resolve(xhttp.response);
-            } else {
-                console.error(ERROR_CREATE_FACE);
-                // eslint-disable-next-line prefer-promise-reject-errors
-                reject();
-            }
-        };
-        xhttp.onerror = function () {
-            console.error(ERROR_CREATE_FACE);
-            reject(xhttp);
-        };
-        xhttp.send();
-    });
+    const url = `${basePath}/bio-session/${sessionId}/faces/${referenceFaceId}/matches/${candidateFaceId}`;
+    console.log(`Calling ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+        return response.json();
+    } else {
+        const error = new Error('getMatches failed');
+        error.status = response.status;
+        throw error;
+    }
 };
 
 function getFPMinuts(minutes) {
@@ -377,7 +312,7 @@ function getTimeLeftBeforeEndFreeze(timeLeft) {
 // msg is following this regex : 'Please retry after ' + new Date(delay)
 // const delayDate = new Date('Mon Dec 14 2020 22:20:39 GMT+0000');
 exports.userBlockInterval = function (fpBlockDate) {
-    document.querySelector('.retry-fp').classList.add('d-none');
+    document.querySelector('.retry-fp').classList.add(D_NONE);
     let fpCountdown = null;
     const updateBlockInterval = () => {
         const currentDate = new Date().getTime();
@@ -397,9 +332,9 @@ exports.userBlockInterval = function (fpBlockDate) {
         // stop internal and display retry button
         clearInterval(fpCountdown);
         document.querySelector('.fp-countdown').innerHTML = ''; // remove countdown since time is over
-        document.querySelector('.please-try-again-in').classList.add('d-none');
+        document.querySelector('.please-try-again-in').classList.add(D_NONE);
         // display retry button
-        document.querySelector('.retry-fp').classList.remove('d-none');
+        document.querySelector('.retry-fp').classList.remove(D_NONE);
     };
     updateBlockInterval();
     // update the UI each second to update the left time of blocking
@@ -420,13 +355,13 @@ function onFirstConnectivityCheck(networkConnectivity, uploadThreshold) {
         console.warn('Unable to check user connectivity.');
     }
     const weakNetworkCheckPage = document.querySelector('#step-weak-network');
-    weakNetworkCheckPage.querySelector('.animation').classList.add('d-none');
-    weakNetworkCheckPage.querySelector('.check-phone').classList.remove('d-none');
-    weakNetworkCheckPage.querySelector('.upload').classList.add('d-none');
-    weakNetworkCheckPage.querySelector('.download').classList.add('d-none');
+    weakNetworkCheckPage.querySelector('.animation').classList.add(D_NONE);
+    weakNetworkCheckPage.querySelector('.check-phone').classList.remove(D_NONE);
+    weakNetworkCheckPage.querySelector('.upload').classList.add(D_NONE);
+    weakNetworkCheckPage.querySelector('.download').classList.add(D_NONE);
 
-    document.querySelectorAll('.step').forEach((s) => s.classList.add('d-none'));
-    weakNetworkCheckPage.classList.remove('d-none');
+    document.querySelectorAll('.step').forEach((s) => s.classList.add(D_NONE));
+    weakNetworkCheckPage.classList.remove(D_NONE);
     if (networkConnectivity) {
         const uploadNotGood = !networkConnectivity.upload ? true : (networkConnectivity.upload < uploadThreshold);
         const signalValue = networkConnectivity.upload;
@@ -434,12 +369,12 @@ function onFirstConnectivityCheck(networkConnectivity, uploadThreshold) {
         weakNetworkCheckPage.querySelector(CLASS_SIGNAL_VALUE).innerHTML = (signalValue && '(' + signalValue + ' kb/s)') || '';
         weakNetworkCheckPage.querySelector(CLASS_SIGNAL_MIN_VALUE).innerHTML = signalThreshold + ' kb/s';
         if (uploadNotGood) {
-            weakNetworkCheckPage.querySelector('.upload').classList.remove('d-none');
+            weakNetworkCheckPage.querySelector('.upload').classList.remove(D_NONE);
         }
     } else { // << case of error
         weakNetworkCheckPage.querySelector(CLASS_SIGNAL_VALUE).innerHTML = '';
         weakNetworkCheckPage.querySelector(CLASS_SIGNAL_MIN_VALUE).innerHTML = uploadThreshold + ' kb/s';
-        weakNetworkCheckPage.querySelector('.upload').classList.remove('d-none');
+        weakNetworkCheckPage.querySelector('.upload').classList.remove(D_NONE);
     }
 }
 
@@ -479,9 +414,9 @@ exports.initializeNetworkCheck = function (client, resetLivenessDesign, networkC
                 networkContext.connectivityOK = false;
                 networkConnectivityNotGood(networkConnectivity);
             } else if (networkConnectivity && displayGoodSignal.value && networkConnectivity.goodConnectivity && networkConnectivity.upload) {
-                document.querySelectorAll('.step').forEach(s => s.classList.add('d-none'));
+                document.querySelectorAll('.step').forEach(s => s.classList.add(D_NONE));
                 const goodNetworkCheckPage = document.querySelector('#step-good-network');
-                goodNetworkCheckPage.classList.remove('d-none');
+                goodNetworkCheckPage.classList.remove(D_NONE);
                 goodNetworkCheckPage.querySelector(CLASS_SIGNAL_VALUE).innerHTML = '(' + networkConnectivity.upload + ' kb/s)';
                 goodNetworkCheckPage.querySelector(CLASS_SIGNAL_MIN_VALUE).innerHTML = BioserverNetworkCheck.UPLOAD_SPEED_THRESHOLD + ' kb/s';
                 displayGoodSignal.value = false;
@@ -491,14 +426,14 @@ exports.initializeNetworkCheck = function (client, resetLivenessDesign, networkC
             }
             if (!networkContext.connectivityOK) { // clear the other waiting screen since we are going to show data from network event
                 clearTimeout(networkContext.timeoutCheckConnectivity); // clear the timeout connectivity check
-                document.querySelector(ID_CONNECTIVITY_CHECK).classList.add('d-none'); // hide the waiting page
+                document.querySelector(ID_CONNECTIVITY_CHECK).classList.add(D_NONE); // hide the waiting page
             }
         }
 
         document.querySelector('#check-network').onclick = function () {
             const weakNetworkCheckPage = document.querySelector('#step-weak-network');
-            weakNetworkCheckPage.querySelector('.animation').classList.remove('d-none');
-            weakNetworkCheckPage.querySelector('.check-phone').classList.add('d-none');
+            weakNetworkCheckPage.querySelector('.animation').classList.remove(D_NONE);
+            weakNetworkCheckPage.querySelector('.check-phone').classList.add(D_NONE);
             displayGoodSignal.value = true;
             window.setTimeout(() => {
                 // Possibly reset networkContext.connectivityOK to undefined if needed
@@ -663,7 +598,7 @@ exports.handlePositionInfo = function (positionInfo, userInstructionMsgDisplayed
 };
 
 exports.genericResetLivenessDesign = async function (session) {
-    document.querySelector('header').classList.remove('d-none');
+    document.querySelector('header').classList.remove(D_NONE);
     document.querySelector('main').classList.remove('darker-bg');
     if (session.bestImageURL) {
         window.URL.revokeObjectURL(session.bestImageURL); // free memory
@@ -675,31 +610,33 @@ exports.stopVideoCaptureAndProcessResult = function (session, settings, resetLiv
     session.bestImageId = faceId;
     // we reset the session when we finished the liveness check real session
     resetLivenessDesign();
-    document.querySelectorAll('.step').forEach((step) => step.classList.add('d-none'));
+    document.querySelectorAll('.step').forEach((step) => step.classList.add(D_NONE));
 
     if (success) {
-        document.querySelector('#step-liveness-ok').classList.remove('d-none');
-        document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add('d-none'));
+        document.querySelector('#step-liveness-ok').classList.remove(D_NONE);
+        document.querySelectorAll('#step-liveness-ok button').forEach((btn) => btn.classList.add(D_NONE));
         if (!settings.idProofingWorkflow) {
-            document.querySelector('.success-no-ipv').classList.remove('d-none');
+            document.querySelector('.success-no-ipv').classList.remove(D_NONE);
         } else {
-            document.querySelector('.success-ipv').classList.remove('d-none');
-            document.querySelector('#get-ipv-transaction').classList.remove('d-none');
-            document.querySelector('#get-ipv-portrait').classList.remove('d-none');
+            document.querySelector('.success-ipv').classList.remove(D_NONE);
+            document.querySelector('#get-ipv-transaction').classList.remove(D_NONE);
+            document.querySelector('#get-ipv-portrait').classList.remove(D_NONE);
         }
         const isMatchingEnabled = urlParams.get('enableMatching') === 'true';
         const nextButton = isMatchingEnabled ? 'next-step' : 'reset-step';
 
-        document.querySelectorAll(`#step-liveness-ok button.${nextButton}`).forEach((step) => step.classList.remove('d-none'));
+        document.querySelectorAll(`#step-liveness-ok button.${nextButton}`).forEach((step) => step.classList.remove(D_NONE));
     } else if (msg?.includes('Timeout') || msg?.includes('Liveness failed')) { // msg from /liveness-challenge-result endpoint
         // We handle failed and timeout similarly, but one may use the id #step-liveness-failed if needed
-        document.querySelector('#step-liveness-timeout').classList.remove('d-none');
-        document.querySelector('#step-liveness-timeout .footer').classList.add('d-none');
+        document.querySelector('#step-liveness-timeout').classList.remove(D_NONE);
+        document.querySelector('#step-liveness-timeout .footer').classList.add(D_NONE);
         setTimeout(() => {
-            document.querySelector('#step-liveness-timeout .footer').classList.remove('d-none');
+            document.querySelector('#step-liveness-timeout .footer').classList.remove(D_NONE);
         }, 2000);
+    } else if (msg === 'Server overloaded') {
+        document.querySelector('#step-server-overloaded').classList.remove(D_NONE);
     } else {
-        document.querySelector('#step-liveness-ko').classList.remove('d-none');
+        document.querySelector('#step-liveness-ko').classList.remove(D_NONE);
         if (msg) {
             // eslint-disable-next-line no-undef
             document.querySelector('#step-liveness-ko .description').textContent = __('Liveness failed');
@@ -713,18 +650,18 @@ exports.stopVideoCaptureAndProcessResult = function (session, settings, resetLiv
         // Special case for camera permission error
         if (msg === __('You denied camera permissions, either by accident or on purpose.')) {
             // Display refresh button instead of restart
-            refreshButton?.classList.remove('d-none');
-            restartButton.classList.add('d-none');
+            refreshButton?.classList.remove(D_NONE);
+            restartButton.classList.add(D_NONE);
         } else {
-            refreshButton?.classList.add('d-none');
-            restartButton?.classList.remove('d-none');
+            refreshButton?.classList.add(D_NONE);
+            restartButton?.classList.remove(D_NONE);
         }
     }
 };
 
 exports.initComponents = function (session, settings, resetLivenessDesign) {
     settings.CLASS_VIDEO_OVERLAY = '#step-liveness .video-overlay';
-    settings.D_NONE = 'd-none';
+    settings.D_NONE = D_NONE;
     settings.D_NONE_FADEOUT = 'd-none-fadeout';
     settings.ID_CONNECTIVITY_CHECK = '#connectivity-check';
     settings.ID_STEP_LIVENESS = '#step-liveness';
@@ -766,7 +703,7 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
         const result = await this.getGipsStatus(settings.basePath, session.identityId);
         console.log('result IPV response' + result);
         document.querySelector(ID_GET_IPV_STATUS_RESULT).innerHTML = JSON.stringify(result, null, 2);
-        document.querySelector(ID_GET_IPV_STATUS_RESULT).classList.remove('d-none');
+        document.querySelector(ID_GET_IPV_STATUS_RESULT).classList.remove(D_NONE);
     });
 
     /**
@@ -778,7 +715,7 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
         const faceImg = await this.getFaceImage(settings.basePath, session.sessionId, session.bestImageId);
         session.bestImageURL = window.URL.createObjectURL(faceImg);
         document.querySelector(ID_BEST_IMAGE_IPV).src = `${session.bestImageURL}`;
-        document.querySelector(ID_BEST_IMAGE_IPV).classList.remove('d-none');
+        document.querySelector(ID_BEST_IMAGE_IPV).classList.remove(D_NONE);
     });
 
     if (urlParams.get('videoTutorial') === 'true') {
@@ -791,15 +728,18 @@ exports.initComponents = function (session, settings, resetLivenessDesign) {
         document.querySelector('#step-end-tutorial-anim').id = 'step-end-tutorial';
     }
     if (document.querySelector('#step-1')) {
-        window.envBrowserOk && document.querySelector('#step-1').classList.remove('d-none');
+        window.envBrowserOk && document.querySelector('#step-1').classList.remove(D_NONE);
     }
     const selfieInput = document.querySelector('#selfieInput');
 
     document.querySelector('#takeMyPickture').addEventListener('click', () => {
         selfieInput.click();
     });
-    selfieInput.addEventListener('change', (e) => {
-        this.pushFaceAndDoMatch(settings.basePath, session.sessionId, session.bestImageId, e.target.files[0]);
+    selfieInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        // Reset value to allow further upload
+        event.target.value = '';
+        this.pushFaceAndDoMatch(settings.basePath, session.sessionId, session.bestImageId, file);
     });
 
     /**
@@ -840,4 +780,10 @@ exports.hideAllStepsAndDisplay = function (step) {
         step = document.querySelector(step);
     }
     step?.classList.contains(D_NONE) && step.classList.remove(D_NONE);
+};
+
+function sleep(delayMs) {
+    return new Promise(resolve => {
+        setTimeout(resolve, delayMs);
+    });
 };

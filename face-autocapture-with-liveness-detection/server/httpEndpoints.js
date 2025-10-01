@@ -160,7 +160,7 @@ exports.initHttpEndpoints = (app) => {
         }
         // Manage result
         try {
-            if (!currentLivenessResult && polling) {
+            if (polling && !currentLivenessResult) {
                 logger.info('< No liveness-challenge associated to this session');
                 res.status(404).send(); // unknown sessionID
             } else if (polling && currentLivenessResult.status === 'PENDING') {
@@ -222,33 +222,46 @@ exports.initHttpEndpoints = (app) => {
     //
     // Create face
     //
-    app.post(config.BASE_PATH + '/bio-session/:bioSessionId/faces', upload.any(),
-        async (req, res) => {
-            try {
-                const sessionId = req.params.bioSessionId;
-                logger.updateContext({ sessionId });
-                let image = req.files[0];
-                let face = req.files[1];
-                if (req.files[0].fieldname !== 'image') {
-                    image = req.files[1];
-                    face = req.files[0];
-                }
-                if (config.IDPROOFING) {
-                    res.status(503).json({ error: 'Not yet implemented' });
-                } else {
-                    const faceResult = await wbsApi.createFace(sessionId, image, face);
-                    logger.info('create face result', faceResult);
-                    if (faceResult.quality >= config.CODING_QUALITY_THRESHOLD) {
-                        res.json({ faceId: faceResult.id });
-                    } else {
-                        res.status(400).send();
-                    }
-                }
-            } catch (err) {
-                logger.error('create face failed', err);
-                res.status(err.status || 500).send();
+    app.post(config.BASE_PATH + '/bio-session/:bioSessionId/faces', upload.any(), async (req, res) => {
+        try {
+            const sessionId = req.params.bioSessionId;
+            logger.updateContext({ sessionId });
+            let image = req.files[0];
+            let face = req.files[1];
+            if (req.files[0].fieldname !== 'image') {
+                image = req.files[1];
+                face = req.files[0];
             }
+            if (config.IDPROOFING) {
+                res.status(503).json({ error: 'Not yet implemented' });
+            } else {
+                const faceResult = await wbsApi.createFace(sessionId, image, face);
+                logger.info('create face result', faceResult);
+                if (faceResult.quality >= config.CODING_QUALITY_THRESHOLD) {
+                    let imageInfo;
+                    if (faceResult?.landmarks.box) {
+                        const box = faceResult?.landmarks.box;
+                        imageInfo = {
+                            boxX: box.x,
+                            boxY: box.y,
+                            boxW: box.width,
+                            boxH: box.height
+                        };
+                    }
+                    res.json({
+                        faceId: faceResult.id,
+                        imageInfo
+                    });
+                } else {
+                    logger.warn(`Image has bad quality: ${faceResult.quality}`);
+                    res.status(400).send();
+                }
+            }
+        } catch (err) {
+            logger.error('create face failed', err);
+            res.status(err.status || 500).send();
         }
+    }
     );
     //
     // get face image

@@ -75,12 +75,13 @@ commonutils.getCapabilities(settings.basePath, settings.healthPath).then(
 ).catch(async () => {
     await stopVideoCaptureAndProcessResult(false, 'Service unavailable');
 });
+
 function getFaceCaptureOptions() {
     let challengeInProgress = false;
     return {
         bioSessionId: session.sessionId,
         onClientInitEnd: () => {
-            console.warn('init ended');
+            console.log('init ended');
             session.loadingInitialized.classList.add(D_NONE_FADEOUT); // initialization successfully, remove loading for video
             session.headStartPositionOutline.classList.remove(D_NONE_FADEOUT);
         },
@@ -125,7 +126,6 @@ function getFaceCaptureOptions() {
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
-
                 document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
                 commonutils.userBlockInterval(new Date(error.unlockDateTime).getTime());
                 document.querySelector('#step-liveness-fp-block').classList.remove(settings.D_NONE);
@@ -134,8 +134,6 @@ function getFaceCaptureOptions() {
                 // we reset the session when we finished the liveness check real session
                 resetLivenessDesign();
                 document.querySelectorAll('.step').forEach((step) => step.classList.add(settings.D_NONE));
-
-                document.querySelector('.please-try-again-in').classList.remove(settings.D_NONE);
                 document.querySelector('#step-server-overloaded').classList.remove(settings.D_NONE);
             } else {
                 await stopVideoCaptureAndProcessResult(false, __('Sorry, there was an issue.'));
@@ -157,8 +155,10 @@ async function init() {
         session.sessionId = createdSession.sessionId;
         session.identityId = createdSession.identityId;
     } catch (err) {
+        console.error(err);
         session.sessionId = false;
-        await stopVideoCaptureAndProcessResult(false, __('Failed to initialize session'));
+        const msg = err.status === 429 ? 'Server overloaded' : __('Failed to initialize session');
+        await stopVideoCaptureAndProcessResult(false, msg);
         return;
     }
     // initialize the face capture client with callbacks
@@ -191,6 +191,7 @@ async function init() {
 document.querySelectorAll('*[data-target]')
     .forEach((btn) => btn.addEventListener('click', async () => {
         const targetStepId = btn.getAttribute('data-target');
+        console.log('Button clicked, target: ' + targetStepId);
         await processStep(targetStepId, btn.hasAttribute('data-delay') && (btn.getAttribute('data-delay') || 2000))
             .catch(async () => {
                 // Too many attempts or server overloaded error have been caught by errorFn, so no need to call further method in that case, just reset variables
@@ -215,8 +216,7 @@ async function processStep(targetStepId, displayWithDelay) {
             document.querySelector(targetStepId).classList.add(settings.D_NONE);
         }, 2000);
     } else {
-        // d-none all steps
-
+        // Hide all steps
         document.querySelectorAll('.step').forEach((row) => row.classList.add(settings.D_NONE));
         if (targetStepId === settings.ID_CONNECTIVITY_CHECK) { // << if client clicks on start capture or start training
             if (session.networkContext.connectivityOK) {

@@ -184,5 +184,7 @@
   "Threshold:": "Seuil:",
   "years old": "ans",
   "Cancel": "Annuler",
-  "Finish": "Terminer"
+  "Finish": "Terminer",
+  "Autocaptured selfie (liveness & age estimation)": "Selfie autocapturé (liveness & estimation d'âge)",
+  "Reference portrait (matching)": "Portrait de référence (matching)"
 }
