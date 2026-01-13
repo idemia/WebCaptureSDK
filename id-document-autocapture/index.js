@@ -1,5 +1,5 @@
 /*
-Copyright 2025 IDEMIA Public Security
+Copyright 2025-2026 IDEMIA Public Security
 Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,6 @@ const logger = require('./server/config/demoLogConf').getLogger();
 const packer = require('./server/packer');
 const httpEndpoints = require('./server/httpEndpoints');
 const crypto = require('crypto');
-
 
 const DEFAULT_LANG = 'en'; // default language
 
@@ -72,7 +71,7 @@ packer.pack();
 
         const options = {
             pfx: fs.readFileSync(config.TLS_KEYSTORE_PATH),
-            passphrase: config.TLS_KEYSTORE_PASSWORD, 
+            passphrase: config.TLS_KEYSTORE_PASSWORD,
             secureOptions: protocolOptionsList.reduce((previous, current) => previous | crypto.constants[current])
         };
         logger.info(`Server secure options: ${options.secureOptions}`);
