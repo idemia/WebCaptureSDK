@@ -697,6 +697,13 @@ video {background-color: black}
         transform: rotate(360deg);
     }
 }
+/* Specific issue fix on Safari where the loader does not start*/
+.d-none-fadeout .loader-animation > div {
+    animation-play-state: paused;
+}
+.d-none .loader-animation > div {
+    animation-play-state: paused;
+}
 .best-image .pc {
     align-self: flex-start;
 }

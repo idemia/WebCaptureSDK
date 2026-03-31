@@ -1,5 +1,5 @@
 /*
-Copyright 2025 IDEMIA Public Security
+Copyright 2025-2026 IDEMIA Public Security
 Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +62,7 @@ module.exports = {
     LIVENESS_SECURITY_LEVEL: 'HIGH',
     // The security level to apply for the current liveness session under dermo-server which is passed
     // when initializing the session. Default value is “HIGH”.
-    LIVENESS_MODE: 'LIVENESS_PASSIVE', // LIVENESS_PASSIVE_VIDEO;LIVENESS_ACTIVE;LIVENESS_PASSIVE
+    LIVENESS_MODE: 'LIVENESS_PASSIVE', // LIVENESS_MLC;LIVENESS_PASSIVE_VIDEO;LIVENESS_ACTIVE;LIVENESS_PASSIVE
     // The number of challenge to be done in active liveness mode under dermo-server which is passed when initializing the session.
     // Default number of challenge set to 2
     LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE: 2,

@@ -214,13 +214,13 @@ limitations under the License.
                 <div class="animation">
                     <div class="animation-content">
                         <div class="animation-tutorial">
-                            <img src="./img/cameraPermission.svg" alt="Camera Access">
+                            <img src="./img/cameraPermission.svg" alt="Camera access needed">
                         </div>
                         <div class="animation-title-text">
-                            <span><%= __("Camera Access") %></span>
+                            <span><%= __("Camera access needed") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("In order to authenticate you, we need access to your camera. Sounds good ?") %></span>
+                            <span><%= __("Camera access is required to scan your face. Without it, we will not be able to start the process.") %></span>
                         </div>
                     </div>
                     <div class="footer">
@@ -250,7 +250,7 @@ limitations under the License.
                             <span><%= __("No camera access") %></span>
                         </div>
                         <div class="animation-text">
-                            <span><%= __("We need access to your camera. Click Allow on the popup or enable it in your privacy settings. Please refresh the page to restart the demo.") %></span>
+                            <span><%= __("We need access to your camera. Click Allow on the popup or enable it in your privacy settings. Please refresh the page to restart the session.") %></span>
                         </div>
                     </div>
                     <div class="footer">
@@ -355,7 +355,7 @@ limitations under the License.
                         <div id="best-image">
                             <img src="./img/success_tick.svg" alt="success">
                         </div>
-                        <span class="animation-title-text"><%= __("Good Job !")%></span>
+                        <span class="animation-title-text"><%= __("Good Job!")%></span>
                         <span class="animation-text next-step"><%= __("Now, we will ask you to upload a photo of your face, so that we can match it with your selfies.")%></span>
                     </div>
                     <div class="footer">
@@ -386,12 +386,12 @@ limitations under the License.
                                         <img src="./img/success_tick.svg" alt="success">
                                     </div>
                                     <div class="row justify-content-center">
-                                        <span class="description text-center col align-self-center"><%= __("You passed liveness!") %></span>
+                                        <span class="description text-center col align-self-center"><%= __("You passed!") %></span>
                                     </div>
                                 </div>
                                 <div class="padb20">
                                     <button class="col-md-4 offset-md-4 btn btn-primary btn-block reset-step reset-animations small-font-small-phone"
-                                            data-target="#step-1"><%= __("restart demo") %>
+                                            data-target="#step-1"><%= __("Restart demo") %>
                                     </button>
                                 </div>
                             </div>
@@ -635,19 +635,13 @@ limitations under the License.
                         <div class="row justify-content-center">
                             <img src="./img/matching_successful.svg" alt="success">
                         </div>
-                        <span class="animation-title-text"><%= __("Good Job !")%></span><br>
+                        <span class="animation-title-text"><%= __("Good Job!")%></span><br>
                         <span class="animation-text"><%= __("Matching succeeded") %></span>
                     </div>
                     <div class="footer">
                         <div class="row">
                             <div class="col">
                                 <button class="btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"> <%= __("Submit") %> </button>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <div class="take-new-capture-text"><%= __("Or repeat if you see it’s needed.") %></div>
-                                <div class="take-new-capture-link"><a data-target="#step-1"><%= __("Retake selfie") %></a></div>
                             </div>
                         </div>
                     </div>
@@ -771,7 +765,7 @@ limitations under the License.
                                 <span id="best-image-match-description" class="animation-content text-center"><%= __("Reference portrait (matching)")%></span>
                             </div>
                         </div>
-                        <span class="animation-title-text text-center age-success d-none"><%= __("Good Job ! You meet the age criteria.")%></span>
+                        <span class="animation-title-text text-center age-success d-none"><%= __("Good Job! You meet the age criteria.")%></span>
                         <span class="animation-title-text text-center age-failure d-none"><%= __("Oops! You are too young.")%></span>
                         <div class="age-estimation-top-block">
                             <span class="animation-age-estimation-text-left"><%= __("Age estimation:")%></span>
@@ -795,9 +789,7 @@ limitations under the License.
                     </div>
                 </div>
             </div>
-
         </main>
-
         <script src="<%=JAVASCRIPT_PATH%>/bioserver-environment-api.js"></script>
         <script src="./js/detect-env.js"></script>
         <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-api.js"></script>

@@ -1,5 +1,5 @@
 /*
-Copyright 2025 IDEMIA Public Security
+Copyright 2025-2026 IDEMIA Public Security
 Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");

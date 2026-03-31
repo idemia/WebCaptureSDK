@@ -1,0 +1,725 @@
+<!--
+Copyright 2025-2026 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no">
+    <title>MLC liveness detection</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/logo-180.png">
+    <link rel="shortcut icon" href="./favicons/logo-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/logo-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/logo-16.png">
+    <link rel="manifest" href="./favicons/manifest.json">
+    <link rel="mask-icon" href="./favicons/safari-pinned-tab.svg" color="#430099">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WebSDK">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#430099"/>
+</head>
+    <body>
+    <main class="container-fluid animation-tut">
+        <!-- Check browser compatibility-->
+        <div id="step-compatibility" class="row step d-none">
+            <div class="col-12 description">
+                <%= __("You seem to be using an unsupported browser.") %>
+            </div>
+            <div class="col-12 browsers-description">
+                <p><%= __("Please use one of following browsers for a better experience") %></p>
+            </div>
+            <div class="col-12 browsers-content">
+                <table class="os-list">
+                </table>
+                <table class="browsers">
+                </table>
+            </div>
+        </div>
+        <!-- Check network-->
+        <div id="step-weak-network" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content loader-wrapper d-flex flex-column">
+                    <div class="loader-animation align-self-center">
+                        <div></div>
+                    </div>
+                    <span class="animation-title-text text-center"><%= __("Checking network signal") %></span>
+                </div>
+            </div>
+            <div class="check-phone animation">
+                <div class="animation-content">
+                    <div class="">
+                        <img width="100" src="./img/wifi-weak.png" alt="Weak network signal">
+                    </div>
+                    <div class="animation-title-text text-center"><span><%= __("Weak network signal") %> <span
+                            class="signal-value"></span></span></div>
+                    <div class="animation-text">
+                        <span class="download"><%= __("This process only works with a connection speed of at least") %></span>
+                        <span class="upload"><%= __("This process only works with an upload connection speed of at least") %></span>
+                        <span class="signal-min-value"></span>.
+                        <span class=""><%= __("It appears your network signal is too weak.") %></span>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" id="check-network"><%= __("re-test network connection") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="connectivity-check" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content loader-wrapper d-flex flex-column">
+                    <div class="loader-animation align-self-center">
+                        <div></div>
+                    </div>
+                    <span class="animation-title-text text-center"><%= __("Checking network signal") %></span>
+                </div>
+            </div>
+        </div>
+        <div id="step-good-network" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="check-phone animation">
+                <div class="animation-content">
+                    <div class="">
+                        <img width="100" src="./img/wifi-medium.png" alt="Good network signal">
+                    </div>
+                    <div class="animation-title-text text-center"><span><%= __("Good network signal") %> <span
+                            class="signal-value"></span></span>
+                    </div>
+                    <div class="animation-text">
+                        <span class=""><%= __("This process only works with a connection speed of at least") %></span>
+                        <span class="signal-min-value"></span>.
+                        <span class=""><%= __("So make sure you maintain a good connection.") %></span>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#step-1-restore"><%= __("i'm ready") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- landing page -->
+        <div id="step-1-anim" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content">
+                    <div class="animation-tutorial">
+                        <img src="./img/letscan3.svg" alt="Lets scan">
+                    </div>
+                    <div class="animation-title-text">
+                        <span><%= __("Capture your face") %></span>
+                    </div>
+                    <div class="animation-text text-left">
+                        <ul>
+                            <li><span><%= __("Make sure your face stays visible within the oval frame.") %></span></li>
+                            <li><span><%= __("Smile broadly when asked to prove you’re a living person.") %></span></li>
+                            <li><span><%= __("Stay still throughout the face illumination process.") %></span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#step-tutorial-luminosity">
+                                <%= __("Continue") %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Luminosity Tutorial -->
+        <div id="step-tutorial-luminosity" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content">
+                    <div class="animation-tutorial">
+                        <img src="./img/increase_luminosity.svg" alt="Increase Luminosity">
+                    </div>
+                    <div class="animation-title-text">
+                        <span><%= __("Turn your screen brightness up to the maximum") %></span>
+                    </div>
+                    <div class="animation-text">
+                        <span><%= __("It will improve your chances of a successful capture.") %></span><br/>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#connectivity-check" data-delay>
+                                <%= __("Continue") %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Camera access -->
+        <div id="step-access-permission" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content">
+                    <div class="animation-tutorial">
+                        <img src="./img/cameraPermission.svg" alt="Camera access needed">
+                    </div>
+                    <div class="animation-title-text">
+                        <span><%= __("Camera access needed") %></span>
+                    </div>
+                    <div class="animation-text">
+                        <span><%= __("Camera access is required to scan your face. Without it, we will not be able to start the process.") %></span>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block" data-target="#socket-init" data-delay>
+                                <%= __("I accept") %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- No camera access -->
+        <div id="step-No-camera-access" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content">
+                    <div class="animation-tutorial">
+                        <img src="./img/somethingWentWrong.svg" alt="Something went wrong">
+                    </div>
+                    <div class="animation-title-text">
+                        <span><%= __("No camera access") %></span>
+                    </div>
+                    <div class="animation-text">
+                        <span><%= __("We need access to your camera. Click Allow on the popup or enable it in your privacy settings. Please refresh the page to restart the session.") %></span>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block reset-animations refresh" onclick="window.location.reload(); return false;"><%= __("Refresh the page") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Video Liveness detection -->
+        <div id="step-liveness" class="row step d-none">
+            <div class="col-12 animation" style="justify-content: start">
+                <div style="width: 100%; height: 60%; position: relative" ><!-- 60% for video and 40% text-->
+                    <video id="user-video" class="w-100 h-100" style="object-fit: cover" autoplay playsinline></video>
+                </div>
+                <!-- Loading init -->
+                <div id="loading-initialized" class="d-none-fadeout video-overlay w-100 h-100 flex-column">
+                    <header class="row header liveness-header">
+                        <div class="col logo">
+                            <img alt="Logo" src="./img/logo-passive-video.png">
+                        </div>
+                    </header>
+                    <div class="loader-wrapper d-flex flex-column">
+                        <div class="loader-animation align-self-center">
+                            <div></div>
+                        </div>
+                        <span class="loader-title"><%= __("Preparing...") %></span>
+                        <span class="loader-text"><%= __("Please wait a moment.") %></span>
+                    </div>
+                </div>
+                <!-- User Instructions management -->
+                <div id="center-head-animation" class="d-none-fadeout feedback-overlay w-100">
+                    <span class="feedback-msg mobile-item"><%= __("Bring your phone up to eye level") %></span>
+                    <span class="feedback-msg pc-item"><%= __("Center your face") %></span>
+                    <p class="feedback-description">
+                        <%= __("Position your face within the oval") %>
+                    </p>
+                </div>
+                <div id="make-smile-animation" class="d-none-fadeout feedback-overlay w-100 with-progress">
+                    <span class="feedback-msg"><%= __("Now make a big smile please") %></span>
+                </div>
+                <div id="no-smile-animation" class="d-none-fadeout feedback-overlay w-100 with-progress">
+                    <span class="feedback-msg"><%= __("Please make a proper smile in front of the camera") %></span>
+                    <p class="feedback-description">
+                        <%= __("Fill the gauge below with your most beautiful smile during few seconds") %>
+                    </p>
+                </div>
+                <div id="make-more-smile-animation" class="d-none-fadeout feedback-overlay w-100 with-progress">
+                    <span class="feedback-msg"><%= __("Don’t be shy, keep smiling...") %></span>
+                    <p class="feedback-description">
+                        <%= __("Fill the gauge below with your most beautiful smile during few seconds") %>
+                    </p>
+                </div>
+                <div id="keep-smile-animation" class="d-none-fadeout feedback-overlay w-100 with-progress">
+                    <span class="feedback-msg"><%= __("Keep smiling for a few seconds...") %></span>
+                    <p class="feedback-description">
+                        <%= __("Fill the gauge below with your most beautiful smile during few seconds") %>
+                    </p>
+                </div>
+                <div id="hold-still-illumination-animation" class="d-none-fadeout feedback-overlay w-100 ">
+                    <span class="feedback-msg"><%= __("Hold still") %></span>
+                    <p class="feedback-description">
+                        <%= __("Stay within the oval") %>
+                    </p>
+                </div>
+                <div id="make-neutral-expression-animation" class="d-none-fadeout feedback-overlay w-100 ">
+                    <span class="feedback-msg"><%= __("Keep a neutral expression for now") %></span>
+                    <p class="feedback-description">
+                        <%= __("Don't smile yet! Just make your mood unreadable for a moment") %>
+                    </p>
+                </div>
+                <div id="move-closer-animation" class="d-none-fadeout feedback-overlay w-100 ">
+                    <span class="feedback-msg"><%= __("Move closer") %></span>
+                    <p class="feedback-description">
+                        <%= __("Make sure your face fills the whole oval shape") %>
+                    </p>
+                </div>
+                <div id="move-further-animation" class="d-none-fadeout feedback-overlay w-100 ">
+                    <span class="feedback-msg"><%= __("Move further") %></span>
+                    <p class="feedback-description">
+                        <%= __("Make sure your face fills the whole oval shape") %>
+                    </p>
+                </div>
+                <div id="face-camera-animation" class="d-none-fadeout feedback-overlay w-100 ">
+                    <span class="feedback-msg"><%= __("Center your face") %></span>
+                    <p class="feedback-description">
+                        <%= __("Make sure your face fills the whole oval shape") %>
+                    </p>
+                </div>
+                <div id="no-face-animation" class="d-none-fadeout feedback-overlay w-100 ">
+                    <span class="feedback-msg"><%= __("We've lost you!") %></span>
+                    <p class="feedback-description">
+                        <%= __("Keep your phone at eye level and at the right distance so that your face just fills the oval") %>
+                    </p>
+                </div>
+                <div id="move-darker-area-animation" class="d-none-fadeout feedback-overlay w-100 ">
+                    <span class="feedback-msg"><%= __("Environment is too bright") %></span>
+                    <p class="feedback-description">
+                        <%= __("Please move to a darker location") %>
+                    </p>
+                </div>
+                <!-- Phone position management -->
+                <div id="phone-not-vertical-animation"
+                     class="video-msg-wrapper d-none-fadeout video-overlay w-100 h-100 flex-column">
+                    <div class="animation d-flex flex-column">
+                        <div class="animation-content">
+                            <div class="animation-image">
+                                <img src="./img/chevrons_up.svg" alt="Please hold your phone vertically"/>
+                            </div>
+                            <div class="animation-title-text text-center">
+                                <span><%= __("Please hold your phone vertically.") %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Screen between smile and illumination -->
+                <div id="illumination-tuto-animation"
+                     class="tutorial-overlay video-msg-wrapper d-none-fadeout no-header-h-100 col">
+                    <header class="row header liveness-header">
+                        <div class="col logo">
+                            <img alt="Logo" src="./img/logo-passive-video.png">
+                        </div>
+                    </header>
+                    <div class="animation col">
+                        <div class="animation-content">
+                            <div class="animation-tutorial">
+                                <img src="./img/front_camera.svg" alt="Tutorial Illumination">
+                            </div>
+                            <div class="animation-title-text">
+                                <span><%= __("Get ready for the next step") %></span>
+                            </div>
+                            <p class="animation-text"><%= __("Your face will be verified with a sequence of color flashes.") %>
+                            <br><br> <%= __("Make sure your face fills the whole oval shape during the whole sequence.") %>
+                            </p>
+                        </div>
+                        <div class="tutorial-footer">
+                            <button class="btn btn-primary btn-block" data-target="#start-illumination">
+                                <%= __("Continue") %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer d-none">
+                <div class="row">
+                    <div class="col">
+                        <div class="smile-progress-bar"></div>
+                        <div class="smile-progress-bar-description">
+                            <span><%= __("No smile") %></span>
+                            <span><%= __("Big smile") %></span>
+                        </div>
+                        <div class="smile-progress-bar-description" style="font-size:36px">
+                            <span>&#128528;</span>
+                            <span>&#128578;</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- loading -->
+        <div id="loading" class="loading row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div class="loader-animation">
+                    <div></div>
+                </div>
+                <span class="description text-center"><%= __("Uploading image") %></span>
+            </div>
+        </div>
+        <div id="loading-results" class="loading row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div class="loader-animation">
+                    <div></div>
+                </div>
+                <span class="description text-center"><%= __("Waiting for results ...") %></span>
+            </div>
+        </div>
+        <div id="uploading-results" class="loading row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div id="uploading-infinite" class="loader-animation">
+                    <div></div>
+                </div>
+                <div id="uploading-progress" class="loader-progress">
+                    <div class="middle-circle"></div>
+                    <div class="progress-spinner"></div>
+                </div>
+                <span class="description text-center"><%= __("Uploading") %>
+                        <small class="text-center"><%= __("We are uploading your results") %></small>
+                        <small class="text-center"><%= __("This might take a few moments") %></small>
+                    </span>
+            </div>
+        </div>
+        <div id="socket-init" class="loading row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div id="init-loader" class="animation">
+                <div class="animation-content loader-wrapper d-flex flex-column">
+                    <div class="loader-animation align-self-center">
+                        <div></div>
+                    </div>
+                    <span class="animation-title-text text-center"><%= __("Initialization in progress...") %></span>
+                </div>
+            </div>
+            <div id="downloading-loader" class="col-12 animation d-none">
+                <div id="downloading-progress" class="loader-progress">
+                    <div class="middle-circle"></div>
+                    <div class="progress-spinner"></div>
+                </div>
+                <div class="animation-title-text text-center">
+                    <span><%= __("Downloading resources...") %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liveness Results OK -->
+        <div id="step-liveness-ok" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation success-no-ipv d-none">
+                <div class="animation-content">
+                    <div id="best-image">
+                        <img src="./img/success_tick.svg" alt="success">
+                    </div>
+                    <span class="animation-title-text"><%= __("Good Job!")%></span>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block reset-step reset-animations" data-target="#step-1">
+                                <%= __("Submit") %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col success-ipv d-none">
+                <div class="col-12 animation success-ipv-block display-block">
+                    <div class="row">
+                        <div class="col-md-11 offset-md-1 col-lg-8 offset-lg-2">
+                            <div class="success-message-ipv">
+                                <div class="row justify-content-center">
+                                    <img src="./img/success_tick.svg" alt="success">
+                                </div>
+                                <div class="row justify-content-center">
+                                    <span class="description text-center col align-self-center"><%= __("You passed!") %></span>
+                                </div>
+                            </div>
+                            <div class="padb20">
+                                <button class="col-md-4 offset-md-4 btn btn-primary btn-block reset-step reset-animations small-font-small-phone"
+                                        data-target="#step-1"><%= __("Restart demo") %>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row padT20">
+                        <div id="debug-ipv-portrait" class="col-md-6">
+                            <button id="get-ipv-portrait"
+                                    class="col-md-8 offset-md-2 btn btn-primary btn-block reset-animations small-font-small-phone">
+                                <%= __("Get GIPS portrait - dev only !") %>
+                            </button>
+                            <div class="padb20">
+                                <img id="best-image-ipv" class="d-none" alt="best image" src="">
+                            </div>
+                        </div>
+                        <div id="debug-ipv-transaction" class="col-md-6">
+                            <button id="get-ipv-transaction"
+                                    class="col-md-8 offset-md-2 btn btn-primary btn-block reset-animations small-font-small-phone">
+                                <%= __("Get GIPS transaction - dev only !") %>
+                            </button>
+                            <pre id="get-ipv-status-result" class="d-none"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Liveness Results SPOOF / TIMEOUT -->
+        <div id="step-liveness-ko" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content continue">
+                    <div class="animation-tutorial">
+                        <img class= "generic" src="./img/somethingWentWrong.svg" alt="Something went wrong">
+                        <img class="too-bright" src="./img/letscan1.svg" alt="Luminosity too high">
+                        <img class="no-face" src="./img/letscan2.svg" alt="Move during illumination">
+                    </div>
+                    <div class="animation-title-text">
+                        <span class="generic"><%= __("Something went wrong!") %></span>
+                        <span class="no-face"><%= __("Your face moved!") %></span>
+                        <span class="too-bright"><%= __("Your environment is too bright!") %></span>
+                    </div>
+                    <div class="animation-text">
+                        <span><%= __("Check the tips below:") %></span>
+                    </div>
+                    <table class="table-liveness-instructions"><!-- TODO: do not use table use div instead -->
+                        <tr class="too-bright">
+                            <td class="table-img-liveness-instructions">
+                                <img src="./img/contrast_sun.svg" alt="Liveness instruction darker">
+                            </td>
+                            <td class="table-txt-liveness-instructions">
+                                <span><%= __("Make sure you are in a darker area.") %></span>
+                            </td>
+                        </tr>
+                        <tr class="too-bright">
+                            <td class="table-img-liveness-instructions">
+                                <img src="./img/light.svg" alt="Increase phone brightness">
+                            </td>
+                            <td class="table-txt-liveness-instructions">
+                                <span><%= __("Turn your screen brightness up to the maximum") %>.</span>
+                            </td>
+                        </tr>
+                        <tr class="generic no-face">
+                            <td class="table-img-liveness-instructions">
+                                <img src="./img/eyes-level.svg" alt="Liveness instruction eyes level">
+                            </td>
+                            <td class="table-txt-liveness-instructions">
+                                <span><%= __("Hold your device still and at eye level.") %></span>
+                            </td>
+                        </tr>
+                        <tr class="too-bright no-face">
+                            <td class="table-img-liveness-instructions">
+                                <img src="./img/person.svg" alt="move during illumination">
+                            </td>
+                            <td class="table-txt-liveness-instructions">
+                                <span><%= __("Make sure your face is always visible within the oval at all time.") %></span>
+                            </td>
+                        </tr>
+                        <tr class="generic">
+                            <td class="table-img-liveness-instructions">
+                                <img src="./img/person.svg" alt="Liveness instruction person">
+                            </td>
+                            <td class="table-txt-liveness-instructions">
+                                <span><%= __("Make sure that you are the only person in the camera field.") %></span>
+                            </td>
+                        </tr>
+                        <tr class="generic">
+                            <td class="table-img-liveness-instructions">
+                                <img src="./img/instruction.svg" alt="move during illumination">
+                            </td>
+                            <td class="table-txt-liveness-instructions">
+                                <span><%= __("Closely follow the instructions during face capture.") %></span>
+                            </td>
+                        </tr>
+                        <!-- Empty tr to have similar behavior than other error screen  -->
+                        <tr class="no-face" style="height: 35px"></tr>
+                    </table>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block reset-animations continue" data-target="#socket-init">
+                                <%= __("Try again") %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Liveness Results FAILED -->
+        <div id="step-liveness-failed" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="animation">
+                <div class="animation-content">
+                    <div class="animation-tutorial">
+                        <img src="./img/somethingWentWrong.svg" alt="Something went wrong">
+                    </div>
+                    <div class="animation-title-text">
+                        <span><%= __("Something went wrong") %></span>
+                    </div>
+                    <div class="animation-text">
+                        <span><%= __("Please restart your liveness by clicking Try again.") %></span>
+                    </div>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block reset-animations" data-target="#socket-init">
+                                <%= __("Try again") %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Liveness Results: Too Many attempts -->
+        <div id="step-liveness-fp-block" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/icons-product-lock-large.svg" alt="failure">
+                <span class="too-many-attempts"><%= __("Too Many attempts!") %></span>
+                <span class="for-security-reason"><%= __("For security reason, we have temporarily disabled access to verification.") %></span>
+                <span class="please-try-again-in"><%= __("Please try again in") %> <span class="fp-countdown"></span></span>
+                <button class="btn btn-primary btn-block reset-animations retry-fp" data-target="#socket-init"><%= __("Try again") %></button>
+            </div>
+        </div>
+        <!-- Server overloaded -->
+        <div id="step-server-overloaded" class="row step d-none results">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <img src="./img/server-overloaded.svg" alt="server-overloaded">
+                <span class="server-overloaded-title"><%= __("Server is at capacity") %></span>
+                <span class="server-overloaded-description"><%= __("The server is currently unable to handle your request. Please try again in a few moments.") %></span>
+                <button class="btn btn-primary btn-block reset-animations retry-fp" data-target="#socket-init"><%= __("Try again") %></button>
+            </div>
+        </div>
+        <!-- Brightness too high -->
+        <div id="step-luminosity-ko" class="row step d-none">
+            <header class="row header">
+                <div class="col logo">
+                    <img alt="Logo" src="./img/logo-passive-video.png">
+                </div>
+            </header>
+            <div class="col-12 animation">
+                <div class="animation-content">
+                    <div class="animation-tutorial">
+                        <img src="./img/letscan1.svg" alt="Luminosity too high">
+                    </div>
+                    <span class="animation-title-text"><%= __("Your environment is too bright!") %></span>
+                    <span class="animation-text"><%= __("Your current environment is not good for capturing.") %><br>
+                        <%= __("Please move to a darker location and push the <b>\"I am ready\"</b> button.") %></span>
+                </div>
+                <div class="footer">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-primary btn-block reset-animations retry-fp" data-target="#step-continue-liveness"><%= __("I am ready") %></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-environment-api.js"></script>
+    <script src="./js/detect-env.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-api.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-network-check.js"></script>
+    <script src="<%=JAVASCRIPT_PATH%>/bioserver-video-ui.js"></script>
+    <script src="./js/index.js"></script>
+    </body>
+</html>

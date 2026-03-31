@@ -669,6 +669,15 @@ video {background-color: black}
     left: 0;
     animation: loader-rotate 1s linear infinite;
 }
+
+/* Specific issue fix on Safari where the loader does not start*/
+.d-none-fadeout .loader-animation > div {
+    animation-play-state: paused;
+}
+.d-none .loader-animation > div {
+    animation-play-state: paused;
+}
+
 @keyframes loader-rotate {
     0% {
         transform: rotate(0);

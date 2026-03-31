@@ -1,5 +1,5 @@
 /*
-Copyright 2025 IDEMIA Public Security
+Copyright 2025-2026 IDEMIA Public Security
 Copyright 2020-2024 IDEMIA Identity & Security
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -204,34 +204,13 @@ async function postConsent(identityId) {
  * Start video capture init session with parameters from configuration
  * response 200
 
- * POST {{url}}/v1/identities/{{identityId}}/attributes/portrait/live-capture-session
+ * POST {{url}}/v1/identities/{{identityId}}/attributes/portrait/capture-session
  * @returns
  * {
- *   "status": "PROCESSING",
- *   "type": "ID_DOCUMENT",
- *   "id": "gips-998cf41c-6d76-45d2-b173-185854dc959f",
- *   "errors": [
- *     {
- *       "field": "surname",
- *       "code": "1006",
- *       "message": "A field does not have the good format"
- *     }
- *   ],
- *   "sessionId": "string",
- *   "livenessParameters": {
- *     "seed": "string",
- *     "serverRandom": "string",
- *     "certificates": [
- *       "string"
- *     ],
- *     "type": "LIVENESS_HIGH",
- *     "timeout": 0,
- *     "securityLevel": "HIGH",
- *     "nbChallenge": 0,
- *     "useAccurateMatch": true,
- *     "matchThreshold": 0,
- *     "signature": "string"
- *   }
+ *      "status": "PROCESSING",
+ *      "type": "PORTRAIT",
+ *      "id": "16bf5db3-345b-4119-9702-442f578d6f5e",
+ *      "sessionId": "8c972a12-3e05-4d6b-b9b5-6f5fc2c0543c"
  * }
  */
 async function startVideoCapture(identityId) {
@@ -241,7 +220,7 @@ async function startVideoCapture(identityId) {
         nbChallenge: config.LIVENESS_ACTIVE_NUMBER_OF_CHALLENGE
     };
 
-    const res = await fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/live-capture-session', {
+    const res = await fetch(config.GIPS_URL + PATH_V1_IDENTITY + identityId + '/attributes/portrait/capture-session', {
         method: 'POST',
         body: JSON.stringify(livenessParamerters),
         headers: jsonContentType(authenticationHeader()),

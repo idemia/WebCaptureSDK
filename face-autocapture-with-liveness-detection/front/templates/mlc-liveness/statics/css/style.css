@@ -1,0 +1,918 @@
+/*
+Copyright 2025 IDEMIA Public Security
+Copyright 2020-2024 IDEMIA Identity & Security
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/* load custom fonts */
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-Regular.woff2) format('woff2'), url(../font/Montserrat-Regular.ttf) format('ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-Bold.woff2) format('woff2'), url(../font/Montserrat-Bold.ttf) format('ttf');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url(../font/Montserrat-SemiBold.woff2) format('woff2'), url(../font/Montserrat-SemiBold.ttf) format('ttf');
+    font-weight: 500;
+    font-style: normal;
+}
+
+html,
+body {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex: 1;
+    font-family: Montserrat, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    max-width: 576px;
+    min-width: 320px;
+    background: white;
+}
+main.pc {
+    max-width: 100%;
+    min-width: 1024px;
+}
+
+/** HEADER MANAGEMENT **/
+
+.liveness-header {
+    margin:0;
+    padding-top: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+}
+.pc header {
+    padding: 24px;
+    height: 50px;
+}
+.pc .liveness-header {
+    height: 50px;
+}
+.header {
+    height: 24px;
+    background: white;
+    text-align: right !important;
+    padding-top: 10px;
+}
+header .logo img {
+    width: 88px;
+}
+
+/********************************/
+
+.pc header .logo img {
+    width: 88px
+}
+
+
+.pointer {cursor: pointer}
+
+.step {
+    flex: 1;
+    flex-direction: column;
+    margin:0;
+}
+.step-basis-auto {
+    flex: 1 0 auto !important;
+}
+.pc .step {
+    margin: 0 66px;
+}
+.step .description,
+.step .footer {
+    flex: 0 0 auto;
+}
+
+.step .description {
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1.36;
+    color: #101010;
+    padding: 16px 0;
+}
+.step .description small {
+    display: block;
+    line-height: 1.38;
+    color: #545454;
+    font-size: 70%;
+}
+small ul {
+    margin: 0; padding:0 0 0 16px;
+}
+.step .check-phone {
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 16px 0;
+}
+
+.check-phone img {max-height: 184px;}
+.pc .check-phone img {max-height: 250px;}
+
+#step-weak-network .animation,
+#socket-init .animation,
+#loading .animation,
+#loading-results .animation,
+#uploading-results .animation,
+#connectivity-check .animation {
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+#step-weak-network .signal-value {color: #f23445}
+#step-good-network .signal-value {color: #4b9e00}
+
+/* hide all pc items*/
+.pc-item {
+    display: none;
+}
+/* hide all mobile item on pc environment*/
+.pc .mobile-item {
+    display: none;
+}
+/* show pc items on pc environment*/
+.pc .pc-item {
+    display: block;
+}
+
+/* ** */
+.pc .step .description {
+    font-size: 38px;
+}
+.step .animation {
+    flex: 1 2 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.pc .step .animation {
+    justify-content: flex-start;
+}
+.animation-title-text {
+    padding-top: 39px;
+    padding-bottom: 17px;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 28px;
+    text-align: center;
+    color: #4C4C4C;
+}
+.animation-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: calc(100% - 110px); /* minus height of footer */
+}
+.pc .animation-content {
+    width: auto;
+    min-height: auto;
+}
+
+#phone-not-vertical-animation .animation-content {
+    min-height: auto;
+}
+
+.animation-text {
+    padding-bottom: 3%;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 23px;
+    color: #656565;
+    text-align: center;
+}
+
+.text-center {
+   text-align: center;
+}
+
+.animation-image {
+    padding-top: 20%;
+    padding-bottom: 5%;
+    text-align: center;
+}
+
+.pc .animation-image {
+    padding-top: 5%;
+}
+
+.animation-small-image{
+    text-align: center;
+    margin-top:30px
+}
+
+.animation-tutorial {
+    height: 30vh;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+.pc .animation-tutorial {
+    height: 40vh;
+}
+
+.animation-tutorial > img{
+    width: 100%
+}
+
+.step .animation .contain{
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    padding-bottom: 80px;
+}
+.pc .step .animation .contain{
+    height: 400px;
+    width: 500px;
+    padding-bottom: 0;
+}
+.step .footer {
+    padding: 30px 0;
+    width: 100%;
+}
+.pc .step .footer, .pc .step .check-phone .btn-footer {
+    position: relative;
+    max-width: 335px;
+}
+.pc .step .footer .col{
+    padding-bottom: 1rem;
+}
+
+.btn {
+    /*Button*/
+    height: 50px;
+    background: #FFFFFF;
+    border: 1px solid #430099;
+    box-sizing: border-box;
+    border-radius: 5px;
+    font-weight: 500;
+    font-size: 17px;
+    color: #430099;
+}
+
+.btn img {
+    width: 18px;
+    margin: 0 5px;
+}
+.pc .btn {
+    height: 60px;
+    font-size: 18px;
+}
+
+.btn-primary,
+.btn-primary:active {
+    color: #430099!important;
+    background-color: #FFFFFF!important;
+    border: 1px solid #430099!important;
+}
+
+.btn-primary:hover {
+    color: white!important;
+    background-color: #430099!important;
+    border: 1px solid #430099!important;
+}
+
+.btn-outline-primary,
+.btn-outline-primary:active {
+    color: #430099!important;
+    background-color: #FFFFFF!important;
+    border: 1px solid #430099!important;
+}
+
+.browsers-content {
+    flex: 1;
+    flex-wrap: wrap;
+    padding: 0;
+}
+.browsers-description {
+    flex: 0 0 auto;
+    padding: 0;
+}
+.browsers, .os-list {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: left;
+}
+
+.browsers > tr {
+    margin-top: 10px;
+}
+.browser-logo {
+    width: 80px;
+}
+.browser-desc {
+    padding-left: 5px;
+    display: flex;
+    justify-content: left;
+}
+
+.os {
+    display: flex;
+    flex: 1 1 100%;
+}
+.os-img {
+    background-size: auto 100px;
+    background-repeat: no-repeat;
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    margin: 5px;
+}
+
+.os-img {
+    background-image: url(../img/os.png) ;
+}
+.os > span {
+    align-self: center;
+}
+
+.os #windows {
+    background-position: 0 0;
+}
+.os #android {
+    background-position: -100px 0;
+}
+.os #ios {
+    background-position: -200px 0;
+}
+.os #mac-os {
+    background-position: -300px 0;
+}
+.os #linux, #ubuntu {
+    background-position: -400px 0;
+}
+
+.column-center {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding:0;
+}
+.pc .column-center {
+    align-items: flex-start;
+    max-width: 500px;
+}
+.row-center {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: 1px solid #b3babe;
+    cursor: pointer;
+}
+.pc .row-center:hover {
+    border: 1px solid #430099;
+}
+.row-center img {
+    width: 100%;
+    height: 45px;
+    object-fit: contain;
+}
+.row-center span{
+    margin-top: 15px
+}
+
+/** VIDEO MANAGEMENT **/
+
+video {
+    background-color: black;
+    margin-top: -0.5px;
+}
+
+#step-liveness,.video-tut #step-tutorial {margin: 0 -15px}
+.pc #step-liveness {
+    margin: 0;
+    align-self: center;
+    width: 700px;
+}
+.pc.video-tut #step-tutorial {
+    max-width: 576px;
+    align-self: center;
+}
+
+/** STEP LIVENESS MANAGEMENT **/
+#step-liveness {
+    position: relative;
+}
+#step-liveness video {
+    transform: scaleX(-1); /* invert user front camera */
+    object-fit: cover;
+}
+
+#step-liveness .animation {
+    align-items: center;
+    /*background-color: black*/
+}
+.pc #step-liveness .animation {
+    justify-content: center;
+}
+
+#step-liveness .video-overlay {
+    position: absolute;
+    top: 0 ;
+    z-index: 999999;
+    display: flex;
+    justify-content: center;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-color: white;
+    transition: opacity 0.3s ease-in;
+}
+
+#step-liveness .tutorial-overlay {
+    position: absolute;
+    top: 0 ;
+    z-index: 999999;
+    display: flex;
+    justify-content: center;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-color: white;
+    transition: opacity 0.3s ease-in;
+}
+
+
+#step-liveness .feedback-overlay {
+    position: absolute;
+    z-index: 1;
+    top: 55% ;
+    left:0;
+    right:0;
+    bottom:0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: start;
+    justify-content: center;
+    transition: opacity 0.5s ease-in;
+    text-align: center;
+    background: rgb(255, 255, 255, 0); /* make background invisible for illumination phase*/
+}
+.pc #step-liveness .feedback-overlay {
+    top: 60% ;
+}
+#step-liveness .feedback-overlay .feedback-msg {
+    padding-top: 15px;
+    padding-bottom: 17px;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 28px;
+    color: #4C4C4C;
+    width: 100%;
+}
+
+#step-liveness .feedback-overlay .feedback-description {
+    padding-bottom: 3%;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 23px;
+    color: #656565;
+    text-align: center;
+}
+.pc #step-liveness .feedback-msg {
+    font-size: 24px;
+}
+
+#step-liveness .d-none-fadeout {
+    opacity: 0!important;
+    visibility: hidden;
+    transition: opacity 250ms ease-out;
+}
+
+.video-msg-wrapper.d-none-fadeout{
+    height: calc(100%) !important;
+}
+.pc .video-msg-wrapper.d-none-fadeout{
+    height: calc(100%) !important;
+}
+
+.video-block,
+.no-header-h-100 {
+    height:calc(100%);
+    width: calc(100%);
+}
+
+.pc .video-block,
+.pc .no-header-h-100{
+    height:calc(100%);
+    width: calc(100%);
+}
+
+
+#step-liveness .video-msg-wrapper {
+    z-index: 999999;
+}
+
+#step-liveness .smile-progress-bar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+#step-liveness .smile-progress-bar-description {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 5px 0 0;
+}
+
+#step-liveness .footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+    z-index: 2;
+    padding: 16px 16px;
+    background: rgba(255, 255, 255,  0); /* make background invisible for illumination phase*/
+}
+
+.pc #step-liveness .footer {
+    max-width: none;
+}
+
+#step-liveness .tutorial-footer {
+    display: flex;
+    flex-wrap: wrap;
+    position: absolute;
+    padding: 30px 0;
+    bottom: 0;
+    flex: 0 0 auto;
+    width: 100%
+}
+
+.pc #step-liveness .tutorial-footer {
+    max-width: 335px;
+    position: relative;
+}
+
+
+
+/**** loading-initialized loading-challenge ***/
+
+#step-liveness #loading-challenge {
+    background: white;
+}
+
+#step-liveness #loading-initialized {
+    background: white;
+}
+
+#step-liveness .loader-text {
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 20px;
+    text-align: center;
+    color: #656565;
+    padding-bottom: 5px;
+}
+.pc #step-liveness .loader-text {
+    font-size: 20px;
+}
+
+#step-liveness .loader-title{
+    padding-top: 5%;
+    padding-bottom: 5%;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 24px;
+    text-align: center;
+    color: #4C4C4C;
+}
+.pc #step-liveness .loader-title {
+    font-size: 24px;
+}
+
+/********************************/
+
+.animation-full {
+    margin-bottom: 80px;
+}
+
+.pc .results {
+    margin-left: 0;
+}
+.results .animation{
+    flex-direction: column;
+    align-items: center!important;
+    justify-content: center!important;
+}
+.results .animation .btn:not(.btn-block) {
+    padding-left: 4rem;
+    padding-right: 4rem;
+    margin-top: 4rem;
+}
+.loading {background-color: rgba(255,255,255,0.9);}
+.loading .animation {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.loader-progress {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.progress-spinner {
+    border-radius: 50%;
+    height: 100%;
+    width: 100%;
+}
+.middle-circle {
+    position: absolute;
+    border-radius: 50%;
+    height: calc(100% - 10px);
+    width: calc(100% - 10px);
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: larger;
+    font-weight: bold;
+}
+.loader-animation,
+.loader-progress {
+    width: 80px;
+    height: 80px;
+    position: relative;
+}
+.pc .loader-animation,
+.pc .loader-progress {
+    width: 100px;
+    height: 100px;
+}
+#loading .loader-animation {
+    background: url('../img/upload_3x.png') center no-repeat;
+    background-size: 40%;
+}
+.loader-animation > div{
+    width: 100%;
+    height: 100%;
+    border: 5px solid rgba(67, 0, 153, 0.2);
+    border-top-color: #430099;
+    box-sizing: border-box;
+    border-radius: 50%;
+    position: relative;
+    top: 0;
+    left: 0;
+    animation: loader-rotate 1s linear infinite;
+}
+@keyframes loader-rotate {
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Specific issue fix on Safari where the loader does not start*/
+.d-none-fadeout .loader-animation > div {
+    animation-play-state: paused;
+}
+.d-none .loader-animation > div {
+    animation-play-state: paused;
+}
+
+.logo #application-version .loader-wrapper {
+    background:white;
+    border-radius: 8px;
+    width: 214px;
+}
+.logo #application-version  .loader-text {
+    color: #430099;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 15px;
+    border: solid 1px #430099;
+    font-size: 10px;
+}
+
+@media (max-width: 400px) {
+    .small-font-small-phone {
+        font-size: 10px !important;
+    }
+}
+
+
+/* All mobiles */
+@media (max-width: 480px) {
+    .animation-text {
+        align-self: normal !important;
+        text-align: left; !important;
+    }
+}
+
+/*generic*/
+.animation-tut .video-tut { display:none!important;}
+.video-tut .animation-tut { display:none!important;}
+
+.retry-fp {
+    margin-top: 30px !important;
+    max-width: 400px;
+}
+
+.too-many-attempts, .server-overloaded-title {
+    padding-top: 20px;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 20px;
+    color: #4C4C4C;
+    text-align: center;
+    letter-spacing: normal;
+}
+.pc .too-many-attempts, .pc .server-overloaded-title {
+    width: 1128px;
+    font-size: 44px;
+}
+.for-security-reason, .server-overloaded-description {
+    padding-top: 20px;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    color: #656565;
+    letter-spacing: normal;
+    text-align: center;
+}
+.pc .for-security-reason, .pc .server-overloaded-description {
+    width: 772px;
+    font-size: 24px;
+}
+
+.please-try-again-in {
+    padding-top: 20px;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 16px;
+    color: #656565;
+    letter-spacing: normal;
+    text-align: center;
+}
+.pc .please-try-again-in {
+    font-size: 24px;
+}
+
+.fp-countdown {
+    font-family: monospace;
+}
+
+/** LIVENESS INSTRUCTIONS **/
+.table-liveness-instructions {
+    height: 156px;
+    width:100%;
+    margin:0;
+    padding:0;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.table-liveness-instructions td tr {
+   padding:0;
+   margin:0;
+}
+
+.table-txt-liveness-instructions {
+   height:12px;
+   line-height: 1.1;
+}
+
+.table-img-liveness-instructions{
+ width:42px;
+}
+
+/** STOP VIDEO **/
+
+#stop-capture {
+    position: absolute;
+    z-index: 999999999;
+    left: 16px;
+    top: 16px;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    background: white;
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+    border-radius: 50%;
+}
+/** LIVENESS OK **/
+#best-image .pc {
+    align-self: flex-start;
+}
+#best-image img {
+    position: absolute;
+    top: 10px;
+    left: 5px;
+}
+
+/** id-proofing specific **/
+.success-message-ipv {
+    text-align:center;
+    margin-bottom:15px
+}
+
+.footer-ipv {
+    max-width: 100% !important;
+    position: static !important;
+}
+
+.success-ipv-block {
+    justify-content:start !important;
+    padding-top: 20px !important;
+}
+
+.success-ipv {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+}
+
+.display-block {
+    display: block !important;;
+}
+
+
+#get-ipv-status-result {
+    white-space: pre-wrap;
+    margin-top: 20px;
+    background-color: #ffc1071a;
+    border: ridge;
+    border-radius:10px;
+}
+
+#get-ipv-portrait {
+    margin-bottom: 20px;
+}
+
+#best-image-ipv {
+    border: ridge;
+    border-radius:10px;
+    max-width: 100%
+}
+
+.padT20 {
+    padding-top: 20px;
+}
+
+.padb20 {
+    padding-bottom: 20px;
+}
+
+ul {
+    /** align left with container-fluid padding **/
+    padding-inline-start: 15px;
+}

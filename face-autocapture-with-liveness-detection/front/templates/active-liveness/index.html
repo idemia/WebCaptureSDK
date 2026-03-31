@@ -276,7 +276,7 @@ limitations under the License.
                     <img class="contain" src="./img/phone-check_2x.png" alt="Check phone">
                 </div>
                 <div class="text-center description">
-                    <span><%= __("In order to authenticate you, we need access to your phone's camera. Sound good?") %></span>
+                    <span><%= __("Camera access is required to scan your face. Without it, we will not be able to start the process.") %></span>
                 </div>
                 <div class="btn-footer w-100">
                     <button class="btn btn-primary btn-block" data-target="#connectivity-check"><%= __("i accept") %></button>
@@ -358,13 +358,13 @@ limitations under the License.
                 <div class="best-image">
                     <img src="./img/success.svg" alt="success">
                 </div>
-                <span class="description text-center"><%= __("You passed liveness!") %></span>
+                <span class="description text-center"><%= __("You passed!") %></span>
                 <b class="text-center pb-3"><%= __("Here's the image we captured during liveness.") %></b>
                 <div class="col-12 footer">
                     <div class="row">
                         <div class="col">
-                            <button class="btn btn-primary btn-block next-step" data-target="#step-selfie"><%= __("next") %></button>
-                            <button class="btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+                            <button class="btn btn-primary btn-block next-step" data-target="#step-selfie"><%= __("Next") %></button>
+                            <button class="btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"><%= __("Restart demo") %></button>
                         </div>
                     </div>
                 </div>
@@ -375,10 +375,10 @@ limitations under the License.
                         <div class="col-md-11 offset-md-1 col-lg-8 offset-lg-2">
                             <div class="success-message-ipv">
                                 <img src="./img/success.svg" alt="success">
-                                <span class="passed-liveness description text-center"><%= __("You passed liveness!") %></span>
+                                <span class="passed-liveness description text-center"><%= __("You passed!") %></span>
                             </div>
                             <div class="padb20">
-                                <button class="col-md-4 offset-md-4 btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"><%= __("restart demo") %></button>
+                                <button class="col-md-4 offset-md-4 btn btn-primary btn-block reset-step reset-animations" data-target="#step-1"><%= __("Restart demo") %></button>
                             </div>
                         </div>
                     </div>
@@ -452,7 +452,7 @@ limitations under the License.
                 <span class="description text-center"><%= __("Sorry, there was an issue.") %></span>
                 <span class="description"><small class="text-center"></small></span>
                 <button class="btn btn-primary reset-animations refresh d-none" onclick="window.location.reload(); return false;"><%= __("Refresh the page") %></button>
-                <button class="btn btn-primary reset-animations restart-demo" data-target="#step-1"><%= __("restart demo") %></button>
+                <button class="btn btn-primary reset-animations restart-demo" data-target="#step-1"><%= __("Restart demo") %></button>
             </div>
         </div>
 
