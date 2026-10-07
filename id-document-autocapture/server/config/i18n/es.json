@@ -74,7 +74,7 @@
   "While holding the passport with one hand, ensure the bottom info and your photo are clearly visible. Clean your phone’s camera if it’s dirty.": "Mientras sostiene el pasaporte con una mano, asegúrese de que la información de la parte inferior y su foto sean claramente visibles. Limpie la cámara de su teléfono si está sucia.",
   "We extracted info from the inside page of your passport.": "Extrajimos información de la página interior de su pasaporte.",
   "If anything is incorrect, please rescan your document.": "Si algo es incorrecto, vuelva a escanear su documento.",
-  "In order to authenticate your document, we need access to your phone's camera. Sound good?": "Para autenticar su documento, necesitamos acceso a la cámara de su teléfono. ¿Le parece bien?",
+  "Camera access is required to scan your document. Without it, we will not be able to start the process.": "Se requiere acceso a la cámara para escanear su documento. Sin ello, no podremos iniciar el proceso.",
   "Align ID in frame": "Alinear ID en marco",
   "Align the passport's inner page in frame": "Alinear la página interior del pasaporte en el marco",
   "Align Front of ID in frame": "Alinear el frente de la identificación en el marco",

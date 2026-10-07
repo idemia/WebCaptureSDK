@@ -18,7 +18,7 @@ limitations under the License.
  * All the JS source code to integrate the demo-doc is present here.
  */
 
-/* global Blob, DocserverVideo, DocserverNetworkCheck, __, DOCSERVER_VIDEO_URL_WITH_BASE_PATH, BASE_PATH, IDPROOFING */
+/* global DocserverVideo, DocserverNetworkCheck, __, DOCSERVER_VIDEO_URL_WITH_BASE_PATH, BASE_PATH, IDPROOFING */
 /* eslint no-console: ["error", { allow: ["log", "error"] }] */
 const { $, $$ } = require('../../utils/commons');
 const { getCurrentDocumentRule } = require('./country-doc-selection');
@@ -63,7 +63,6 @@ let client; // let start & stop doc capture
 let clientStartTimeout; // handle the setTimeout where the client.start happens
 let identityId; // identity of the GIPS transaction (if GIPS workflow)
 let evidenceId; // evidenceId associated to a document on GIPS (if GIPS workflow)
-let bestImageURL; // best image url (in memory window.URL.createObjectURL) (if GIPS workflow)
 let videoStream; // user video camera stream
 let currentDocSide; // current captured document type (front/back)
 let captureInProgress;
@@ -110,8 +109,7 @@ stopCaptureButton.onclick = function () {
     }
     console.log('client stop request sent to backend...');
     resetDocAuthDesigns();
-    // send abort message to backend
-    client.stop();
+    client.disconnect();
     videoStream = null;
     videoOutput.srcObject = null;
     let currentTargetStepId;
@@ -162,7 +160,7 @@ async function initDocCaptureClient(options = {}) {
         onClientInitEnd: () => {
             console.log('Capture client init end');
             loadingInitialization.classList.add(dNoneString); // initialization done, remove loading for video preview
-            alignDocMsg.classList.remove(dNoneFadeoutString);
+            displayMsg(alignDocMsg, 1000);
         },
         onChangeDocumentSide: (data) => {
             console.log('Document side ' + currentDocSide + ' is captured...');
@@ -349,7 +347,7 @@ function displayChangeSideUI(startDelay) {
         // Display video message
         resetVideoMsgContent();
         alignDocMsg.querySelector('.video-msg-back').classList.remove('d-none');
-        alignDocMsg.classList.remove(dNoneFadeoutString);
+        displayMsg(alignDocMsg, 1000);
         displayAbortButton();
     }, startDelay);
 }
@@ -819,9 +817,6 @@ function initDocAuthDesign(docSide) {
 function resetDocAuthDesigns() {
     $('header').classList.remove('d-none');
     $('main').classList.remove('darker-bg');
-    if (bestImageURL) {
-        window.URL.revokeObjectURL(bestImageURL);
-    } // free memory
 }
 
 /**
@@ -889,7 +884,6 @@ function displayInstructionsToUser({ position, corners, pending, uploadProgress 
         }
     }
     if (corners) {
-        // displayMsg(scanningDocMsg, 5000);
         if (showLiveCorners) {
             const { x0, y0, x1, y1, x2, y2, x3, y3 } = corners;
             const coefW = videoOutput.offsetWidth / videoOutput.videoWidth;
@@ -946,7 +940,6 @@ window.onload = () => {
     if (typeof DocserverNetworkCheck !== 'undefined') {
         let displayGoodSignal = false;
 
-        // eslint-disable-next-line no-inner-declarations
         function onNetworkCheckUpdate(networkConnectivity) {
             if (!networkConnectivity || !networkConnectivity.goodConnectivity) {
                 connectivityOK = false;
@@ -969,7 +962,6 @@ window.onload = () => {
             }
         }
 
-        // eslint-disable-next-line no-inner-declarations
         function doNetworkCheck() {
             DocserverNetworkCheck.connectivityMeasure({
                 uploadURL: DOCSERVER_VIDEO_URL_WITH_BASE_PATH + networkSpeedString,

@@ -28,8 +28,8 @@ function displayEnvironement(env) {
     var envDetectionPage = document.querySelector('#step-compatibility');
     var descriptionClass = '.description';
     var stepCountrySelectionId = '#step-country-selection';
+    var browsersDescription = envDetectionPage.querySelector('.browsers-description ');
     if (env.envDetected) {
-        var browsersDescription = envDetectionPage.querySelector('.browsers-description ');
         var envOS = env.envDetected.os;
         var envBrowser = env.envDetected.browser;
         if (!envOS.isSupported) {
@@ -92,7 +92,11 @@ function displayEnvironement(env) {
             }
         }
     } else {
+        window.envBrowserOk = false;
+        document.querySelector(stepCountrySelectionId).className = document.querySelector(stepCountrySelectionId).className.concat(' d-none');
+        envDetectionPage.className = envDetectionPage.className.replace('d-none', '');
         envDetectionPage.querySelector(descriptionClass).textContent = env.message;
+        browsersDescription.textContent = '';
     }
 }
 

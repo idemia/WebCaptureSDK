@@ -18,7 +18,7 @@ limitations under the License.
 /*
  * File used to allow communication with WebDocserver API. This file can be used by integrator as it is.
  */
-const fetch = (...args) => import('node-fetch').then(({ default: _fetch }) => _fetch(...args));
+const fetch = require('node-fetch').default;
 const FormData = require('form-data');
 const config = require('./config');
 const multipart = require('parse-multipart');

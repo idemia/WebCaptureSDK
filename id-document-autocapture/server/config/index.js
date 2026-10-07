@@ -28,7 +28,8 @@ for (const [key, value] of Object.entries(process.env)) {
         try {
             values[key] = JSON.parse(value);
             continue;
-        } catch (err) {
+        } catch (_) {
+            // ignore
         }
     }
     values[key] = value;

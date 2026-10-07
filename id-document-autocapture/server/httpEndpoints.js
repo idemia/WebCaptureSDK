@@ -25,11 +25,8 @@ const gipsApi = require('./gips-api');
 
 const { findDocTypesByCountry, findRulesByCountryAndType } = require('./config/rules');
 
-let token; const documentCaptureResults = {}; // TODO use some distributed cache
+const documentCaptureResults = {}; // TODO use some distributed cache
 
-module.exports.getToken = () => {
-    return token;
-};
 module.exports.initHttpEndpoints = (app) => {
     /**
      * Exposes api to create docserver session by country + document type or rules
@@ -138,7 +135,6 @@ module.exports.initHttpEndpoints = (app) => {
      *
      */
     app.get(config.BASE_PATH + '/doc-capture-result/:sessionId/:docType/:docSide', async (req, res) => {
-        let finalResult = {};
         const sessionId = req.params.sessionId;
         logger.updateContext({ sessionId });
         const docSide = req.params.docSide;
@@ -173,7 +169,7 @@ module.exports.initHttpEndpoints = (app) => {
                 } else {
                     const docCaptureSession = await webDocApi.getDocCaptureResult(sessionId, documentCaptureResults[sessionId].captureId);
                     documentCaptureResults[sessionId] = docCaptureSession;
-                    finalResult = getDataToDisplay(docCaptureSession, docSide);
+                    const finalResult = getDataToDisplay(docCaptureSession, docSide);
                     logger.info(`Document capture result for side=${req.params.docSide}:`, removePiiData(finalResult));
                     res.json(finalResult);
                 }

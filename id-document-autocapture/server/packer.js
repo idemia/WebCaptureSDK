@@ -32,7 +32,7 @@ config.SUPPORTED_LANGUAGES.split(',').forEach(lang => {
         if (lang !== 'en') {
             languages[lang] = require(`./config/i18n/${lang}.json`);
         }
-    } catch (err) {
+    } catch (_) {
         logger.warn('Warning! No %s.json found, fallback to english for this language %s', lang);
     }
 });
